@@ -9,7 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Slider } from "@/components/ui/slider";
-import { MatchScoreRing } from "@/components/MatchScoreRing";
+import MatchScoreRing from "@/components/MatchScoreRing";
 import { toast } from "sonner";
 import {
   Search, Users, Handshake, Send, CheckCircle, XCircle,

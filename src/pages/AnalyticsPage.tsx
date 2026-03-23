@@ -1,7 +1,7 @@
 import { useState } from "react";
 import DashboardLayout from "@/components/DashboardLayout";
-import { GlassCard } from "@/components/GlassCard";
-import { MatchScoreRing } from "@/components/MatchScoreRing";
+import GlassCard from "@/components/GlassCard";
+import MatchScoreRing from "@/components/MatchScoreRing";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";

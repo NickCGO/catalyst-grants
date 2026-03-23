@@ -50,6 +50,8 @@ const App = () => (
           <Route path="/tasks" element={<TasksPage />} />
           <Route path="/crm" element={<CRMPage />} />
           <Route path="/crm/:funderId" element={<CRMDetailPage />} />
+          <Route path="/analytics" element={<AnalyticsPage />} />
+          <Route path="/partnerships" element={<PartnershipsPage />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
