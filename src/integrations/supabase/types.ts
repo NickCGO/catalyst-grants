@@ -739,68 +739,115 @@ export type Database = {
         Row: {
           annual_beneficiary_reach: number | null
           annual_budget: number | null
+          annual_budget_currency: string | null
           annual_income: number | null
+          baseline_data: string | null
           bbbee_level: number | null
+          beneficiary_demographics: Json | null
           beneficiary_groups: string[] | null
+          beneficiary_participation: string | null
+          beneficiary_reach_unit: string | null
+          beneficiary_selection_criteria: string | null
           board_count: number | null
+          budget_breakdown: Json | null
           ceo_name: string | null
           cities: string[] | null
+          cofunding_available: boolean | null
+          cofunding_description: string | null
+          community_voice_quote: string | null
           core_values: string[] | null
           country: string | null
           created_at: string | null
+          data_collection_methods: string[] | null
+          direct_beneficiaries_annual: number | null
+          executive_director_bio: string | null
           finance_contact: string | null
+          financial_management_system: string | null
           focus_areas: string[] | null
           focus_priority: Json | null
           founded_year: number | null
           fte_count: number | null
           funding_achievement: string | null
           funding_gap: number | null
+          funding_sources_detail: Json | null
+          gap_in_services: string | null
           geo_summary: string | null
+          governance_structure: string | null
+          grant_management_experience: string | null
           has_bbbee: boolean | null
+          has_dedicated_bank_account: boolean | null
           has_grant_writer: boolean | null
           has_me_framework: boolean | null
+          has_policies: boolean | null
           has_strategic_plan: boolean | null
           id: string
+          impact_indicators: Json | null
           impact_statement: string | null
+          indirect_beneficiaries_annual: number | null
+          innovation_factor: string | null
+          intervention_approach: string | null
           is_audited: boolean | null
           is_discoverable: boolean | null
+          key_outcomes: string[] | null
+          key_outputs: string[] | null
+          key_staff: Json | null
           largest_grant_range: string | null
           last_audit_year: number | null
+          lessons_learned: string | null
           logo_url: string | null
           mission_statement: string | null
+          mne_framework_description: string | null
           name: string
           onboarding_complete: boolean | null
           onboarding_step: number | null
           operational_expenses: number | null
           org_size: string | null
           org_type: string | null
+          organisational_achievements: string | null
           other_african_countries: string[] | null
           partner_types: string[] | null
           partnership_open: boolean | null
           partnership_role: string | null
+          partnership_seeks: string[] | null
           partnership_statement: string | null
           partnership_strengths: string[] | null
           parttime_count: number | null
           past_funders: string[] | null
+          past_funders_detailed: Json | null
+          past_impact_achievements: string | null
           pbo_number: string | null
           pct_corporate: number | null
           pct_government: number | null
           pct_grants: number | null
+          physical_address: string | null
+          policies_list: string[] | null
+          postal_address: string | null
+          primary_sdgs: string[] | null
+          primary_target_group: string | null
+          problem_evidence: string | null
+          problem_geographic_context: string | null
+          problem_root_causes: string | null
+          problem_statement: string | null
           profile_completeness: number | null
           programme_details: Json | null
           programmes: string[] | null
           region: string | null
           regions_of_operation: string[] | null
           registration_number: string | null
+          reporting_frequency: string | null
           sdgs: number[] | null
+          strategic_plan_period: string | null
           tax_status: string | null
           theory_of_change: string | null
+          toc_if_then: string | null
           total_funding_3yr: string | null
           trading_name: string | null
+          typical_grant_size_range: string | null
           user_id: string
           vision_statement: string | null
           volunteer_count: number | null
           website: string | null
+          why_your_org: string | null
           works_internationally: boolean | null
           works_other_african: boolean | null
           works_rural: boolean | null
@@ -809,68 +856,115 @@ export type Database = {
         Insert: {
           annual_beneficiary_reach?: number | null
           annual_budget?: number | null
+          annual_budget_currency?: string | null
           annual_income?: number | null
+          baseline_data?: string | null
           bbbee_level?: number | null
+          beneficiary_demographics?: Json | null
           beneficiary_groups?: string[] | null
+          beneficiary_participation?: string | null
+          beneficiary_reach_unit?: string | null
+          beneficiary_selection_criteria?: string | null
           board_count?: number | null
+          budget_breakdown?: Json | null
           ceo_name?: string | null
           cities?: string[] | null
+          cofunding_available?: boolean | null
+          cofunding_description?: string | null
+          community_voice_quote?: string | null
           core_values?: string[] | null
           country?: string | null
           created_at?: string | null
+          data_collection_methods?: string[] | null
+          direct_beneficiaries_annual?: number | null
+          executive_director_bio?: string | null
           finance_contact?: string | null
+          financial_management_system?: string | null
           focus_areas?: string[] | null
           focus_priority?: Json | null
           founded_year?: number | null
           fte_count?: number | null
           funding_achievement?: string | null
           funding_gap?: number | null
+          funding_sources_detail?: Json | null
+          gap_in_services?: string | null
           geo_summary?: string | null
+          governance_structure?: string | null
+          grant_management_experience?: string | null
           has_bbbee?: boolean | null
+          has_dedicated_bank_account?: boolean | null
           has_grant_writer?: boolean | null
           has_me_framework?: boolean | null
+          has_policies?: boolean | null
           has_strategic_plan?: boolean | null
           id?: string
+          impact_indicators?: Json | null
           impact_statement?: string | null
+          indirect_beneficiaries_annual?: number | null
+          innovation_factor?: string | null
+          intervention_approach?: string | null
           is_audited?: boolean | null
           is_discoverable?: boolean | null
+          key_outcomes?: string[] | null
+          key_outputs?: string[] | null
+          key_staff?: Json | null
           largest_grant_range?: string | null
           last_audit_year?: number | null
+          lessons_learned?: string | null
           logo_url?: string | null
           mission_statement?: string | null
+          mne_framework_description?: string | null
           name: string
           onboarding_complete?: boolean | null
           onboarding_step?: number | null
           operational_expenses?: number | null
           org_size?: string | null
           org_type?: string | null
+          organisational_achievements?: string | null
           other_african_countries?: string[] | null
           partner_types?: string[] | null
           partnership_open?: boolean | null
           partnership_role?: string | null
+          partnership_seeks?: string[] | null
           partnership_statement?: string | null
           partnership_strengths?: string[] | null
           parttime_count?: number | null
           past_funders?: string[] | null
+          past_funders_detailed?: Json | null
+          past_impact_achievements?: string | null
           pbo_number?: string | null
           pct_corporate?: number | null
           pct_government?: number | null
           pct_grants?: number | null
+          physical_address?: string | null
+          policies_list?: string[] | null
+          postal_address?: string | null
+          primary_sdgs?: string[] | null
+          primary_target_group?: string | null
+          problem_evidence?: string | null
+          problem_geographic_context?: string | null
+          problem_root_causes?: string | null
+          problem_statement?: string | null
           profile_completeness?: number | null
           programme_details?: Json | null
           programmes?: string[] | null
           region?: string | null
           regions_of_operation?: string[] | null
           registration_number?: string | null
+          reporting_frequency?: string | null
           sdgs?: number[] | null
+          strategic_plan_period?: string | null
           tax_status?: string | null
           theory_of_change?: string | null
+          toc_if_then?: string | null
           total_funding_3yr?: string | null
           trading_name?: string | null
+          typical_grant_size_range?: string | null
           user_id: string
           vision_statement?: string | null
           volunteer_count?: number | null
           website?: string | null
+          why_your_org?: string | null
           works_internationally?: boolean | null
           works_other_african?: boolean | null
           works_rural?: boolean | null
@@ -879,68 +973,115 @@ export type Database = {
         Update: {
           annual_beneficiary_reach?: number | null
           annual_budget?: number | null
+          annual_budget_currency?: string | null
           annual_income?: number | null
+          baseline_data?: string | null
           bbbee_level?: number | null
+          beneficiary_demographics?: Json | null
           beneficiary_groups?: string[] | null
+          beneficiary_participation?: string | null
+          beneficiary_reach_unit?: string | null
+          beneficiary_selection_criteria?: string | null
           board_count?: number | null
+          budget_breakdown?: Json | null
           ceo_name?: string | null
           cities?: string[] | null
+          cofunding_available?: boolean | null
+          cofunding_description?: string | null
+          community_voice_quote?: string | null
           core_values?: string[] | null
           country?: string | null
           created_at?: string | null
+          data_collection_methods?: string[] | null
+          direct_beneficiaries_annual?: number | null
+          executive_director_bio?: string | null
           finance_contact?: string | null
+          financial_management_system?: string | null
           focus_areas?: string[] | null
           focus_priority?: Json | null
           founded_year?: number | null
           fte_count?: number | null
           funding_achievement?: string | null
           funding_gap?: number | null
+          funding_sources_detail?: Json | null
+          gap_in_services?: string | null
           geo_summary?: string | null
+          governance_structure?: string | null
+          grant_management_experience?: string | null
           has_bbbee?: boolean | null
+          has_dedicated_bank_account?: boolean | null
           has_grant_writer?: boolean | null
           has_me_framework?: boolean | null
+          has_policies?: boolean | null
           has_strategic_plan?: boolean | null
           id?: string
+          impact_indicators?: Json | null
           impact_statement?: string | null
+          indirect_beneficiaries_annual?: number | null
+          innovation_factor?: string | null
+          intervention_approach?: string | null
           is_audited?: boolean | null
           is_discoverable?: boolean | null
+          key_outcomes?: string[] | null
+          key_outputs?: string[] | null
+          key_staff?: Json | null
           largest_grant_range?: string | null
           last_audit_year?: number | null
+          lessons_learned?: string | null
           logo_url?: string | null
           mission_statement?: string | null
+          mne_framework_description?: string | null
           name?: string
           onboarding_complete?: boolean | null
           onboarding_step?: number | null
           operational_expenses?: number | null
           org_size?: string | null
           org_type?: string | null
+          organisational_achievements?: string | null
           other_african_countries?: string[] | null
           partner_types?: string[] | null
           partnership_open?: boolean | null
           partnership_role?: string | null
+          partnership_seeks?: string[] | null
           partnership_statement?: string | null
           partnership_strengths?: string[] | null
           parttime_count?: number | null
           past_funders?: string[] | null
+          past_funders_detailed?: Json | null
+          past_impact_achievements?: string | null
           pbo_number?: string | null
           pct_corporate?: number | null
           pct_government?: number | null
           pct_grants?: number | null
+          physical_address?: string | null
+          policies_list?: string[] | null
+          postal_address?: string | null
+          primary_sdgs?: string[] | null
+          primary_target_group?: string | null
+          problem_evidence?: string | null
+          problem_geographic_context?: string | null
+          problem_root_causes?: string | null
+          problem_statement?: string | null
           profile_completeness?: number | null
           programme_details?: Json | null
           programmes?: string[] | null
           region?: string | null
           regions_of_operation?: string[] | null
           registration_number?: string | null
+          reporting_frequency?: string | null
           sdgs?: number[] | null
+          strategic_plan_period?: string | null
           tax_status?: string | null
           theory_of_change?: string | null
+          toc_if_then?: string | null
           total_funding_3yr?: string | null
           trading_name?: string | null
+          typical_grant_size_range?: string | null
           user_id?: string
           vision_statement?: string | null
           volunteer_count?: number | null
           website?: string | null
+          why_your_org?: string | null
           works_internationally?: boolean | null
           works_other_african?: boolean | null
           works_rural?: boolean | null
@@ -1123,6 +1264,89 @@ export type Database = {
           {
             foreignKeyName: "partnerships_lead_org_id_fkey"
             columns: ["lead_org_id"]
+            isOneToOne: false
+            referencedRelation: "organisations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      programme_details: {
+        Row: {
+          activities: string[] | null
+          annual_budget_range: string | null
+          annual_reach: number | null
+          approach_methodology: string | null
+          challenges_faced: string | null
+          created_at: string | null
+          description: string | null
+          detailed_description: string | null
+          geographic_areas: string[] | null
+          id: string
+          intervention_approaches: string[] | null
+          key_outcomes: string[] | null
+          key_outputs: string[] | null
+          org_id: string
+          partner_organisations: string[] | null
+          primary_focus_area: string | null
+          programme_name: string
+          secondary_focus_areas: string[] | null
+          status: string | null
+          success_story: string | null
+          target_beneficiaries: string | null
+          year_started: number | null
+        }
+        Insert: {
+          activities?: string[] | null
+          annual_budget_range?: string | null
+          annual_reach?: number | null
+          approach_methodology?: string | null
+          challenges_faced?: string | null
+          created_at?: string | null
+          description?: string | null
+          detailed_description?: string | null
+          geographic_areas?: string[] | null
+          id?: string
+          intervention_approaches?: string[] | null
+          key_outcomes?: string[] | null
+          key_outputs?: string[] | null
+          org_id: string
+          partner_organisations?: string[] | null
+          primary_focus_area?: string | null
+          programme_name: string
+          secondary_focus_areas?: string[] | null
+          status?: string | null
+          success_story?: string | null
+          target_beneficiaries?: string | null
+          year_started?: number | null
+        }
+        Update: {
+          activities?: string[] | null
+          annual_budget_range?: string | null
+          annual_reach?: number | null
+          approach_methodology?: string | null
+          challenges_faced?: string | null
+          created_at?: string | null
+          description?: string | null
+          detailed_description?: string | null
+          geographic_areas?: string[] | null
+          id?: string
+          intervention_approaches?: string[] | null
+          key_outcomes?: string[] | null
+          key_outputs?: string[] | null
+          org_id?: string
+          partner_organisations?: string[] | null
+          primary_focus_area?: string | null
+          programme_name?: string
+          secondary_focus_areas?: string[] | null
+          status?: string | null
+          success_story?: string | null
+          target_beneficiaries?: string | null
+          year_started?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "programme_details_org_id_fkey"
+            columns: ["org_id"]
             isOneToOne: false
             referencedRelation: "organisations"
             referencedColumns: ["id"]
