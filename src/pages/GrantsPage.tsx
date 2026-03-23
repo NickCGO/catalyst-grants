@@ -224,15 +224,15 @@ const GrantsPage = () => {
     toast.success("Funder saved!");
   };
 
-  const handleApply = async (funderId: string, funderName: string) => {
+  const handleApply = (funder: any) => {
     if (!org?.id) { toast.error("Complete onboarding first"); return; }
-    const { data, error } = await supabase.from("applications").insert({
-      org_id: org.id, funder_id: funderId, project_name: `Application to ${funderName}`,
-      status: "pending", kanban_column: "backlog",
-    }).select("id").single();
-    if (error) { toast.error("Failed to create application"); return; }
-    toast.success("Application created!");
-    navigate("/applications");
+    setApplyModal(funder);
+  };
+
+  const handleApplicationCreated = (proposalId: string, route: ApplicationRoute) => {
+    setApplyModal(null);
+    const formatParam = route === "full_proposal" ? "" : `?format=${route}`;
+    navigate(`/writer/${proposalId}${formatParam}`);
   };
 
   return (
