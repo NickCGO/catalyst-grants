@@ -2,7 +2,7 @@ import { ReactNode, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import {
   LayoutDashboard, Search, ClipboardList, PenTool, Newspaper, Settings,
-  Sparkles, LogOut, FileText, Mail, Bell, CheckSquare, Users,
+  Sparkles, LogOut, FileText, Mail, Bell, CheckSquare, Users, Handshake,
 } from "lucide-react";
 import {
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent,
@@ -21,6 +21,7 @@ const navItems = [
   { title: "Applications", url: "/applications", icon: ClipboardList },
   { title: "Proposal Writer", url: "/writer", icon: PenTool },
   { title: "Tasks", url: "/tasks", icon: CheckSquare },
+  { title: "Funder CRM", url: "/crm", icon: Handshake },
   { title: "Reports", url: "/reports", icon: FileText },
   { title: "Email Hub", url: "/email", icon: Mail },
   { title: "News", url: "/news", icon: Newspaper },

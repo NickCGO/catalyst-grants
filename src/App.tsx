@@ -17,6 +17,8 @@ import NewsPage from "./pages/NewsPage";
 import SettingsPage from "./pages/SettingsPage";
 import TeamManagementPage from "./pages/TeamManagementPage";
 import TasksPage from "./pages/TasksPage";
+import CRMPage from "./pages/CRMPage";
+import CRMDetailPage from "./pages/CRMDetailPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -44,6 +46,8 @@ const App = () => (
           <Route path="/settings" element={<SettingsPage />} />
           <Route path="/team" element={<TeamManagementPage />} />
           <Route path="/tasks" element={<TasksPage />} />
+          <Route path="/crm" element={<CRMPage />} />
+          <Route path="/crm/:funderId" element={<CRMDetailPage />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
