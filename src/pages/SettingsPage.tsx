@@ -226,7 +226,7 @@ const SettingsPage = () => {
                     <Textarea value={mission} onChange={e => setMission(e.target.value)} className="mt-1 bg-secondary/30 border-border/50" />
                   </div>
                   <div>
-                    <Label className="text-xs text-muted-foreground">Annual Income (ZAR)</Label>
+                    <Label className="text-xs text-muted-foreground">Annual Income (USD)</Label>
                     <Input type="number" value={annualIncome} onChange={e => setAnnualIncome(e.target.value)} className="mt-1 bg-secondary/30 border-border/50" />
                   </div>
                   <div className="space-y-2">

@@ -1341,11 +1341,11 @@ const OnboardingPage = () => {
                           <Label className={labelClass}>Typical Grant Size Sought</Label>
                           <select value={typicalGrantSize} onChange={e => setTypicalGrantSize(e.target.value)} className={selectClass}>
                             <option value="">Select</option>
-                            <option value="under_50k">Under R50k</option>
-                            <option value="50k_250k">R50k–R250k</option>
-                            <option value="250k_1m">R250k–R1M</option>
-                            <option value="1m_5m">R1M–R5M</option>
-                            <option value="over_5m">Over R5M</option>
+                            <option value="under_50k">Under $50k</option>
+                            <option value="50k_250k">$50k–$250k</option>
+                            <option value="250k_1m">$250k–$1M</option>
+                            <option value="1m_5m">$1M–$5M</option>
+                            <option value="over_5m">Over $5M</option>
                           </select>
                         </div>
                       </div>
