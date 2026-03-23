@@ -366,7 +366,7 @@ const LandingPage = () => {
             Ready to find your next grant?
           </h2>
           <p className="text-muted-foreground mb-8">
-            Get started free — no credit card required.
+            Join hundreds of African NGOs already using GrantMatch.
           </p>
           <Link to="/signup">
             <Button size="lg" className="bg-primary text-primary-foreground hover:bg-primary/90 px-10 text-base">
