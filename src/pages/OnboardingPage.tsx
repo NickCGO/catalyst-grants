@@ -254,6 +254,29 @@ const OnboardingPage = () => {
     if (programmes.length > 1) setProgrammes(prev => prev.filter((_, i) => i !== idx));
   };
 
+  // Document uploads
+  const [uploadedDocs, setUploadedDocs] = useState<Record<string, string>>({});
+  const [uploadingDoc, setUploadingDoc] = useState<string | null>(null);
+
+  const handleDocUpload = async (docKey: string, file: File | undefined) => {
+    if (!file) return;
+    setUploadingDoc(docKey);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      const { data: org } = await supabase.from("organisations").select("id").eq("user_id", user.id).maybeSingle();
+      if (!org) { toast({ title: "Complete step 1 first", variant: "destructive" }); setUploadingDoc(null); return; }
+      const filePath = `${org.id}/${docKey}_${Date.now()}.${file.name.split(".").pop()}`;
+      const { error } = await supabase.storage.from("org-documents").upload(filePath, file, { upsert: true });
+      if (error) throw error;
+      setUploadedDocs(prev => ({ ...prev, [docKey]: filePath }));
+      toast({ title: "Document uploaded!", description: file.name });
+    } catch (err: any) {
+      toast({ title: "Upload failed", description: err.message, variant: "destructive" });
+    }
+    setUploadingDoc(null);
+  };
+
   const [saving, setSaving] = useState(false);
 
   const saveToSupabase = async () => {
