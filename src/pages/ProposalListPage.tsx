@@ -1,35 +1,48 @@
-import { useState, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Plus, FileText, Sparkles, ExternalLink } from "lucide-react";
+import { Plus, FileText, Sparkles } from "lucide-react";
 import DashboardLayout from "@/components/DashboardLayout";
 import GlassCard from "@/components/GlassCard";
 import MatchScoreRing from "@/components/MatchScoreRing";
 import StatusBadge from "@/components/StatusBadge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-
-interface ProposalItem {
-  id: string;
-  funder: string;
-  project: string;
-  status: string;
-  aiScore: number | null;
-  wordCount: number;
-  targetWordCount: number;
-  lastEdited: string;
-  deadline: string;
-}
-
-const sampleProposals: ProposalItem[] = [
-  { id: "1", funder: "DG Murray Trust", project: "Youth Education Initiative", status: "draft", aiScore: null, wordCount: 450, targetWordCount: 2000, lastEdited: "2 hours ago", deadline: "Apr 1, 2026" },
-  { id: "2", funder: "Anglo American Chairman's Fund", project: "Community Health Programme", status: "ai_review", aiScore: 72, wordCount: 1800, targetWordCount: 2000, lastEdited: "1 day ago", deadline: "Apr 15, 2026" },
-  { id: "3", funder: "Ford Foundation", project: "Gender Justice Project", status: "human_review", aiScore: 85, wordCount: 2100, targetWordCount: 2000, lastEdited: "3 days ago", deadline: "Jun 30, 2026" },
-  { id: "4", funder: "National Lotteries Commission", project: "Sports for Change", status: "approved", aiScore: 91, wordCount: 2000, targetWordCount: 2000, lastEdited: "5 days ago", deadline: "Mar 15, 2026" },
-];
+import { Skeleton } from "@/components/ui/skeleton";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 
 const ProposalListPage = () => {
+  const { user } = useAuth();
   const navigate = useNavigate();
+  const [proposals, setProposals] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!user) return;
+    const load = async () => {
+      const { data: org } = await supabase.from("organisations").select("id").eq("user_id", user.id).maybeSingle();
+      if (!org) { setLoading(false); return; }
+
+      const { data } = await supabase
+        .from("proposals")
+        .select("*, applications(project_name, deadline, funder_id), funders(donor_name)")
+        .eq("org_id", org.id)
+        .order("created_at", { ascending: false });
+
+      setProposals(data || []);
+      setLoading(false);
+    };
+    load();
+  }, [user]);
+
+  if (loading) return (
+    <DashboardLayout>
+      <div className="max-w-5xl mx-auto space-y-3">
+        {[1,2,3].map(i => <Skeleton key={i} className="h-24 w-full" />)}
+      </div>
+    </DashboardLayout>
+  );
 
   return (
     <DashboardLayout>
@@ -39,64 +52,51 @@ const ProposalListPage = () => {
             <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
               <FileText className="h-6 w-6 text-primary" /> Proposal Writer
             </h1>
-            <p className="text-sm text-muted-foreground mt-1">
-              AI-powered grant proposals tailored to each funder
-            </p>
+            <p className="text-sm text-muted-foreground mt-1">AI-powered grant proposals tailored to each funder</p>
           </div>
-          <Button
-            className="bg-primary text-primary-foreground hover:bg-primary/90"
-            onClick={() => navigate("/writer/new")}
-          >
+          <Button className="bg-primary text-primary-foreground hover:bg-primary/90" onClick={() => navigate("/writer/new")}>
             <Plus className="h-4 w-4 mr-1" /> New Proposal
           </Button>
         </div>
 
-        {sampleProposals.length === 0 ? (
-          <GlassCard className="text-center py-16">
-            <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-            <h3 className="text-lg font-semibold text-foreground mb-2">No proposals yet</h3>
-            <p className="text-sm text-muted-foreground mb-4">
-              Find a grant and click "Apply" to start writing your first proposal.
-            </p>
-            <Button onClick={() => navigate("/grants")} className="bg-primary text-primary-foreground">
-              Browse Grants <ExternalLink className="h-3.5 w-3.5 ml-1" />
-            </Button>
+        {proposals.length === 0 ? (
+          <GlassCard className="p-8 text-center">
+            <FileText className="h-8 w-8 text-muted-foreground/30 mx-auto mb-2" />
+            <p className="text-sm text-muted-foreground">No proposals yet. Find a grant and click "Apply" to start writing.</p>
+            <Button variant="outline" className="mt-4" onClick={() => navigate("/grants")}>Browse Grants</Button>
           </GlassCard>
         ) : (
           <div className="space-y-3">
-            {sampleProposals.map((p, i) => (
-              <motion.div
-                key={p.id}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.05 }}
-              >
-                <GlassCard className="flex items-center gap-4 cursor-pointer" onClick={() => navigate(`/writer/${p.id}`)}>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
-                      <h3 className="text-sm font-semibold text-foreground truncate">{p.funder}</h3>
-                      <StatusBadge status={p.status} />
-                    </div>
-                    <p className="text-xs text-muted-foreground truncate">{p.project}</p>
-                    <div className="flex items-center gap-4 mt-2">
-                      <div className="flex-1 max-w-[200px]">
-                        <div className="flex items-center justify-between text-[10px] text-muted-foreground mb-1">
-                          <span>{p.wordCount.toLocaleString()} / {p.targetWordCount.toLocaleString()} words</span>
-                          <span>{Math.round((p.wordCount / p.targetWordCount) * 100)}%</span>
+            {proposals.map((p, i) => {
+              const funderName = p.funders?.donor_name || "Unknown Funder";
+              const project = p.applications?.project_name || "Proposal";
+              const wordPct = p.target_word_count ? Math.min(100, Math.round(((p.word_count || 0) / p.target_word_count) * 100)) : 0;
+              return (
+                <motion.div key={p.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.04 }}>
+                  <GlassCard className="p-4 hover:border-primary/30 transition-all cursor-pointer" onClick={() => navigate(`/writer/${p.id}`)}>
+                    <div className="flex items-center justify-between">
+                      <div className="flex-1 min-w-0 mr-4">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="text-sm font-semibold text-foreground truncate">{funderName}</span>
+                          <StatusBadge status={p.status || "draft"} />
                         </div>
-                        <Progress value={(p.wordCount / p.targetWordCount) * 100} className="h-1.5" />
+                        <p className="text-xs text-muted-foreground">{project}</p>
+                        <div className="flex items-center gap-4 mt-2">
+                          <div className="flex-1 max-w-[200px]">
+                            <Progress value={wordPct} className="h-1.5" />
+                            <span className="text-[9px] text-muted-foreground">{p.word_count || 0}/{p.target_word_count || 2000} words</span>
+                          </div>
+                          <span className="text-[10px] text-muted-foreground">
+                            {new Date(p.created_at).toLocaleDateString("en-ZA", { month: "short", day: "numeric" })}
+                          </span>
+                        </div>
                       </div>
-                      <span className="text-[10px] text-muted-foreground">Edited {p.lastEdited}</span>
-                      <span className="text-[10px] text-muted-foreground">Due {p.deadline}</span>
+                      {p.ai_score && <MatchScoreRing score={p.ai_score} size="sm" />}
                     </div>
-                  </div>
-                  {p.aiScore !== null && <MatchScoreRing score={p.aiScore} size="md" />}
-                  <Button variant="ghost" size="sm" className="text-xs text-primary shrink-0">
-                    Continue →
-                  </Button>
-                </GlassCard>
-              </motion.div>
-            ))}
+                  </GlassCard>
+                </motion.div>
+              );
+            })}
           </div>
         )}
       </div>
