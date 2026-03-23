@@ -10,6 +10,8 @@ import {
   Sparkles,
   LogOut,
   ChevronLeft,
+  FileText,
+  Mail,
 } from "lucide-react";
 import {
   Sidebar,
