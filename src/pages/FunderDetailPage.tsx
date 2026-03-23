@@ -132,7 +132,4 @@ const FunderDetailPage = () => {
   );
 };
 
-// Missing import
-import { Users as UsersIcon } from "lucide-react";
-
 export default FunderDetailPage;
