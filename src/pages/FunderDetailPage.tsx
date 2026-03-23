@@ -114,7 +114,7 @@ const FunderDetailPage = () => {
             <GlassCard hoverable={false}>
               <h3 className="text-sm font-semibold text-foreground mb-2">Contact</h3>
               <div className="space-y-2 text-xs text-muted-foreground">
-                {funder.contact_person && <p className="flex items-center gap-2"><Users className="h-3 w-3" />{funder.contact_person}</p>}
+                {funder.contact_person && <p className="flex items-center gap-2">{funder.contact_person}</p>}
                 {funder.email && <p className="flex items-center gap-2"><Mail className="h-3 w-3" />{funder.email}</p>}
                 {funder.telephone && <p className="flex items-center gap-2"><Phone className="h-3 w-3" />{funder.telephone}</p>}
                 {funder.website && (
