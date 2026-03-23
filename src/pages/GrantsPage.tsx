@@ -4,6 +4,7 @@ import { Search, SlidersHorizontal, Users, Loader2 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import DashboardLayout from "@/components/DashboardLayout";
 import FunderCard from "@/components/FunderCard";
+import StartApplicationModal, { type ApplicationRoute } from "@/components/StartApplicationModal";
 import GlassCard from "@/components/GlassCard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
