@@ -84,17 +84,7 @@ function AppSidebarContent() {
       </SidebarContent>
 
       <div className="mt-auto p-4 border-t border-border/30">
-        <div className="flex items-center gap-3">
-          <div className="h-8 w-8 rounded-full bg-primary/20 flex items-center justify-center shrink-0">
-            <span className="text-xs font-semibold text-primary">EF</span>
-          </div>
-          {!collapsed && (
-            <div className="flex-1 min-w-0">
-              <div className="text-xs font-medium text-foreground truncate">Elizayo Foundation</div>
-              <div className="text-[10px] text-muted-foreground">Free plan</div>
-            </div>
-          )}
-        </div>
+        <SidebarOrgInfo collapsed={collapsed} />
       </div>
     </Sidebar>
   );
