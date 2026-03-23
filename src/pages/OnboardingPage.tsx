@@ -265,7 +265,7 @@ const OnboardingPage = () => {
 
   // ── Step 7: Budget & Finance ──
   const [annualBudget, setAnnualBudget] = useState("");
-  const [budgetCurrency, setBudgetCurrency] = useState("ZAR");
+  const [budgetCurrency, setBudgetCurrency] = useState("USD");
   const [staffPercent, setStaffPercent] = useState(40);
   const [programmesPercent, setProgrammesPercent] = useState(40);
   const [overheadsPercent, setOverheadsPercent] = useState(20);
@@ -842,7 +842,7 @@ const OnboardingPage = () => {
                       <div className="flex items-center justify-between p-3 rounded-lg border border-border/30">
                         <div>
                           <div className="text-xs text-foreground">Is your organisation audited?</div>
-                          <div className="text-[10px] text-muted-foreground">Required by most funders above R250,000</div>
+                          <div className="text-[10px] text-muted-foreground">Required by most funders above $250,000</div>
                         </div>
                         <Switch checked={isAudited} onCheckedChange={setIsAudited} />
                       </div>
@@ -1104,12 +1104,12 @@ const OnboardingPage = () => {
                               <Label className={labelClass}>Budget Range</Label>
                               <select value={prog.budget} onChange={e => updateProgramme(idx, "budget", e.target.value)} className={selectClass}>
                                 <option value="">Select</option>
-                                <option value="under_100k">Under R100k</option>
-                                <option value="100k_250k">R100k–R250k</option>
-                                <option value="250k_500k">R250k–R500k</option>
-                                <option value="500k_1m">R500k–R1M</option>
-                                <option value="1m_3m">R1M–R3M</option>
-                                <option value="3m_plus">R3M+</option>
+                                <option value="under_100k">Under $100k</option>
+                                <option value="100k_250k">$100k–$250k</option>
+                                <option value="250k_500k">$250k–$500k</option>
+                                <option value="500k_1m">$500k–$1M</option>
+                                <option value="1m_3m">$1M–$3M</option>
+                                <option value="3m_plus">$3M+</option>
                               </select>
                             </div>
                             <div>
@@ -1308,10 +1308,10 @@ const OnboardingPage = () => {
                         <div>
                           <Label className={labelClass}>Currency</Label>
                           <select value={budgetCurrency} onChange={e => setBudgetCurrency(e.target.value)} className={selectClass}>
-                            <option value="ZAR">ZAR (Rand)</option>
                             <option value="USD">USD</option>
                             <option value="EUR">EUR</option>
                             <option value="GBP">GBP</option>
+                            <option value="ZAR">ZAR (Rand)</option>
                           </select>
                         </div>
                       </div>
@@ -1341,11 +1341,11 @@ const OnboardingPage = () => {
                           <Label className={labelClass}>Typical Grant Size Sought</Label>
                           <select value={typicalGrantSize} onChange={e => setTypicalGrantSize(e.target.value)} className={selectClass}>
                             <option value="">Select</option>
-                            <option value="under_50k">Under R50k</option>
-                            <option value="50k_250k">R50k–R250k</option>
-                            <option value="250k_1m">R250k–R1M</option>
-                            <option value="1m_5m">R1M–R5M</option>
-                            <option value="over_5m">Over R5M</option>
+                            <option value="under_50k">Under $50k</option>
+                            <option value="50k_250k">$50k–$250k</option>
+                            <option value="250k_1m">$250k–$1M</option>
+                            <option value="1m_5m">$1M–$5M</option>
+                            <option value="over_5m">Over $5M</option>
                           </select>
                         </div>
                       </div>

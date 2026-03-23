@@ -49,8 +49,10 @@ export type Database = {
       applications: {
         Row: {
           activity_category: string | null
+          ai_funder_tip: string | null
           amount_awarded: number | null
           amount_requested: number | null
+          application_route: string | null
           applied_month: string | null
           applied_year: number | null
           created_at: string | null
@@ -66,8 +68,10 @@ export type Database = {
         }
         Insert: {
           activity_category?: string | null
+          ai_funder_tip?: string | null
           amount_awarded?: number | null
           amount_requested?: number | null
+          application_route?: string | null
           applied_month?: string | null
           applied_year?: number | null
           created_at?: string | null
@@ -83,8 +87,10 @@ export type Database = {
         }
         Update: {
           activity_category?: string | null
+          ai_funder_tip?: string | null
           amount_awarded?: number | null
           amount_requested?: number | null
+          application_route?: string | null
           applied_month?: string | null
           applied_year?: number | null
           created_at?: string | null
@@ -1502,6 +1508,8 @@ export type Database = {
           approved_at: string | null
           created_at: string | null
           draft_content: string | null
+          form_prep_content: Json | null
+          format: string | null
           funder_id: string | null
           funder_requirements: string | null
           id: string
@@ -1520,6 +1528,8 @@ export type Database = {
           approved_at?: string | null
           created_at?: string | null
           draft_content?: string | null
+          form_prep_content?: Json | null
+          format?: string | null
           funder_id?: string | null
           funder_requirements?: string | null
           id?: string
@@ -1538,6 +1548,8 @@ export type Database = {
           approved_at?: string | null
           created_at?: string | null
           draft_content?: string | null
+          form_prep_content?: Json | null
+          format?: string | null
           funder_id?: string | null
           funder_requirements?: string | null
           id?: string

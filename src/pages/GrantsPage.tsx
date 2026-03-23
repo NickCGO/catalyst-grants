@@ -4,6 +4,7 @@ import { Search, SlidersHorizontal, Users, Loader2 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import DashboardLayout from "@/components/DashboardLayout";
 import FunderCard from "@/components/FunderCard";
+import StartApplicationModal, { type ApplicationRoute } from "@/components/StartApplicationModal";
 import GlassCard from "@/components/GlassCard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -90,6 +91,7 @@ const GrantsPage = () => {
   const [page, setPage] = useState(0);
   const [loading, setLoading] = useState(true);
   const [matchScores, setMatchScores] = useState<Record<string, number>>({});
+  const [applyModal, setApplyModal] = useState<any>(null);
   const { org } = useOrganisation();
   const navigate = useNavigate();
 
@@ -222,15 +224,15 @@ const GrantsPage = () => {
     toast.success("Funder saved!");
   };
 
-  const handleApply = async (funderId: string, funderName: string) => {
+  const handleApply = (funder: any) => {
     if (!org?.id) { toast.error("Complete onboarding first"); return; }
-    const { data, error } = await supabase.from("applications").insert({
-      org_id: org.id, funder_id: funderId, project_name: `Application to ${funderName}`,
-      status: "pending", kanban_column: "backlog",
-    }).select("id").single();
-    if (error) { toast.error("Failed to create application"); return; }
-    toast.success("Application created!");
-    navigate("/applications");
+    setApplyModal(funder);
+  };
+
+  const handleApplicationCreated = (proposalId: string, route: ApplicationRoute) => {
+    setApplyModal(null);
+    const formatParam = route === "full_proposal" ? "" : `?format=${route}`;
+    navigate(`/writer/${proposalId}${formatParam}`);
   };
 
   return (
@@ -339,7 +341,7 @@ const GrantsPage = () => {
                       )}
                       <FunderCard {...f}
                         onSave={() => handleSave(f.id)}
-                        onApply={() => handleApply(f.id, f.name)}
+                        onApply={() => handleApply({ id: f.id, donor_name: f.name, category: f.category, method_of_approach: f.method, geographical_area: f.geography, application_period: f.applicationPeriod, funder_focus: f.funderFocus, website: f.website, contact_person: f.contact, email: f.email })}
                         onView={() => navigate(`/grants/${f.id}`)} />
                     </motion.div>
                   ))}
@@ -373,6 +375,18 @@ const GrantsPage = () => {
           </div>
         </div>
       </div>
+      {applyModal && org && (
+        <StartApplicationModal
+          open={!!applyModal}
+          onClose={() => setApplyModal(null)}
+          funder={applyModal}
+          matchScore={matchScores[applyModal.id] || 0}
+          isOpen={funders.find(f => f.id === applyModal.id)?.isOpen}
+          orgId={org.id}
+          programmes={org.programmes || []}
+          onCreated={handleApplicationCreated}
+        />
+      )}
     </DashboardLayout>
   );
 };
