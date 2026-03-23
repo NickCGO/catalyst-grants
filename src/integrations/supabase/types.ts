@@ -948,6 +948,187 @@ export type Database = {
         }
         Relationships: []
       }
+      partnership_members: {
+        Row: {
+          budget_share_percent: number | null
+          id: string
+          joined_at: string | null
+          org_id: string
+          partnership_id: string
+          responsibilities: string[] | null
+          role: string | null
+          status: string | null
+        }
+        Insert: {
+          budget_share_percent?: number | null
+          id?: string
+          joined_at?: string | null
+          org_id: string
+          partnership_id: string
+          responsibilities?: string[] | null
+          role?: string | null
+          status?: string | null
+        }
+        Update: {
+          budget_share_percent?: number | null
+          id?: string
+          joined_at?: string | null
+          org_id?: string
+          partnership_id?: string
+          responsibilities?: string[] | null
+          role?: string | null
+          status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "partnership_members_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organisations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "partnership_members_partnership_id_fkey"
+            columns: ["partnership_id"]
+            isOneToOne: false
+            referencedRelation: "partnerships"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      partnership_proposals: {
+        Row: {
+          ai_merge_status: string | null
+          created_at: string | null
+          funder_id: string | null
+          id: string
+          merged_content: string | null
+          overall_score: number | null
+          partnership_id: string
+          section_ownership: Json | null
+          sections: Json | null
+          status: string | null
+          version: number | null
+        }
+        Insert: {
+          ai_merge_status?: string | null
+          created_at?: string | null
+          funder_id?: string | null
+          id?: string
+          merged_content?: string | null
+          overall_score?: number | null
+          partnership_id: string
+          section_ownership?: Json | null
+          sections?: Json | null
+          status?: string | null
+          version?: number | null
+        }
+        Update: {
+          ai_merge_status?: string | null
+          created_at?: string | null
+          funder_id?: string | null
+          id?: string
+          merged_content?: string | null
+          overall_score?: number | null
+          partnership_id?: string
+          section_ownership?: Json | null
+          sections?: Json | null
+          status?: string | null
+          version?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "partnership_proposals_funder_id_fkey"
+            columns: ["funder_id"]
+            isOneToOne: false
+            referencedRelation: "funders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "partnership_proposals_partnership_id_fkey"
+            columns: ["partnership_id"]
+            isOneToOne: false
+            referencedRelation: "partnerships"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      partnerships: {
+        Row: {
+          agreement_signed: boolean | null
+          application_id: string | null
+          budget_total: number | null
+          created_at: string | null
+          description: string | null
+          funder_id: string | null
+          id: string
+          lead_org_id: string
+          lead_share_percent: number | null
+          mou_content: string | null
+          partnership_name: string | null
+          partnership_type: string | null
+          status: string | null
+          trust_score: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          agreement_signed?: boolean | null
+          application_id?: string | null
+          budget_total?: number | null
+          created_at?: string | null
+          description?: string | null
+          funder_id?: string | null
+          id?: string
+          lead_org_id: string
+          lead_share_percent?: number | null
+          mou_content?: string | null
+          partnership_name?: string | null
+          partnership_type?: string | null
+          status?: string | null
+          trust_score?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          agreement_signed?: boolean | null
+          application_id?: string | null
+          budget_total?: number | null
+          created_at?: string | null
+          description?: string | null
+          funder_id?: string | null
+          id?: string
+          lead_org_id?: string
+          lead_share_percent?: number | null
+          mou_content?: string | null
+          partnership_name?: string | null
+          partnership_type?: string | null
+          status?: string | null
+          trust_score?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "partnerships_application_id_fkey"
+            columns: ["application_id"]
+            isOneToOne: false
+            referencedRelation: "applications"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "partnerships_funder_id_fkey"
+            columns: ["funder_id"]
+            isOneToOne: false
+            referencedRelation: "funders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "partnerships_lead_org_id_fkey"
+            columns: ["lead_org_id"]
+            isOneToOne: false
+            referencedRelation: "organisations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       proposal_comments: {
         Row: {
           content: string
