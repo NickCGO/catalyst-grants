@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import DashboardLayout from "@/components/DashboardLayout";
 import GlassCard from "@/components/GlassCard";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import MatchScoreRing from "@/components/MatchScoreRing";
+import StartApplicationModal, { type ApplicationRoute } from "@/components/StartApplicationModal";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ArrowLeft, Globe, Mail, Phone, MapPin, Calendar, FileText } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -16,10 +17,14 @@ const monthKeys = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep"
 const FunderDetailPage = () => {
   const { id } = useParams();
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [funder, setFunder] = useState<any>(null);
   const [windows, setWindows] = useState<any>(null);
   const [matchScore, setMatchScore] = useState<number>(0);
   const [loading, setLoading] = useState(true);
+  const [orgId, setOrgId] = useState("");
+  const [programmes, setProgrammes] = useState<string[]>([]);
+  const [showApplyModal, setShowApplyModal] = useState(false);
 
   useEffect(() => {
     if (!id) return;
@@ -32,8 +37,10 @@ const FunderDetailPage = () => {
       setWindows(w);
 
       if (user) {
-        const { data: org } = await supabase.from("organisations").select("id").eq("user_id", user.id).maybeSingle();
+        const { data: org } = await supabase.from("organisations").select("id, programmes").eq("user_id", user.id).maybeSingle();
         if (org) {
+          setOrgId(org.id);
+          setProgrammes(org.programmes || []);
           const { data: match } = await supabase.from("grant_matches").select("match_score").eq("org_id", org.id).eq("funder_id", id).maybeSingle();
           setMatchScore(match?.match_score || 0);
         }
@@ -63,6 +70,12 @@ const FunderDetailPage = () => {
 
   const currentMonth = new Date().getMonth();
   const isOpen = windows ? windows[monthKeys[currentMonth]] : false;
+
+  const handleCreated = (proposalId: string, route: ApplicationRoute) => {
+    setShowApplyModal(false);
+    const formatParam = route === "full_proposal" ? "" : `?format=${route}`;
+    navigate(`/writer/${proposalId}${formatParam}`);
+  };
 
   return (
     <DashboardLayout>
@@ -124,10 +137,25 @@ const FunderDetailPage = () => {
                 )}
               </div>
             </GlassCard>
-            <Button className="w-full bg-primary text-primary-foreground">Start Application</Button>
+            <Button className="w-full bg-primary text-primary-foreground" onClick={() => setShowApplyModal(true)}>
+              Start Application →
+            </Button>
           </div>
         </div>
       </div>
+
+      {orgId && (
+        <StartApplicationModal
+          open={showApplyModal}
+          onClose={() => setShowApplyModal(false)}
+          funder={funder}
+          matchScore={matchScore}
+          isOpen={isOpen}
+          orgId={orgId}
+          programmes={programmes}
+          onCreated={handleCreated}
+        />
+      )}
     </DashboardLayout>
   );
 };
