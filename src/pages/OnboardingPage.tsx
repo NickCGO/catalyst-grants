@@ -265,7 +265,7 @@ const OnboardingPage = () => {
 
   // ── Step 7: Budget & Finance ──
   const [annualBudget, setAnnualBudget] = useState("");
-  const [budgetCurrency, setBudgetCurrency] = useState("ZAR");
+  const [budgetCurrency, setBudgetCurrency] = useState("USD");
   const [staffPercent, setStaffPercent] = useState(40);
   const [programmesPercent, setProgrammesPercent] = useState(40);
   const [overheadsPercent, setOverheadsPercent] = useState(20);
