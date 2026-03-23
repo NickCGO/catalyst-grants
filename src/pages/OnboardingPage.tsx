@@ -842,7 +842,7 @@ const OnboardingPage = () => {
                       <div className="flex items-center justify-between p-3 rounded-lg border border-border/30">
                         <div>
                           <div className="text-xs text-foreground">Is your organisation audited?</div>
-                          <div className="text-[10px] text-muted-foreground">Required by most funders above R250,000</div>
+                          <div className="text-[10px] text-muted-foreground">Required by most funders above $250,000</div>
                         </div>
                         <Switch checked={isAudited} onCheckedChange={setIsAudited} />
                       </div>
