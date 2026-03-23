@@ -91,10 +91,10 @@ const PartnershipWorkspacePage = () => {
   const handleMerge = async () => {
     setMerging(true);
     try {
-      const result = await callAI(
-        "Merge these sections from two NGOs into a coherent proposal. Ensure consistent voice and remove duplication. Return the merged text.",
-        Object.entries(sectionContent).map(([k, v]) => `## ${k}\n${v}`).join("\n\n")
-      );
+      const result = await callAI([
+        { role: "system", content: "Merge these sections from two NGOs into a coherent proposal. Ensure consistent voice and remove duplication. Return the merged text." },
+        { role: "user", content: Object.entries(sectionContent).map(([k, v]) => `## ${k}\n${v}`).join("\n\n") },
+      ]);
       toast.success("Sections merged & harmonised successfully!");
     } catch {
       toast.error("Merge failed. Try again.");
