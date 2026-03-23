@@ -132,7 +132,7 @@ const LandingPage = () => {
             </Link>
             <Link to="/signup">
               <Button size="sm" className="bg-primary text-primary-foreground hover:bg-primary/90">
-                Start free <ArrowRight className="ml-1 h-3 w-3" />
+                Get started <ArrowRight className="ml-1 h-3 w-3" />
               </Button>
             </Link>
           </div>
