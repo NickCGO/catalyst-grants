@@ -105,10 +105,10 @@ const PartnershipWorkspacePage = () => {
   const handleGenerateMOU = async () => {
     setMouGenerating(true);
     try {
-      const result = await callAI(
-        `Generate a partnership MOU between ${p.leadOrg.name} (lead, ${p.leadShare}% budget) and ${p.partnerOrg.name} (partner, ${100 - p.leadShare}% budget) for a grant application to ${p.funder}. Include: Purpose, Roles, Financial Management, Reporting, Dispute Resolution, Termination. Format as professional HTML.`,
-        JSON.stringify({ partnership: p.name, budget: p.budgetTotal, responsibilities: p.responsibilities })
-      );
+      const result = await callAI([
+        { role: "system", content: `Generate a partnership MOU between ${p.leadOrg.name} (lead, ${p.leadShare}% budget) and ${p.partnerOrg.name} (partner, ${100 - p.leadShare}% budget) for a grant application to ${p.funder}. Include: Purpose, Roles, Financial Management, Reporting, Dispute Resolution, Termination. Format as professional HTML.` },
+        { role: "user", content: JSON.stringify({ partnership: p.name, budget: p.budgetTotal, responsibilities: p.responsibilities }) },
+      ]);
       setMouContent(result || "MOU content generated.");
       toast.success("MOU generated!");
     } catch {
