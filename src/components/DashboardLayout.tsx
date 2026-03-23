@@ -10,6 +10,8 @@ import {
   Sparkles,
   LogOut,
   ChevronLeft,
+  FileText,
+  Mail,
 } from "lucide-react";
 import {
   Sidebar,
@@ -30,7 +32,9 @@ const navItems = [
   { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
   { title: "Find Grants", url: "/grants", icon: Search },
   { title: "Applications", url: "/applications", icon: ClipboardList },
-  { title: "Proposal Writer", url: "/writer", icon: PenTool, badge: "Phase 2" },
+  { title: "Proposal Writer", url: "/writer", icon: PenTool },
+  { title: "Reports", url: "/reports", icon: FileText },
+  { title: "Email Hub", url: "/email", icon: Mail },
   { title: "News", url: "/news", icon: Newspaper },
   { title: "Settings", url: "/settings", icon: Settings },
 ];
@@ -65,11 +69,6 @@ function AppSidebarContent() {
                       <item.icon className="h-4 w-4 shrink-0" />
                       {!collapsed && (
                         <span className="flex-1">{item.title}</span>
-                      )}
-                      {!collapsed && item.badge && (
-                        <span className="text-[9px] px-1.5 py-0.5 rounded bg-primary/15 text-primary font-medium">
-                          {item.badge}
-                        </span>
                       )}
                     </NavLink>
                   </SidebarMenuButton>

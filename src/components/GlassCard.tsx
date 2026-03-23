@@ -1,7 +1,7 @@
-import { ReactNode } from "react";
+import { ReactNode, HTMLAttributes } from "react";
 import { cn } from "@/lib/utils";
 
-interface GlassCardProps {
+interface GlassCardProps extends HTMLAttributes<HTMLDivElement> {
   children: ReactNode;
   className?: string;
   hoverable?: boolean;
@@ -16,7 +16,7 @@ const glowClasses: Record<string, string> = {
   green: "glow-green",
 };
 
-const GlassCard = ({ children, className, hoverable = true, glowColor }: GlassCardProps) => {
+const GlassCard = ({ children, className, hoverable = true, glowColor, ...props }: GlassCardProps) => {
   return (
     <div
       className={cn(
@@ -25,6 +25,7 @@ const GlassCard = ({ children, className, hoverable = true, glowColor }: GlassCa
         "p-6",
         className
       )}
+      {...props}
     >
       {children}
     </div>
