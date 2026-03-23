@@ -1,6 +1,6 @@
 import { useState } from "react";
 import DashboardLayout from "@/components/DashboardLayout";
-import { GlassCard } from "@/components/GlassCard";
+import GlassCard from "@/components/GlassCard";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
