@@ -27,12 +27,12 @@ const NewsPage = () => {
   // Load funding alerts from real data — funders open this month
   useEffect(() => {
     const loadAlerts = async () => {
-      const months = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"];
+      const months = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"] as const;
       const currentMonth = months[new Date().getMonth()];
       const { data } = await supabase
         .from("funder_windows")
         .select("funder_id, donor_name")
-        .eq(currentMonth, true)
+        .eq(currentMonth, true as any)
         .limit(10);
       if (data && data.length > 0) {
         // Get match scores if org exists
