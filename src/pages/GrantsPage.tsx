@@ -91,6 +91,7 @@ const GrantsPage = () => {
   const [page, setPage] = useState(0);
   const [loading, setLoading] = useState(true);
   const [matchScores, setMatchScores] = useState<Record<string, number>>({});
+  const [applyModal, setApplyModal] = useState<any>(null);
   const { org } = useOrganisation();
   const navigate = useNavigate();
 
