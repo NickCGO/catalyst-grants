@@ -132,7 +132,7 @@ const LandingPage = () => {
             </Link>
             <Link to="/signup">
               <Button size="sm" className="bg-primary text-primary-foreground hover:bg-primary/90">
-                Start free <ArrowRight className="ml-1 h-3 w-3" />
+                Get started <ArrowRight className="ml-1 h-3 w-3" />
               </Button>
             </Link>
           </div>
@@ -169,7 +169,7 @@ const LandingPage = () => {
             >
               <Link to="/signup">
                 <Button size="lg" className="bg-primary text-primary-foreground hover:bg-primary/90 px-8 text-base">
-                  Start for free <ArrowRight className="ml-2 h-4 w-4" />
+                  Get started <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
               </Link>
               <a href="#how-it-works">
@@ -366,7 +366,7 @@ const LandingPage = () => {
             Ready to find your next grant?
           </h2>
           <p className="text-muted-foreground mb-8">
-            Get started free — no credit card required.
+            Join hundreds of African NGOs already using GrantMatch.
           </p>
           <Link to="/signup">
             <Button size="lg" className="bg-primary text-primary-foreground hover:bg-primary/90 px-10 text-base">

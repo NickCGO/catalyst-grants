@@ -1,5 +1,5 @@
-import { ReactNode } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { ReactNode, useEffect, useState } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard, Search, ClipboardList, PenTool, Newspaper, Settings,
   Sparkles, LogOut, FileText, Mail, Bell, CheckSquare, Users, Handshake, BarChart3,
@@ -15,6 +15,8 @@ import {
 } from "@/components/ui/popover";
 import { useNotifications } from "@/hooks/useNotifications";
 import { formatDistanceToNow } from "date-fns";
+import { useAuth, useOrganisation } from "@/hooks/useAuth";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const navItems = [
   { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
@@ -82,17 +84,7 @@ function AppSidebarContent() {
       </SidebarContent>
 
       <div className="mt-auto p-4 border-t border-border/30">
-        <div className="flex items-center gap-3">
-          <div className="h-8 w-8 rounded-full bg-primary/20 flex items-center justify-center shrink-0">
-            <span className="text-xs font-semibold text-primary">EF</span>
-          </div>
-          {!collapsed && (
-            <div className="flex-1 min-w-0">
-              <div className="text-xs font-medium text-foreground truncate">Elizayo Foundation</div>
-              <div className="text-[10px] text-muted-foreground">Free plan</div>
-            </div>
-          )}
-        </div>
+        <SidebarOrgInfo collapsed={collapsed} />
       </div>
     </Sidebar>
   );
@@ -160,11 +152,61 @@ function NotificationBell() {
   );
 }
 
+function SidebarOrgInfo({ collapsed }: { collapsed: boolean }) {
+  const { org } = useOrganisation();
+  const { signOut } = useAuth();
+  const navigate = useNavigate();
+  const initials = org?.name ? org.name.split(" ").map((w: string) => w[0]).join("").slice(0, 2).toUpperCase() : "??";
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate("/login");
+  };
+
+  return (
+    <div className="flex items-center gap-3">
+      <div className="h-8 w-8 rounded-full bg-primary/20 flex items-center justify-center shrink-0">
+        <span className="text-xs font-semibold text-primary">{initials}</span>
+      </div>
+      {!collapsed && (
+        <div className="flex-1 min-w-0">
+          <div className="text-xs font-medium text-foreground truncate">{org?.name || "Loading..."}</div>
+          <button onClick={handleSignOut} className="text-[10px] text-muted-foreground hover:text-destructive flex items-center gap-1 mt-0.5">
+            <LogOut className="h-2.5 w-2.5" /> Sign out
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
 interface DashboardLayoutProps {
   children: ReactNode;
 }
 
 const DashboardLayout = ({ children }: DashboardLayoutProps) => {
+  const { user, loading } = useAuth();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!loading && !user) {
+      navigate("/login");
+    }
+  }, [loading, user, navigate]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen gradient-bg flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <Sparkles className="h-8 w-8 text-primary mx-auto animate-pulse" />
+          <p className="text-sm text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!user) return null;
+
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full gradient-bg">
