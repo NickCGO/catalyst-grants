@@ -1104,12 +1104,12 @@ const OnboardingPage = () => {
                               <Label className={labelClass}>Budget Range</Label>
                               <select value={prog.budget} onChange={e => updateProgramme(idx, "budget", e.target.value)} className={selectClass}>
                                 <option value="">Select</option>
-                                <option value="under_100k">Under R100k</option>
-                                <option value="100k_250k">R100k–R250k</option>
-                                <option value="250k_500k">R250k–R500k</option>
-                                <option value="500k_1m">R500k–R1M</option>
-                                <option value="1m_3m">R1M–R3M</option>
-                                <option value="3m_plus">R3M+</option>
+                                <option value="under_100k">Under $100k</option>
+                                <option value="100k_250k">$100k–$250k</option>
+                                <option value="250k_500k">$250k–$500k</option>
+                                <option value="500k_1m">$500k–$1M</option>
+                                <option value="1m_3m">$1M–$3M</option>
+                                <option value="3m_plus">$3M+</option>
                               </select>
                             </div>
                             <div>
