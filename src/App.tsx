@@ -15,6 +15,8 @@ import ReportsPage from "./pages/ReportsPage";
 import EmailHubPage from "./pages/EmailHubPage";
 import NewsPage from "./pages/NewsPage";
 import SettingsPage from "./pages/SettingsPage";
+import TeamManagementPage from "./pages/TeamManagementPage";
+import TasksPage from "./pages/TasksPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -40,6 +42,8 @@ const App = () => (
           <Route path="/email" element={<EmailHubPage />} />
           <Route path="/news" element={<NewsPage />} />
           <Route path="/settings" element={<SettingsPage />} />
+          <Route path="/team" element={<TeamManagementPage />} />
+          <Route path="/tasks" element={<TasksPage />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
