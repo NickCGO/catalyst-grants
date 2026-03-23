@@ -1308,10 +1308,10 @@ const OnboardingPage = () => {
                         <div>
                           <Label className={labelClass}>Currency</Label>
                           <select value={budgetCurrency} onChange={e => setBudgetCurrency(e.target.value)} className={selectClass}>
-                            <option value="ZAR">ZAR (Rand)</option>
                             <option value="USD">USD</option>
                             <option value="EUR">EUR</option>
                             <option value="GBP">GBP</option>
+                            <option value="ZAR">ZAR (Rand)</option>
                           </select>
                         </div>
                       </div>
