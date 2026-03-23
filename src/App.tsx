@@ -46,6 +46,8 @@ const App = () => (
           <Route path="/settings" element={<SettingsPage />} />
           <Route path="/team" element={<TeamManagementPage />} />
           <Route path="/tasks" element={<TasksPage />} />
+          <Route path="/crm" element={<CRMPage />} />
+          <Route path="/crm/:funderId" element={<CRMDetailPage />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
