@@ -1,4 +1,4 @@
-import { ReactNode, useState } from "react";
+import { ReactNode } from "react";
 import { Link, useLocation } from "react-router-dom";
 import {
   LayoutDashboard, Search, ClipboardList, PenTool, Newspaper, Settings,
@@ -10,10 +10,11 @@ import {
   SidebarTrigger, useSidebar,
 } from "@/components/ui/sidebar";
 import { NavLink } from "@/components/NavLink";
-import { Badge } from "@/components/ui/badge";
 import {
   Popover, PopoverContent, PopoverTrigger,
 } from "@/components/ui/popover";
+import { useNotifications } from "@/hooks/useNotifications";
+import { formatDistanceToNow } from "date-fns";
 
 const navItems = [
   { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
@@ -31,13 +32,17 @@ const navItems = [
   { title: "Settings", url: "/settings", icon: Settings },
 ];
 
-const mockNotifications = [
-  { id: "1", type: "proposal_review", title: "Review requested", body: "James submitted the DG Murray proposal for review", link: "/writer", time: "5 min ago", read: false },
-  { id: "2", type: "deadline", title: "Deadline approaching", body: "Anglo American application due in 7 days", link: "/applications", time: "1 hour ago", read: false },
-  { id: "3", type: "task", title: "Task assigned", body: "You've been assigned: Collect M&E data", link: "/tasks", time: "2 hours ago", read: false },
-  { id: "4", type: "ai_complete", title: "Proposal generated", body: "AI finished writing the NLC proposal", link: "/writer", time: "3 hours ago", read: true },
-  { id: "5", type: "team_invite", title: "New team member", body: "Thabo Khumalo joined as Viewer", link: "/team", time: "1 day ago", read: true },
-];
+const typeIcons: Record<string, string> = {
+  proposal_review: "📝",
+  deadline: "⏰",
+  task: "✅",
+  ai_complete: "🤖",
+  team_invite: "👥",
+  partnership_request: "🤝",
+  partnership_accepted: "🎉",
+  interaction_due: "📞",
+  match_new: "🎯",
+};
 
 function AppSidebarContent() {
   const { state } = useSidebar();
@@ -94,10 +99,7 @@ function AppSidebarContent() {
 }
 
 function NotificationBell() {
-  const [notifications, setNotifications] = useState(mockNotifications);
-  const unreadCount = notifications.filter(n => !n.read).length;
-
-  const markAllRead = () => setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+  const { notifications, unreadCount, markAllRead, markRead } = useNotifications();
 
   return (
     <Popover>
@@ -119,20 +121,40 @@ function NotificationBell() {
           )}
         </div>
         <div className="max-h-80 overflow-y-auto">
-          {notifications.map(n => (
-            <Link key={n.id} to={n.link}
-              className={`block px-4 py-3 border-b border-border/10 hover:bg-secondary/20 transition-colors ${!n.read ? "bg-primary/5" : ""}`}>
-              <div className="flex items-start gap-2">
-                {!n.read && <span className="h-2 w-2 rounded-full bg-primary mt-1.5 shrink-0" />}
-                <div className={!n.read ? "" : "ml-4"}>
-                  <div className="text-xs font-medium text-foreground">{n.title}</div>
-                  <div className="text-[10px] text-muted-foreground mt-0.5">{n.body}</div>
-                  <div className="text-[9px] text-muted-foreground/60 mt-1">{n.time}</div>
+          {notifications.length === 0 ? (
+            <div className="px-4 py-8 text-center text-xs text-muted-foreground">No notifications yet</div>
+          ) : (
+            notifications.map((n) => (
+              <Link
+                key={n.id}
+                to={n.link || "#"}
+                onClick={() => !n.read && markRead(n.id)}
+                className={`block px-4 py-3 border-b border-border/10 hover:bg-secondary/20 transition-colors ${!n.read ? "bg-primary/5" : ""}`}
+              >
+                <div className="flex items-start gap-2">
+                  <span className="text-sm mt-0.5">{typeIcons[n.type] || "🔔"}</span>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-xs font-medium text-foreground flex items-center gap-1.5">
+                      {n.title}
+                      {!n.read && <span className="h-1.5 w-1.5 rounded-full bg-primary shrink-0" />}
+                    </div>
+                    <div className="text-[10px] text-muted-foreground mt-0.5 truncate">{n.body}</div>
+                    <div className="text-[9px] text-muted-foreground/60 mt-1">
+                      {n.created_at ? formatDistanceToNow(new Date(n.created_at), { addSuffix: true }) : ""}
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </Link>
-          ))}
+              </Link>
+            ))
+          )}
         </div>
+        {notifications.length > 0 && (
+          <div className="px-4 py-2 border-t border-border/30 text-center">
+            <Link to="/settings?tab=notifications" className="text-[10px] text-primary hover:underline">
+              Notification preferences
+            </Link>
+          </div>
+        )}
       </PopoverContent>
     </Popover>
   );
