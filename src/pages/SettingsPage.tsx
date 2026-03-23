@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { motion } from "framer-motion";
 import { Settings, User, Sparkles, Bell, Puzzle } from "lucide-react";
 import DashboardLayout from "@/components/DashboardLayout";
 import GlassCard from "@/components/GlassCard";
@@ -10,6 +9,7 @@ import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "@/hooks/use-toast";
+import { useSearchParams } from "react-router-dom";
 
 const focusAreaLabels = [
   "Children", "Families/Parents", "Disability", "Health/HIV", "Aged/Elderly",
@@ -20,11 +20,30 @@ const focusAreaLabels = [
   "Agriculture/Land", "Animals",
 ];
 
+const notificationTypes = [
+  { key: "newGrants", label: "New matching grants", desc: "Get notified when new funders match your profile", type: "match_new" },
+  { key: "deadlines", label: "Upcoming deadlines", desc: "Reminders 7 days before application deadlines", type: "deadline" },
+  { key: "reviews", label: "Proposal review requested", desc: "When a team member requests your review", type: "proposal_review" },
+  { key: "taskAssigned", label: "Task assigned to you", desc: "When you're assigned a new task", type: "task" },
+  { key: "taskOverdue", label: "Task overdue reminders", desc: "Daily reminders for overdue tasks", type: "task_overdue" },
+  { key: "partnershipRequest", label: "Partnership requests", desc: "When another NGO sends a partnership request", type: "partnership_request" },
+  { key: "partnershipAccepted", label: "Partnership accepted", desc: "When your partnership request is accepted", type: "partnership_accepted" },
+  { key: "teamInvite", label: "Team member joined", desc: "When an invited member joins your organisation", type: "team_invite" },
+  { key: "aiComplete", label: "AI tasks completed", desc: "When AI finishes generating proposals or reports", type: "ai_complete" },
+  { key: "interactionDue", label: "CRM interaction reminders", desc: "When a funder follow-up is overdue", type: "interaction_due" },
+];
+
 const SettingsPage = () => {
+  const [searchParams] = useSearchParams();
+  const defaultTab = searchParams.get("tab") || "profile";
+
   const [tone, setTone] = useState("formal");
   const [reportFormat, setReportFormat] = useState("narrative");
   const [writingLength, setWritingLength] = useState("standard");
-  const [notifications, setNotifications] = useState({ newGrants: true, deadlines: true, reviews: false });
+  const [notifications, setNotifications] = useState<Record<string, boolean>>(
+    Object.fromEntries(notificationTypes.map(n => [n.key, true]))
+  );
+  const [emailDigest, setEmailDigest] = useState<"off" | "immediate" | "daily">("daily");
   const [modules, setModules] = useState({ emailHub: true, reports: true });
   const [selectedFocus, setSelectedFocus] = useState<string[]>(["Education/ECD", "Youth", "Community Dev", "Women/Gender", "Health/HIV"]);
 
@@ -37,7 +56,7 @@ const SettingsPage = () => {
           </h1>
         </div>
 
-        <Tabs defaultValue="profile">
+        <Tabs defaultValue={defaultTab}>
           <TabsList className="bg-secondary/30 border border-border/30 mb-6">
             <TabsTrigger value="profile"><User className="h-3.5 w-3.5 mr-1" /> Organisation</TabsTrigger>
             <TabsTrigger value="ai"><Sparkles className="h-3.5 w-3.5 mr-1" /> AI Preferences</TabsTrigger>
@@ -174,27 +193,62 @@ const SettingsPage = () => {
           </TabsContent>
 
           <TabsContent value="notifications">
-            <GlassCard hoverable={false}>
-              <h3 className="text-sm font-semibold text-foreground mb-4">Email Notifications</h3>
-              <div className="space-y-4">
-                {[
-                  { key: "newGrants", label: "New matching grants", desc: "Get notified when new funders match your profile" },
-                  { key: "deadlines", label: "Upcoming deadlines", desc: "Reminders 7 days before application deadlines" },
-                  { key: "reviews", label: "Proposal review requested", desc: "When a team member requests your review" },
-                ].map(n => (
-                  <div key={n.key} className="flex items-center justify-between p-3 rounded-lg border border-border/30">
-                    <div>
-                      <div className="text-sm text-foreground">{n.label}</div>
-                      <div className="text-xs text-muted-foreground">{n.desc}</div>
+            <div className="space-y-6">
+              {/* Email Digest Preference */}
+              <GlassCard hoverable={false}>
+                <h3 className="text-sm font-semibold text-foreground mb-1">Email Digest</h3>
+                <p className="text-xs text-muted-foreground mb-4">Choose how you receive email notifications</p>
+                <div className="grid grid-cols-3 gap-2">
+                  {[
+                    { id: "off" as const, label: "Off", desc: "No email notifications" },
+                    { id: "immediate" as const, label: "Immediate", desc: "Get emailed instantly" },
+                    { id: "daily" as const, label: "Daily Digest", desc: "One summary email per day" },
+                  ].map(opt => (
+                    <button
+                      key={opt.id}
+                      onClick={() => {
+                        setEmailDigest(opt.id);
+                        toast({ title: `Email digest set to ${opt.label}` });
+                      }}
+                      className={`p-3 rounded-lg text-center border transition-colors ${
+                        emailDigest === opt.id
+                          ? "border-primary bg-primary/5 text-foreground"
+                          : "border-border/30 text-muted-foreground hover:bg-secondary/30"
+                      }`}
+                    >
+                      <div className="text-xs font-medium">{opt.label}</div>
+                      <div className="text-[10px] mt-0.5 opacity-70">{opt.desc}</div>
+                    </button>
+                  ))}
+                </div>
+              </GlassCard>
+
+              {/* In-App Notification Toggles */}
+              <GlassCard hoverable={false}>
+                <h3 className="text-sm font-semibold text-foreground mb-1">In-App Notifications</h3>
+                <p className="text-xs text-muted-foreground mb-4">Toggle which notifications appear in your notification bell</p>
+                <div className="space-y-3">
+                  {notificationTypes.map(n => (
+                    <div key={n.key} className="flex items-center justify-between p-3 rounded-lg border border-border/30">
+                      <div>
+                        <div className="text-sm text-foreground">{n.label}</div>
+                        <div className="text-xs text-muted-foreground">{n.desc}</div>
+                      </div>
+                      <Switch
+                        checked={notifications[n.key]}
+                        onCheckedChange={(checked) => setNotifications(prev => ({ ...prev, [n.key]: checked }))}
+                      />
                     </div>
-                    <Switch
-                      checked={notifications[n.key as keyof typeof notifications]}
-                      onCheckedChange={(checked) => setNotifications(prev => ({ ...prev, [n.key]: checked }))}
-                    />
-                  </div>
-                ))}
-              </div>
-            </GlassCard>
+                  ))}
+                </div>
+                <Button
+                  className="bg-primary text-primary-foreground hover:bg-primary/90 mt-4"
+                  onClick={() => toast({ title: "Notification preferences saved" })}
+                >
+                  Save Preferences
+                </Button>
+              </GlassCard>
+            </div>
           </TabsContent>
 
           <TabsContent value="modules">
