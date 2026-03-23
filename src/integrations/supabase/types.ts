@@ -273,6 +273,151 @@ export type Database = {
           },
         ]
       }
+      funder_interactions: {
+        Row: {
+          ai_generated: boolean | null
+          created_at: string | null
+          created_by: string | null
+          date: string
+          funder_id: string
+          id: string
+          interaction_type: string
+          org_id: string
+          outcome: string | null
+          relationship_id: string | null
+          sentiment: string | null
+          summary: string | null
+        }
+        Insert: {
+          ai_generated?: boolean | null
+          created_at?: string | null
+          created_by?: string | null
+          date?: string
+          funder_id: string
+          id?: string
+          interaction_type: string
+          org_id: string
+          outcome?: string | null
+          relationship_id?: string | null
+          sentiment?: string | null
+          summary?: string | null
+        }
+        Update: {
+          ai_generated?: boolean | null
+          created_at?: string | null
+          created_by?: string | null
+          date?: string
+          funder_id?: string
+          id?: string
+          interaction_type?: string
+          org_id?: string
+          outcome?: string | null
+          relationship_id?: string | null
+          sentiment?: string | null
+          summary?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "funder_interactions_funder_id_fkey"
+            columns: ["funder_id"]
+            isOneToOne: false
+            referencedRelation: "funders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "funder_interactions_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organisations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "funder_interactions_relationship_id_fkey"
+            columns: ["relationship_id"]
+            isOneToOne: false
+            referencedRelation: "funder_relationships"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      funder_relationships: {
+        Row: {
+          applications_count: number | null
+          created_at: string | null
+          funder_id: string
+          health_score: number | null
+          id: string
+          last_interaction_date: string | null
+          next_action_date: string | null
+          next_action_note: string | null
+          next_action_type: string | null
+          notes: string | null
+          org_id: string
+          relationship_owner: string | null
+          relationship_status: string | null
+          successful_count: number | null
+          tags: string[] | null
+          total_applied: number | null
+          total_awarded: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          applications_count?: number | null
+          created_at?: string | null
+          funder_id: string
+          health_score?: number | null
+          id?: string
+          last_interaction_date?: string | null
+          next_action_date?: string | null
+          next_action_note?: string | null
+          next_action_type?: string | null
+          notes?: string | null
+          org_id: string
+          relationship_owner?: string | null
+          relationship_status?: string | null
+          successful_count?: number | null
+          tags?: string[] | null
+          total_applied?: number | null
+          total_awarded?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          applications_count?: number | null
+          created_at?: string | null
+          funder_id?: string
+          health_score?: number | null
+          id?: string
+          last_interaction_date?: string | null
+          next_action_date?: string | null
+          next_action_note?: string | null
+          next_action_type?: string | null
+          notes?: string | null
+          org_id?: string
+          relationship_owner?: string | null
+          relationship_status?: string | null
+          successful_count?: number | null
+          tags?: string[] | null
+          total_applied?: number | null
+          total_awarded?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "funder_relationships_funder_id_fkey"
+            columns: ["funder_id"]
+            isOneToOne: false
+            referencedRelation: "funders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "funder_relationships_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organisations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       funder_windows: {
         Row: {
           application_period_text: string | null
