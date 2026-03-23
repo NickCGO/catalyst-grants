@@ -1,6 +1,7 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
+import { supabase } from "@/integrations/supabase/client";
 import {
   ArrowRight, ArrowLeft, Sparkles, Check, Building2, Heart, Target,
   MapPin, BarChart3, History, Globe, Info, Save, Users, Briefcase
