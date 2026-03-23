@@ -375,6 +375,18 @@ const GrantsPage = () => {
           </div>
         </div>
       </div>
+      {applyModal && org && (
+        <StartApplicationModal
+          open={!!applyModal}
+          onClose={() => setApplyModal(null)}
+          funder={applyModal}
+          matchScore={matchScores[applyModal.id] || 0}
+          isOpen={funders.find(f => f.id === applyModal.id)?.isOpen}
+          orgId={org.id}
+          programmes={org.programmes || []}
+          onCreated={handleApplicationCreated}
+        />
+      )}
     </DashboardLayout>
   );
 };
