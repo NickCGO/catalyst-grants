@@ -17,6 +17,8 @@ import NewsPage from "./pages/NewsPage";
 import SettingsPage from "./pages/SettingsPage";
 import TeamManagementPage from "./pages/TeamManagementPage";
 import TasksPage from "./pages/TasksPage";
+import CRMPage from "./pages/CRMPage";
+import CRMDetailPage from "./pages/CRMDetailPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
