@@ -4,7 +4,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import {
   ArrowRight, ArrowLeft, Sparkles, Check, Building2, Heart, Target,
-  MapPin, BarChart3, History, Globe, Info, Save, Users, Briefcase
+  MapPin, BarChart3, History, Globe, Info, Save, Users, Briefcase,
+  AlertTriangle, Plus, X, FileText, Upload, Shield, DollarSign
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,7 +16,7 @@ import { Switch } from "@/components/ui/switch";
 import { Slider } from "@/components/ui/slider";
 import { Progress } from "@/components/ui/progress";
 import GlassCard from "@/components/GlassCard";
-import { callAI } from "@/lib/ai";
+import { callAI, callAIJSON } from "@/lib/ai";
 import { toast } from "@/hooks/use-toast";
 import {
   Tooltip,
@@ -23,6 +24,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 
+// ── Constants ──
 const focusAreas = [
   { key: "children", label: "Children", icon: "👶", desc: "Programmes for children aged 0-12" },
   { key: "families_parents", label: "Families/Parents", icon: "👨‍👩‍👧", desc: "Family strengthening & parenting" },
@@ -79,7 +81,7 @@ const beneficiaryGroups = [
   { key: "children_0_12", label: "Children (0-12)", icon: "👶" },
   { key: "youth_13_24", label: "Youth (13-24)", icon: "🧑" },
   { key: "women_girls", label: "Women & Girls", icon: "👩" },
-  { key: "elderly", label: "Elderly", icon: "👴" },
+  { key: "elderly", label: "Elderly (60+)", icon: "👴" },
   { key: "pwd", label: "People with Disabilities", icon: "♿" },
   { key: "refugees", label: "Refugees & Migrants", icon: "🌍" },
   { key: "lgbtqi", label: "LGBTQI+", icon: "🏳️‍🌈" },
@@ -89,20 +91,47 @@ const beneficiaryGroups = [
 ];
 
 const coreValueOptions = [
-  "Integrity", "Community-led", "Transparency", "Ubuntu", "Empowerment",
-  "Dignity", "Innovation", "Accountability",
+  "Ubuntu", "Dignity", "Community-led", "Transparency", "Accountability",
+  "Integrity", "Empowerment", "Inclusion", "Innovation", "Compassion",
+  "Respect", "Justice", "Sustainability",
+];
+
+const interventionApproaches = [
+  "Direct service delivery", "Capacity building / training", "Advocacy & awareness",
+  "Community mobilisation", "Referral & case management", "Research & evidence generation",
+  "Systems change", "Peer education", "Digital / technology-based",
+];
+
+const dataCollectionOptions = [
+  "Pre/post surveys or assessments", "School or institution records", "Case files and case notes",
+  "Attendance registers", "Focus group discussions", "Individual interviews",
+  "Observation checklists", "Baseline and endline surveys", "Project activity registers",
+  "Partner organisation reports", "Community feedback sessions", "Digital data collection (KoBoToolbox, ODK, Google Forms)",
+];
+
+const policyOptions = [
+  "Child protection / safeguarding", "Financial management", "HR / employment",
+  "Anti-fraud and corruption", "Data protection (POPIA)", "Health & safety", "Gender equality",
+];
+
+const boardSpecialities = [
+  "Legal", "Finance", "Education", "Health", "Social work",
+  "Corporate / Business", "Community representative", "Academic / Research", "Government / Policy",
 ];
 
 const steps = [
-  { title: "Legal Identity", icon: Building2, time: "~2 min" },
-  { title: "Mission & Vision", icon: Heart, time: "~5 min" },
-  { title: "Focus Areas", icon: Target, time: "~3 min" },
-  { title: "Programmes", icon: Briefcase, time: "~5 min" },
-  { title: "Geographic Footprint", icon: MapPin, time: "~2 min" },
-  { title: "Capacity & Financials", icon: BarChart3, time: "~5 min" },
-  { title: "Funding History", icon: History, time: "~3 min" },
+  { title: "Legal Identity", icon: Building2, time: "~3 min", sidebar: "This step powers: Cover page, Eligibility statements, Organisational capacity section." },
+  { title: "Mission & Theory of Change", icon: Heart, time: "~8 min", sidebar: "This step powers: Executive summary (entire), Problem statement (framing), All 8 proposal sections." },
+  { title: "The Problem You Solve", icon: AlertTriangle, time: "~8 min", sidebar: "This step powers: Problem statement, Needs analysis, Situation analysis, Justification." },
+  { title: "Your Programmes", icon: Briefcase, time: "~10 min", sidebar: "This step powers: Methodology (entire), Activities plan, Work plan, Budget narrative." },
+  { title: "Your Beneficiaries", icon: Users, time: "~5 min", sidebar: "This step powers: Target groups section, Beneficiary numbers, Gender mainstreaming paragraphs." },
+  { title: "Impact & Monitoring", icon: Target, time: "~8 min", sidebar: "This step powers: Monitoring & Evaluation section (entire), Logframe indicators, Reporting framework." },
+  { title: "Budget & Finance", icon: DollarSign, time: "~5 min", sidebar: "This step powers: Budget narrative, Financial sustainability, Co-funding sections." },
+  { title: "Team & Capacity", icon: Shield, time: "~5 min", sidebar: "This step powers: Organisational capacity (entire), Staff profiles, Governance, Track record." },
+  { title: "Past Funding & Partnerships", icon: History, time: "~5 min", sidebar: "This step powers: Track record statements, Sustainability section, Partnership paragraphs." },
 ];
 
+// ── Helper components ──
 const WhyTooltip = ({ text }: { text: string }) => (
   <Tooltip>
     <TooltipTrigger asChild>
@@ -116,11 +145,53 @@ const WhyTooltip = ({ text }: { text: string }) => (
   </Tooltip>
 );
 
+const AIButton = ({ onClick, loading, label = "AI Assist" }: { onClick: () => void; loading?: boolean; label?: string }) => (
+  <Button variant="ghost" size="sm" className="h-6 text-xs text-primary" onClick={onClick} disabled={loading}>
+    <Sparkles className="h-3 w-3 mr-1" /> {loading ? "Writing..." : label}
+  </Button>
+);
+
+const DynamicListInput = ({
+  items, setItems, placeholder, label, max = 8, minEncouraged = 2,
+}: {
+  items: string[]; setItems: (v: string[]) => void; placeholder: string; label: string; max?: number; minEncouraged?: number;
+}) => (
+  <div>
+    <Label className="text-xs text-muted-foreground">{label}</Label>
+    <div className="space-y-2 mt-1">
+      {items.map((item, i) => (
+        <div key={i} className="flex gap-2">
+          <Input value={item} onChange={e => { const n = [...items]; n[i] = e.target.value; setItems(n); }}
+            placeholder={placeholder} className="bg-secondary/30 border-border/50 text-foreground text-sm" />
+          {items.length > 1 && (
+            <Button variant="ghost" size="sm" className="h-9 w-9 p-0 text-muted-foreground" onClick={() => setItems(items.filter((_, j) => j !== i))}>
+              <X className="h-3 w-3" />
+            </Button>
+          )}
+        </div>
+      ))}
+    </div>
+    {items.length < max && (
+      <Button variant="ghost" size="sm" className="mt-1 text-xs text-primary" onClick={() => setItems([...items, ""])}>
+        <Plus className="h-3 w-3 mr-1" /> Add another
+      </Button>
+    )}
+    {items.filter(Boolean).length < minEncouraged && (
+      <p className="text-[10px] text-amber-400 mt-1">At least {minEncouraged} recommended</p>
+    )}
+  </div>
+);
+
+// ── Main component ──
 const OnboardingPage = () => {
   const [step, setStep] = useState(0);
+  const [orgId, setOrgId] = useState<string | null>(null);
   const navigate = useNavigate();
+  const inputClass = "mt-1 bg-secondary/30 border-border/50 text-foreground text-sm";
+  const labelClass = "text-xs text-muted-foreground";
+  const selectClass = "w-full mt-1 px-3 py-2 rounded-lg bg-secondary/30 border border-border/50 text-sm text-foreground";
 
-  // Step 1: Legal Identity
+  // ── Step 1: Legal Identity ──
   const [orgName, setOrgName] = useState("");
   const [tradingName, setTradingName] = useState("");
   const [orgType, setOrgType] = useState("");
@@ -132,164 +203,349 @@ const OnboardingPage = () => {
   const [pboNumber, setPboNumber] = useState("");
   const [isAudited, setIsAudited] = useState(false);
   const [lastAuditYear, setLastAuditYear] = useState("");
+  const [physicalAddress, setPhysicalAddress] = useState("");
 
-  // Step 2: Mission & Vision
+  // ── Step 2: Mission & ToC ──
   const [mission, setMission] = useState("");
   const [vision, setVision] = useState("");
   const [coreValues, setCoreValues] = useState<string[]>([]);
+  const [tocAction, setTocAction] = useState("");
+  const [tocPopulation, setTocPopulation] = useState("");
+  const [tocChange, setTocChange] = useState("");
+  const [tocMechanism, setTocMechanism] = useState("");
   const [theoryOfChange, setTheoryOfChange] = useState("");
   const [selectedBeneficiaries, setSelectedBeneficiaries] = useState<string[]>([]);
   const [beneficiaryReach, setBeneficiaryReach] = useState("");
+  const [beneficiaryReachUnit, setBeneficiaryReachUnit] = useState("individuals");
   const [impactStatement, setImpactStatement] = useState("");
-  const [generatingMission, setGeneratingMission] = useState(false);
-
-  // Step 3: Focus Areas
-  const [selectedFocus, setSelectedFocus] = useState<string[]>([]);
-  const [focusPriority, setFocusPriority] = useState<Record<string, string>>({});
   const [selectedSDGs, setSelectedSDGs] = useState<number[]>([]);
+  const [primarySDGs, setPrimarySDGs] = useState<string[]>([]);
 
-  // Step 4: Programmes
+  // ── Step 3: Problem ──
+  const [problemStatement, setProblemStatement] = useState("");
+  const [problemEvidence, setProblemEvidence] = useState<string[]>([""]);
+  const [problemRootCauses, setProblemRootCauses] = useState("");
+  const [problemGeoContext, setProblemGeoContext] = useState("");
+  const [communityVoice, setCommunityVoice] = useState("");
+  const [gapInServices, setGapInServices] = useState("");
+  const [whyYourOrg, setWhyYourOrg] = useState("");
+
+  // ── Step 4: Programmes ──
   const [programmes, setProgrammes] = useState<Array<{
-    name: string; description: string; focusArea: string;
-    beneficiaries: string; areas: string; status: string; yearStarted: string; budget: string;
-  }>>([{ name: "", description: "", focusArea: "", beneficiaries: "", areas: "", status: "Active", yearStarted: "", budget: "" }]);
+    name: string; shortDesc: string; fullDesc: string; approaches: string[];
+    activities: string[]; outputs: string[]; outcomes: string[]; impactStory: string;
+    areas: string; reach: string; reachUnit: string; budget: string; status: string; yearStarted: string; partners: string;
+  }>>([{
+    name: "", shortDesc: "", fullDesc: "", approaches: [], activities: ["", "", ""],
+    outputs: ["", ""], outcomes: ["", ""], impactStory: "", areas: "", reach: "",
+    reachUnit: "individuals", budget: "", status: "Active", yearStarted: "", partners: "",
+  }]);
+  const [innovationFactor, setInnovationFactor] = useState("");
+
+  // ── Step 5: Beneficiaries ──
+  const [primaryTargetGroup, setPrimaryTargetGroup] = useState("");
+  const [beneficiarySelection, setBeneficiarySelection] = useState("");
+  const [genderFemale, setGenderFemale] = useState(50);
+  const [directBeneficiaries, setDirectBeneficiaries] = useState("");
+  const [indirectBeneficiaries, setIndirectBeneficiaries] = useState("");
+  const [beneficiaryParticipation, setBeneficiaryParticipation] = useState("");
+  const [vulnerabilityFactors, setVulnerabilityFactors] = useState<string[]>([]);
+
+  // ── Step 6: Impact & M&E ──
+  const [keyOutcomes, setKeyOutcomes] = useState<string[]>(["", "", ""]);
+  const [indicators, setIndicators] = useState<Array<{
+    name: string; type: string; baseline: string; target: string; method: string; frequency: string;
+  }>>([{ name: "", type: "outcome", baseline: "", target: "", method: "", frequency: "quarterly" }]);
+  const [dataCollectionMethods, setDataCollectionMethods] = useState<string[]>([]);
+  const [hasMEFramework, setHasMEFramework] = useState("");
+  const [mneDescription, setMneDescription] = useState("");
+  const [reportingFrequency, setReportingFrequency] = useState("");
+  const [baselineData, setBaselineData] = useState("");
+  const [pastImpactAchievements, setPastImpactAchievements] = useState<string[]>(["", "", ""]);
+
+  // ── Step 7: Budget & Finance ──
   const [annualBudget, setAnnualBudget] = useState("");
-  const [operationalExpenses, setOperationalExpenses] = useState("");
+  const [budgetCurrency, setBudgetCurrency] = useState("ZAR");
+  const [staffPercent, setStaffPercent] = useState(40);
+  const [programmesPercent, setProgrammesPercent] = useState(40);
+  const [overheadsPercent, setOverheadsPercent] = useState(20);
+  const [pctGrants, setPctGrants] = useState(50);
+  const [pctGovernment, setPctGovernment] = useState(20);
+  const [pctCorporate, setPctCorporate] = useState(20);
+  const [pctSelfGenerated, setPctSelfGenerated] = useState(10);
   const [fundingGap, setFundingGap] = useState("");
+  const [typicalGrantSize, setTypicalGrantSize] = useState("");
+  const [financialSystem, setFinancialSystem] = useState("");
+  const [hasDedicatedBank, setHasDedicatedBank] = useState(false);
+  const [cofundingAvailable, setCofundingAvailable] = useState(false);
+  const [cofundingDescription, setCofundingDescription] = useState("");
 
-  // Step 5: Geographic Footprint
-  const [regionsOfOperation, setRegionsOfOperation] = useState<string[]>([]);
-  const [cities, setCities] = useState("");
-  const [worksRural, setWorksRural] = useState(false);
-  const [worksUrban, setWorksUrban] = useState(false);
-  const [worksOtherAfrican, setWorksOtherAfrican] = useState(false);
-  const [otherAfricanCountries, setOtherAfricanCountries] = useState<string[]>([]);
-  const [worksInternationally, setWorksInternationally] = useState(false);
-
-  // Step 6: Capacity
+  // ── Step 8: Team & Capacity ──
   const [fteCount, setFteCount] = useState("");
   const [parttimeCount, setParttimeCount] = useState("");
   const [volunteerCount, setVolunteerCount] = useState("");
   const [boardCount, setBoardCount] = useState("");
   const [hasGrantWriter, setHasGrantWriter] = useState(false);
   const [ceoName, setCeoName] = useState("");
-  const [financeContact, setFinanceContact] = useState("");
-  const [annualIncome, setAnnualIncome] = useState("");
-  const [pctGrants, setPctGrants] = useState(50);
-  const [pctGovernment, setPctGovernment] = useState(20);
-  const [pctCorporate, setPctCorporate] = useState(20);
-  const [hasStrategicPlan, setHasStrategicPlan] = useState(false);
-  const [hasMEFramework, setHasMEFramework] = useState(false);
+  const [ceoBio, setCeoBio] = useState("");
+  const [keyStaff, setKeyStaff] = useState<Array<{ name: string; title: string; qualification: string; experience: string }>>([]);
   const [hasBBBEE, setHasBBBEE] = useState(false);
   const [bbbeeLevel, setBbbeeLevel] = useState("");
+  const [selectedPolicies, setSelectedPolicies] = useState<string[]>([]);
+  const [hasStrategicPlan, setHasStrategicPlan] = useState("");
+  const [strategicPlanPeriod, setStrategicPlanPeriod] = useState("");
+  const [orgAchievements, setOrgAchievements] = useState<string[]>(["", "", ""]);
+  const [governanceStructure, setGovernanceStructure] = useState("");
 
-  // Step 7: Funding History
+  // ── Step 9: Past Funding & Partnerships ──
   const [hasReceivedGrants, setHasReceivedGrants] = useState(false);
-  const [pastFunders, setPastFunders] = useState("");
+  const [pastFundersDetailed, setPastFundersDetailed] = useState<Array<{
+    name: string; amount: string; year: string; project: string; outcome: string;
+  }>>([]);
   const [largestGrant, setLargestGrant] = useState("");
   const [totalFunding3yr, setTotalFunding3yr] = useState("");
-  const [fundingAchievement, setFundingAchievement] = useState("");
-  const [partnershipOpen, setPartnershipOpen] = useState<boolean | null>(null);
+  const [grantManagement, setGrantManagement] = useState("");
+  const [proudAchievement, setProudAchievement] = useState("");
+  const [lessonsLearned, setLessonsLearned] = useState("");
+  const [partnershipAppetite, setPartnershipAppetite] = useState("");
   const [partnershipRole, setPartnershipRole] = useState("");
-  const [partnerTypes, setPartnerTypes] = useState<string[]>([]);
-  const [partnershipStrengths, setPartnershipStrengths] = useState<string[]>([]);
+  const [partnershipBrings, setPartnershipBrings] = useState<string[]>([]);
+  const [partnershipSeeks, setPartnershipSeeks] = useState<string[]>([]);
   const [partnershipStatement, setPartnershipStatement] = useState("");
-  const [isDiscoverable, setIsDiscoverable] = useState(false);
+  const [isDiscoverable, setIsDiscoverable] = useState(true);
 
-  // Calculate completeness
-  const completeness = (() => {
-    let filled = 0;
-    let total = 14;
-    if (orgName) filled++;
-    if (country) filled++;
-    if (mission) filled++;
-    if (selectedFocus.length >= 2) filled++;
-    if (programmes[0]?.name) filled++;
-    if (regionsOfOperation.length > 0) filled++;
-    if (fteCount) filled++;
-    if (annualIncome) filled++;
-    if (regNumber) filled++;
-    if (orgType) filled++;
-    if (theoryOfChange) filled++;
-    if (selectedBeneficiaries.length > 0) filled++;
-    if (selectedSDGs.length > 0) filled++;
-    if (ceoName) filled++;
-    return Math.round((filled / total) * 100);
-  })();
+  // ── Focus areas (used in Step 2 context) ──
+  const [selectedFocus, setSelectedFocus] = useState<string[]>([]);
+  const [focusPriority, setFocusPriority] = useState<Record<string, string>>({});
 
-  const generateMission = useCallback(async () => {
-    setGeneratingMission(true);
-    try {
-      const keywords = prompt("Enter 3-5 keywords about your work (e.g. youth, education, Western Cape):");
-      if (!keywords) { setGeneratingMission(false); return; }
-      const result = await callAI([
-        { role: "system", content: "You are a professional NGO consultant. Generate a compelling 3-sentence mission statement for an African NGO. Be specific and inspiring." },
-        { role: "user", content: `Generate a mission statement for an NGO with these keywords: ${keywords}. Country: ${country}. Return only the mission statement text, no quotes.` },
-      ]);
-      setMission(result);
-      toast({ title: "Mission statement generated!", description: "Feel free to edit it." });
-    } catch {
-      toast({ title: "AI unavailable", variant: "destructive" });
-    }
-    setGeneratingMission(false);
-  }, [country]);
-
-  const toggleFocus = (key: string) => {
-    setSelectedFocus(prev =>
-      prev.includes(key) ? prev.filter(k => k !== key) : [...prev, key]
-    );
-  };
-
-  const addProgramme = () => {
-    if (programmes.length < 8) {
-      setProgrammes(prev => [...prev, { name: "", description: "", focusArea: "", beneficiaries: "", areas: "", status: "Active", yearStarted: "", budget: "" }]);
-    }
-  };
-
-  const updateProgramme = (idx: number, field: string, value: string) => {
-    setProgrammes(prev => prev.map((p, i) => i === idx ? { ...p, [field]: value } : p));
-  };
-
-  const removeProgramme = (idx: number) => {
-    if (programmes.length > 1) setProgrammes(prev => prev.filter((_, i) => i !== idx));
-  };
-
-  // Document uploads
+  // ── Document uploads ──
   const [uploadedDocs, setUploadedDocs] = useState<Record<string, string>>({});
   const [uploadingDoc, setUploadingDoc] = useState<string | null>(null);
 
+  // ── AI loading states ──
+  const [aiLoading, setAiLoading] = useState<string | null>(null);
+
+  // ── Saving ──
+  const [saving, setSaving] = useState(false);
+
+  // ── Completeness ──
+  const completeness = (() => {
+    let score = 0;
+    // Step 1: 10 pts
+    if (orgName) score += 2.5; if (orgType) score += 2.5; if (regNumber) score += 2.5; if (isAudited || lastAuditYear) score += 2.5;
+    // Step 2: 20 pts
+    if (mission) score += 5; if (theoryOfChange || tocAction) score += 5; if (selectedBeneficiaries.length > 0) score += 5; if (impactStatement) score += 5;
+    // Step 3: 15 pts
+    if (problemStatement) score += 5; if (problemEvidence.filter(Boolean).length >= 2) score += 5; if (whyYourOrg) score += 5;
+    // Step 4: 20 pts
+    const p = programmes[0]; if (p?.name) score += 5; if (p?.fullDesc) score += 5;
+    if (p?.activities?.filter(Boolean).length >= 3) score += 5; if (p?.outputs?.filter(Boolean).length >= 2) score += 5;
+    // Step 5: 10 pts
+    if (primaryTargetGroup) score += 3.3; if (beneficiarySelection) score += 3.3; if (directBeneficiaries) score += 3.4;
+    // Step 6: 15 pts
+    if (keyOutcomes.filter(Boolean).length >= 3) score += 5; if (indicators.filter(i => i.name).length >= 3) score += 5;
+    if (dataCollectionMethods.length > 0) score += 5;
+    // Step 7: 10 pts — normalised from 120 → 100
+    if (annualBudget) score += 3.3; if (fundingGap) score += 3.3; if (pctGrants > 0) score += 3.4;
+    // Step 8: legacy from 120
+    // Step 9: legacy from 120
+    return Math.min(100, Math.round(score * (100 / 120) * (120 / 100)));
+  })();
+
+  // ── Load existing org ──
+  useEffect(() => {
+    const loadOrg = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) { navigate("/login"); return; }
+      const { data: org } = await supabase.from("organisations").select("*").eq("user_id", user.id).maybeSingle();
+      if (org) {
+        setOrgId(org.id);
+        if (org.onboarding_complete) { navigate("/dashboard"); return; }
+        // Pre-fill from existing data
+        if (org.name) setOrgName(org.name);
+        if (org.trading_name) setTradingName(org.trading_name);
+        if (org.org_type) setOrgType(org.org_type);
+        if (org.registration_number) setRegNumber(org.registration_number);
+        if (org.country) setCountry(org.country);
+        if (org.region) setRegion(org.region);
+        if (org.founded_year) setYearEstablished(String(org.founded_year));
+        if (org.tax_status) setTaxStatus(org.tax_status);
+        if (org.pbo_number) setPboNumber(org.pbo_number);
+        if (org.is_audited) setIsAudited(org.is_audited);
+        if (org.last_audit_year) setLastAuditYear(String(org.last_audit_year));
+        if (org.mission_statement) setMission(org.mission_statement);
+        if (org.vision_statement) setVision(org.vision_statement);
+        if (org.core_values) setCoreValues(org.core_values);
+        if (org.theory_of_change) setTheoryOfChange(org.theory_of_change);
+        if (org.beneficiary_groups) setSelectedBeneficiaries(org.beneficiary_groups);
+        if (org.annual_beneficiary_reach) setBeneficiaryReach(String(org.annual_beneficiary_reach));
+        if (org.impact_statement) setImpactStatement(org.impact_statement);
+        if (org.focus_areas) setSelectedFocus(org.focus_areas);
+        if (org.sdgs) setSelectedSDGs(org.sdgs);
+        if (org.onboarding_step) setStep(Math.min(org.onboarding_step, 8));
+        if ((org as any).problem_statement) setProblemStatement((org as any).problem_statement);
+        if ((org as any).problem_root_causes) setProblemRootCauses((org as any).problem_root_causes);
+        if ((org as any).why_your_org) setWhyYourOrg((org as any).why_your_org);
+        if ((org as any).primary_target_group) setPrimaryTargetGroup((org as any).primary_target_group);
+        if ((org as any).beneficiary_selection_criteria) setBeneficiarySelection((org as any).beneficiary_selection_criteria);
+        if ((org as any).direct_beneficiaries_annual) setDirectBeneficiaries(String((org as any).direct_beneficiaries_annual));
+        if ((org as any).indirect_beneficiaries_annual) setIndirectBeneficiaries(String((org as any).indirect_beneficiaries_annual));
+        if (org.fte_count) setFteCount(String(org.fte_count));
+        if (org.parttime_count) setParttimeCount(String(org.parttime_count));
+        if (org.volunteer_count) setVolunteerCount(String(org.volunteer_count));
+        if (org.board_count) setBoardCount(String(org.board_count));
+        if (org.ceo_name) setCeoName(org.ceo_name);
+        if (org.has_grant_writer) setHasGrantWriter(org.has_grant_writer);
+        if (org.annual_budget) setAnnualBudget(String(org.annual_budget));
+        if (org.funding_gap) setFundingGap(String(org.funding_gap));
+        if (org.pct_grants) setPctGrants(org.pct_grants);
+        if (org.pct_government) setPctGovernment(org.pct_government);
+        if (org.pct_corporate) setPctCorporate(org.pct_corporate);
+        if (org.has_bbbee) setHasBBBEE(org.has_bbbee);
+        if (org.bbbee_level) setBbbeeLevel(String(org.bbbee_level));
+        if (org.has_strategic_plan) setHasStrategicPlan(org.has_strategic_plan ? "yes" : "no");
+        if (org.has_me_framework) setHasMEFramework(org.has_me_framework ? "yes" : "no");
+        if (org.partnership_open !== null) setPartnershipAppetite(org.partnership_open ? "open" : "not_looking");
+        if (org.partnership_role) setPartnershipRole(org.partnership_role);
+        if (org.partnership_statement) setPartnershipStatement(org.partnership_statement);
+        if (org.is_discoverable) setIsDiscoverable(org.is_discoverable);
+        if (org.largest_grant_range) setLargestGrant(org.largest_grant_range);
+        if (org.total_funding_3yr) setTotalFunding3yr(org.total_funding_3yr);
+        if (org.funding_achievement) setProudAchievement(org.funding_achievement);
+      }
+    };
+    loadOrg();
+  }, [navigate]);
+
+  // ── AI Assist functions ──
+  const generateMission = useCallback(async () => {
+    setAiLoading("mission");
+    try {
+      const keywords = prompt("Enter 5-8 keywords about your work (e.g. youth, education, Western Cape, after school):");
+      if (!keywords) { setAiLoading(null); return; }
+      const result = await callAI([
+        { role: "system", content: "You are helping an African NGO write a concise, compelling mission statement. Write 1 option: 2 sentences, present tense, active voice, specific about WHO you serve and WHAT you do. No jargon." },
+        { role: "user", content: `Keywords: ${keywords}. Country: ${country}. Org type: ${orgType}. Return only the mission statement text.` },
+      ]);
+      setMission(result);
+      toast({ title: "Mission generated!", description: "Edit it to make it yours." });
+    } catch { toast({ title: "AI unavailable", variant: "destructive" }); }
+    setAiLoading(null);
+  }, [country, orgType]);
+
+  const generateToC = useCallback(async () => {
+    if (!tocAction || !tocPopulation || !tocChange) {
+      toast({ title: "Fill in the If-Then fields first", variant: "destructive" }); return;
+    }
+    setAiLoading("toc");
+    try {
+      const result = await callAI([
+        { role: "system", content: "You are helping an African NGO articulate their Theory of Change. Write a 200-word paragraph that opens with the problem, describes the intervention, explains the mechanism of change, and states outcomes. First person plural. Professional but not bureaucratic." },
+        { role: "user", content: `Mission: ${mission}\nIf we: ${tocAction}\nWith/for: ${tocPopulation}\nThen: ${tocChange}\nBecause: ${tocMechanism}\nCountry: ${country}` },
+      ]);
+      setTheoryOfChange(result);
+      toast({ title: "Theory of Change generated!" });
+    } catch { toast({ title: "AI unavailable", variant: "destructive" }); }
+    setAiLoading(null);
+  }, [tocAction, tocPopulation, tocChange, tocMechanism, mission, country]);
+
+  const generateProblemStatement = useCallback(async () => {
+    setAiLoading("problem");
+    try {
+      const result = await callAI([
+        { role: "system", content: "Write a compelling 200-word problem statement for a grant proposal. Open with a striking fact, name specific geography and population, explain root causes, cite evidence patterns. First person plural." },
+        { role: "user", content: `Focus: ${selectedFocus.join(", ")}\nGeography: ${country}, ${region}\nMission: ${mission}\nBeneficiaries: ${selectedBeneficiaries.join(", ")}` },
+      ]);
+      setProblemStatement(result);
+      toast({ title: "Problem statement generated!" });
+    } catch { toast({ title: "AI unavailable", variant: "destructive" }); }
+    setAiLoading(null);
+  }, [selectedFocus, country, region, mission, selectedBeneficiaries]);
+
+  const generateIndicators = useCallback(async () => {
+    setAiLoading("indicators");
+    try {
+      const result = await callAIJSON<Array<{ indicator: string; type: string; example_baseline: string; example_target: string; measurement_method: string; measurement_frequency: string }>>(
+        [
+          { role: "system", content: "You are an M&E specialist. Generate 3 SMART indicators. Return JSON array with objects having: indicator, type (output|outcome), example_baseline, example_target, measurement_method, measurement_frequency." },
+          { role: "user", content: `Outcomes: ${keyOutcomes.filter(Boolean).join("; ")}\nProgrammes: ${programmes.map(p => p.name).filter(Boolean).join(", ")}\nBeneficiaries: ${primaryTargetGroup}\nCountry: ${country}` },
+        ]
+      );
+      if (Array.isArray(result)) {
+        setIndicators(result.map(r => ({
+          name: r.indicator, type: r.type, baseline: r.example_baseline,
+          target: r.example_target, method: r.measurement_method, frequency: r.measurement_frequency,
+        })));
+        toast({ title: "Indicators generated!" });
+      }
+    } catch { toast({ title: "AI unavailable", variant: "destructive" }); }
+    setAiLoading(null);
+  }, [keyOutcomes, programmes, primaryTargetGroup, country]);
+
+  const generateCeoBio = useCallback(async () => {
+    setAiLoading("bio");
+    try {
+      const result = await callAI([
+        { role: "system", content: "Write a professional 80-word biography for a grant proposal. Third person. Highlight credibility for managing grants." },
+        { role: "user", content: `Name: ${ceoName}\nOrganisation: ${orgName}\nCountry: ${country}` },
+      ]);
+      setCeoBio(result);
+      toast({ title: "Bio generated!" });
+    } catch { toast({ title: "AI unavailable", variant: "destructive" }); }
+    setAiLoading(null);
+  }, [ceoName, orgName, country]);
+
+  // ── Document upload ──
   const handleDocUpload = async (docKey: string, file: File | undefined) => {
-    if (!file) return;
+    if (!file || !orgId) return;
     setUploadingDoc(docKey);
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-      const { data: org } = await supabase.from("organisations").select("id").eq("user_id", user.id).maybeSingle();
-      if (!org) { toast({ title: "Complete step 1 first", variant: "destructive" }); setUploadingDoc(null); return; }
-      const filePath = `${org.id}/${docKey}_${Date.now()}.${file.name.split(".").pop()}`;
+      const filePath = `${orgId}/${docKey}_${Date.now()}.${file.name.split(".").pop()}`;
       const { error } = await supabase.storage.from("org-documents").upload(filePath, file, { upsert: true });
       if (error) throw error;
       setUploadedDocs(prev => ({ ...prev, [docKey]: filePath }));
-      toast({ title: "Document uploaded!", description: file.name });
-    } catch (err: any) {
-      toast({ title: "Upload failed", description: err.message, variant: "destructive" });
-    }
+      toast({ title: "Uploaded!", description: file.name });
+    } catch (err: any) { toast({ title: "Upload failed", description: err.message, variant: "destructive" }); }
     setUploadingDoc(null);
   };
 
-  const [saving, setSaving] = useState(false);
+  // ── Programme helpers ──
+  const addProgramme = () => {
+    if (programmes.length < 8) {
+      setProgrammes(prev => [...prev, {
+        name: "", shortDesc: "", fullDesc: "", approaches: [], activities: ["", "", ""],
+        outputs: ["", ""], outcomes: ["", ""], impactStory: "", areas: "", reach: "",
+        reachUnit: "individuals", budget: "", status: "Active", yearStarted: "", partners: "",
+      }]);
+    }
+  };
+  const updateProgramme = (idx: number, field: string, value: any) => {
+    setProgrammes(prev => prev.map((p, i) => i === idx ? { ...p, [field]: value } : p));
+  };
+
+  // ── Save & Navigate ──
+  const saveProgress = async (currentStep: number) => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      const baseData: any = {
+        onboarding_step: currentStep,
+        profile_completeness: completeness,
+        name: orgName || "My Organisation",
+      };
+      if (orgId) {
+        await supabase.from("organisations").update(baseData).eq("id", orgId);
+      }
+    } catch { /* silent */ }
+  };
 
   const saveToSupabase = async () => {
     setSaving(true);
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        toast({ title: "Not logged in", description: "Please log in first.", variant: "destructive" });
-        navigate("/login");
-        return;
-      }
+      if (!user) { navigate("/login"); return; }
 
-      const orgData = {
+      const orgData: any = {
         name: orgName,
         trading_name: tradingName || null,
         org_type: orgType || null,
@@ -301,69 +557,119 @@ const OnboardingPage = () => {
         pbo_number: pboNumber || null,
         is_audited: isAudited,
         last_audit_year: lastAuditYear ? parseInt(lastAuditYear) : null,
+        physical_address: physicalAddress || null,
         mission_statement: mission || null,
         vision_statement: vision || null,
         core_values: coreValues.length > 0 ? coreValues : null,
         theory_of_change: theoryOfChange || null,
+        toc_if_then: tocAction ? `If we ${tocAction} with ${tocPopulation}, then ${tocChange} because ${tocMechanism}` : null,
         beneficiary_groups: selectedBeneficiaries.length > 0 ? selectedBeneficiaries : null,
         annual_beneficiary_reach: beneficiaryReach ? parseInt(beneficiaryReach) : null,
+        beneficiary_reach_unit: beneficiaryReachUnit,
         impact_statement: impactStatement || null,
         focus_areas: selectedFocus.length > 0 ? selectedFocus : null,
         focus_priority: Object.keys(focusPriority).length > 0 ? focusPriority : null,
         sdgs: selectedSDGs.length > 0 ? selectedSDGs : null,
+        primary_sdgs: primarySDGs.length > 0 ? primarySDGs : null,
+        problem_statement: problemStatement || null,
+        problem_evidence: problemEvidence.filter(Boolean).join("\n---\n") || null,
+        problem_root_causes: problemRootCauses || null,
+        problem_geographic_context: problemGeoContext || null,
+        community_voice_quote: communityVoice || null,
+        gap_in_services: gapInServices || null,
+        why_your_org: whyYourOrg || null,
         programmes: programmes.filter(p => p.name).map(p => p.name),
         programme_details: programmes.filter(p => p.name),
+        intervention_approach: programmes[0]?.approaches?.join(", ") || null,
+        innovation_factor: innovationFactor || null,
+        primary_target_group: primaryTargetGroup || null,
+        beneficiary_selection_criteria: beneficiarySelection || null,
+        beneficiary_demographics: { gender_female_pct: genderFemale, vulnerability_factors: vulnerabilityFactors },
+        direct_beneficiaries_annual: directBeneficiaries ? parseInt(directBeneficiaries) : null,
+        indirect_beneficiaries_annual: indirectBeneficiaries ? parseInt(indirectBeneficiaries) : null,
+        beneficiary_participation: beneficiaryParticipation || null,
+        key_outcomes: keyOutcomes.filter(Boolean),
+        impact_indicators: indicators.filter(i => i.name),
+        data_collection_methods: dataCollectionMethods,
+        reporting_frequency: reportingFrequency || null,
+        has_me_framework: hasMEFramework === "yes",
+        mne_framework_description: mneDescription || null,
+        baseline_data: baselineData || null,
+        past_impact_achievements: pastImpactAchievements.filter(Boolean).join("\n---\n") || null,
         annual_budget: annualBudget ? parseFloat(annualBudget) : null,
-        operational_expenses: operationalExpenses ? parseFloat(operationalExpenses) : null,
+        annual_budget_currency: budgetCurrency,
+        budget_breakdown: { staff: staffPercent, programmes: programmesPercent, overheads: overheadsPercent },
+        funding_sources_detail: { grants: pctGrants, government: pctGovernment, corporate: pctCorporate, self_generated: pctSelfGenerated },
         funding_gap: fundingGap ? parseFloat(fundingGap) : null,
-        regions_of_operation: regionsOfOperation.length > 0 ? regionsOfOperation : null,
-        cities: cities ? cities.split(",").map(c => c.trim()) : null,
-        works_rural: worksRural,
-        works_urban: worksUrban,
-        works_other_african: worksOtherAfrican,
-        other_african_countries: otherAfricanCountries.length > 0 ? otherAfricanCountries : null,
-        works_internationally: worksInternationally,
+        typical_grant_size_range: typicalGrantSize || null,
+        financial_management_system: financialSystem || null,
+        has_dedicated_bank_account: hasDedicatedBank,
+        cofunding_available: cofundingAvailable,
+        cofunding_description: cofundingDescription || null,
+        pct_grants: pctGrants,
+        pct_government: pctGovernment,
+        pct_corporate: pctCorporate,
         fte_count: fteCount ? parseInt(fteCount) : null,
         parttime_count: parttimeCount ? parseInt(parttimeCount) : null,
         volunteer_count: volunteerCount ? parseInt(volunteerCount) : null,
         board_count: boardCount ? parseInt(boardCount) : null,
         has_grant_writer: hasGrantWriter,
         ceo_name: ceoName || null,
-        finance_contact: financeContact || null,
-        annual_income: annualIncome ? parseFloat(annualIncome) : null,
-        pct_grants: pctGrants,
-        pct_government: pctGovernment,
-        pct_corporate: pctCorporate,
-        has_strategic_plan: hasStrategicPlan,
-        has_me_framework: hasMEFramework,
+        executive_director_bio: ceoBio || null,
+        key_staff: keyStaff.length > 0 ? keyStaff : null,
         has_bbbee: hasBBBEE,
         bbbee_level: bbbeeLevel ? parseInt(bbbeeLevel) : null,
-        past_funders: pastFunders ? pastFunders.split(",").map(f => f.trim()) : null,
+        has_policies: selectedPolicies.length > 0,
+        policies_list: selectedPolicies.length > 0 ? selectedPolicies : null,
+        has_strategic_plan: hasStrategicPlan === "yes",
+        strategic_plan_period: strategicPlanPeriod || null,
+        governance_structure: governanceStructure || null,
+        organisational_achievements: orgAchievements.filter(Boolean).join("\n---\n") || null,
+        past_funders_detailed: pastFundersDetailed.length > 0 ? pastFundersDetailed : null,
         largest_grant_range: largestGrant || null,
         total_funding_3yr: totalFunding3yr || null,
-        funding_achievement: fundingAchievement || null,
-        partnership_open: partnershipOpen,
+        grant_management_experience: grantManagement || null,
+        funding_achievement: proudAchievement || null,
+        lessons_learned: lessonsLearned || null,
+        partnership_open: partnershipAppetite === "open" || partnershipAppetite === "selective",
         partnership_role: partnershipRole || null,
-        partner_types: partnerTypes.length > 0 ? partnerTypes : null,
-        partnership_strengths: partnershipStrengths.length > 0 ? partnershipStrengths : null,
+        partnership_strengths: partnershipBrings.length > 0 ? partnershipBrings : null,
+        partnership_seeks: partnershipSeeks.length > 0 ? partnershipSeeks : null,
         partnership_statement: partnershipStatement || null,
         is_discoverable: isDiscoverable,
         onboarding_complete: true,
-        onboarding_step: 7,
+        onboarding_step: 9,
         profile_completeness: completeness,
       };
 
-      // Check if org exists
-      const { data: existingOrg } = await supabase
-        .from("organisations")
-        .select("id")
-        .eq("user_id", user.id)
-        .maybeSingle();
-
-      if (existingOrg) {
-        await supabase.from("organisations").update(orgData).eq("id", existingOrg.id);
+      if (orgId) {
+        await supabase.from("organisations").update(orgData).eq("id", orgId);
       } else {
-        await supabase.from("organisations").insert({ ...orgData, user_id: user.id });
+        const { data } = await supabase.from("organisations").insert({ ...orgData, user_id: user.id }).select("id").single();
+        if (data) setOrgId(data.id);
+      }
+
+      // Save programme details to separate table
+      if (orgId) {
+        for (const prog of programmes.filter(p => p.name)) {
+          await supabase.from("programme_details").upsert({
+            org_id: orgId,
+            programme_name: prog.name,
+            description: prog.shortDesc,
+            detailed_description: prog.fullDesc,
+            activities: prog.activities.filter(Boolean),
+            key_outputs: prog.outputs.filter(Boolean),
+            key_outcomes: prog.outcomes.filter(Boolean),
+            success_story: prog.impactStory,
+            geographic_areas: prog.areas ? prog.areas.split(",").map(s => s.trim()) : [],
+            annual_reach: prog.reach ? parseInt(prog.reach) : null,
+            annual_budget_range: prog.budget,
+            status: prog.status.toLowerCase(),
+            year_started: prog.yearStarted ? parseInt(prog.yearStarted) : null,
+            intervention_approaches: prog.approaches,
+            partner_organisations: prog.partners ? prog.partners.split(",").map(s => s.trim()) : [],
+          }, { onConflict: "id" });
+        }
       }
 
       toast({ title: "🎉 Onboarding complete!", description: "Calculating your matches..." });
@@ -375,63 +681,19 @@ const OnboardingPage = () => {
   };
 
   const next = () => {
-    if (step < 6) {
-      setStep(step + 1);
-      // Save progress at each step
-      saveProgress(step + 1);
-    } else {
-      saveToSupabase();
-    }
+    if (step < 8) { setStep(step + 1); saveProgress(step + 1); }
+    else saveToSupabase();
   };
 
-  const saveProgress = async (currentStep: number) => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-      const { data: existingOrg } = await supabase
-        .from("organisations")
-        .select("id")
-        .eq("user_id", user.id)
-        .maybeSingle();
-      if (existingOrg) {
-        await supabase.from("organisations").update({
-          onboarding_step: currentStep,
-          profile_completeness: completeness,
-          name: orgName || "My Organisation",
-        }).eq("id", existingOrg.id);
-      }
-    } catch { /* silent */ }
+  const toggleFocus = (key: string) => {
+    setSelectedFocus(prev => prev.includes(key) ? prev.filter(k => k !== key) : [...prev, key]);
   };
 
-  // Load existing org data on mount
-  useEffect(() => {
-    const loadOrg = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) { navigate("/login"); return; }
-      const { data: org } = await supabase
-        .from("organisations")
-        .select("*")
-        .eq("user_id", user.id)
-        .maybeSingle();
-      if (org) {
-        if (org.name) setOrgName(org.name);
-        if (org.country) setCountry(org.country);
-        if (org.region) setRegion(org.region);
-        if (org.onboarding_step) setStep(org.onboarding_step);
-        if (org.onboarding_complete) navigate("/dashboard");
-      }
-    };
-    loadOrg();
-  }, [navigate]);
-
-  const inputClass = "mt-1 bg-secondary/30 border-border/50 text-foreground";
-  const labelClass = "text-xs text-muted-foreground";
-  const selectClass = "w-full mt-1 px-3 py-2 rounded-lg bg-secondary/30 border border-border/50 text-sm text-foreground";
-
+  // ── RENDER ──
   return (
     <div className="min-h-screen gradient-bg flex flex-col">
       {/* Header */}
-      <div className="flex items-center justify-between p-4 sm:p-6">
+      <div className="flex items-center justify-between p-4 sm:p-6 border-b border-border/20">
         <div className="flex items-center gap-2">
           <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center">
             <Sparkles className="h-4 w-4 text-primary-foreground" />
@@ -439,634 +701,987 @@ const OnboardingPage = () => {
           <span className="text-sm font-semibold text-foreground">GrantMatch</span>
         </div>
         <div className="flex items-center gap-3">
-          <span className="text-xs text-muted-foreground">Profile: {completeness}%</span>
-          <Progress value={completeness} className="w-24 h-1.5" />
-          <Button variant="ghost" size="sm" className="text-xs text-muted-foreground" onClick={() => toast({ title: "Progress saved!" })}>
+          <span className="text-xs text-muted-foreground hidden sm:inline">Profile: {completeness}%</span>
+          <Progress value={completeness} className="w-20 sm:w-28 h-1.5" />
+          <Button variant="ghost" size="sm" className="text-xs text-muted-foreground" onClick={() => { saveProgress(step); toast({ title: "Progress saved!" }); navigate("/dashboard"); }}>
             <Save className="h-3 w-3 mr-1" /> Save & exit
           </Button>
         </div>
       </div>
 
-      <div className="flex-1 flex items-start justify-center p-4 sm:p-6 overflow-y-auto">
-        <div className="w-full max-w-3xl">
-          {/* Progress Stepper */}
-          <div className="flex items-center gap-1 mb-6 overflow-x-auto pb-2">
-            {steps.map((s, i) => (
+      <div className="flex-1 flex">
+        {/* Left sidebar — step nav (desktop) */}
+        <div className="hidden lg:block w-56 border-r border-border/20 p-4 space-y-1">
+          {steps.map((s, i) => (
+            <button key={i} onClick={() => setStep(i)}
+              className={`w-full flex items-center gap-2 p-2 rounded-lg text-xs transition-colors ${
+                i === step ? "bg-primary/10 text-primary" : i < step ? "text-foreground/80" : "text-muted-foreground"
+              }`}>
+              <div className={`h-5 w-5 rounded-full flex items-center justify-center text-[9px] ${
+                i < step ? "bg-emerald-500/20 text-emerald-400" : i === step ? "bg-primary/20 text-primary" : "bg-secondary text-muted-foreground"
+              }`}>
+                {i < step ? <Check className="h-3 w-3" /> : i + 1}
+              </div>
+              <span className="truncate">{s.title}</span>
+              <span className="ml-auto text-[9px] text-muted-foreground">{s.time}</span>
+            </button>
+          ))}
+        </div>
+
+        {/* Main content */}
+        <div className="flex-1 overflow-y-auto p-4 sm:p-6">
+          {/* Mobile stepper */}
+          <div className="flex items-center gap-1 mb-4 lg:hidden overflow-x-auto pb-2">
+            {steps.map((_, i) => (
               <div key={i} className="flex items-center gap-1 shrink-0">
-                <button
-                  onClick={() => setStep(i)}
-                  className={`h-7 w-7 rounded-full flex items-center justify-center text-[10px] font-medium transition-colors ${
-                    i < step ? "bg-success text-success-foreground" :
-                    i === step ? "bg-primary text-primary-foreground" :
-                    "bg-secondary text-muted-foreground"
-                  }`}
-                >
-                  {i < step ? <Check className="h-3.5 w-3.5" /> : i + 1}
+                <button onClick={() => setStep(i)}
+                  className={`h-6 w-6 rounded-full flex items-center justify-center text-[9px] font-medium ${
+                    i < step ? "bg-emerald-500/20 text-emerald-400" : i === step ? "bg-primary text-primary-foreground" : "bg-secondary text-muted-foreground"
+                  }`}>
+                  {i < step ? <Check className="h-3 w-3" /> : i + 1}
                 </button>
-                {i < 6 && (
-                  <div className={`w-6 sm:w-10 h-0.5 rounded-full ${i < step ? "bg-success" : "bg-secondary"}`} />
-                )}
+                {i < 8 && <div className={`w-4 sm:w-8 h-0.5 rounded-full ${i < step ? "bg-emerald-500/30" : "bg-secondary"}`} />}
               </div>
             ))}
           </div>
 
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={step}
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
-              transition={{ duration: 0.25 }}
-            >
-              <GlassCard hoverable={false} className="p-6 sm:p-8">
-                <div className="flex items-center justify-between mb-1">
-                  <h2 className="text-lg font-bold text-foreground flex items-center gap-2">
-                    {(() => { const Icon = steps[step].icon; return <Icon className="h-5 w-5 text-primary" />; })()}
-                    {steps[step].title}
-                  </h2>
-                  <span className="text-[10px] text-muted-foreground bg-secondary/50 px-2 py-0.5 rounded-full">{steps[step].time}</span>
-                </div>
+          <div className="max-w-2xl mx-auto">
+            <AnimatePresence mode="wait">
+              <motion.div key={step} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.2 }}>
+                <GlassCard hoverable={false} className="p-5 sm:p-8">
+                  <div className="flex items-center justify-between mb-1">
+                    <h2 className="text-lg font-bold text-foreground flex items-center gap-2">
+                      {(() => { const Icon = steps[step].icon; return <Icon className="h-5 w-5 text-primary" />; })()}
+                      Step {step + 1}: {steps[step].title}
+                    </h2>
+                    <span className="text-[10px] text-muted-foreground bg-secondary/50 px-2 py-0.5 rounded-full">{steps[step].time}</span>
+                  </div>
 
-                {/* STEP 0: Legal Identity */}
-                {step === 0 && (
-                  <div className="space-y-4 mt-4">
-                    <p className="text-xs text-muted-foreground">Let's start with the basics. This ensures we find funders who can actually work with your organisation.
-                      <WhyTooltip text="Many funders require NPO registration, audited financials, or specific legal structures. This prevents wasting time on ineligible funders." />
-                    </p>
-                    <div>
-                      <Label className={labelClass}>Organisation Full Legal Name *</Label>
-                      <Input value={orgName} onChange={e => setOrgName(e.target.value)} placeholder="e.g. Elizayo Youth Foundation NPC" className={inputClass} />
-                    </div>
-                    <div>
-                      <Label className={labelClass}>Trading/Common Name (if different)</Label>
-                      <Input value={tradingName} onChange={e => setTradingName(e.target.value)} placeholder="e.g. Elizayo Foundation" className={inputClass} />
-                    </div>
-                    <div>
-                      <Label className={labelClass}>Organisation Type *</Label>
-                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mt-1">
-                        {["NPO", "NPC", "CBO", "Trust", "Section 21", "International NGO", "Other"].map(t => (
-                          <button key={t} onClick={() => setOrgType(t)}
-                            className={`p-2 rounded-lg text-xs border transition-colors ${orgType === t ? "border-primary bg-primary/10 text-foreground" : "border-border/30 text-muted-foreground hover:bg-secondary/30"}`}>
-                            {t}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
+                  {/* ═══ STEP 1: Legal Identity ═══ */}
+                  {step === 0 && (
+                    <div className="space-y-4 mt-4">
+                      <p className="text-xs text-muted-foreground">Let's start with the basics. This ensures we find funders who can actually work with your organisation.
+                        <WhyTooltip text="Many funders require NPO registration, audited financials, or specific legal structures." />
+                      </p>
                       <div>
-                        <Label className={labelClass}>Registration Number *</Label>
-                        <Input value={regNumber} onChange={e => setRegNumber(e.target.value)} placeholder="NPO-123456" className={inputClass} />
+                        <Label className={labelClass}>Organisation Full Legal Name *</Label>
+                        <Input value={orgName} onChange={e => setOrgName(e.target.value)} placeholder="As it appears on your registration certificate" className={inputClass} />
                       </div>
                       <div>
-                        <Label className={labelClass}>Country of Registration *</Label>
-                        <select value={country} onChange={e => setCountry(e.target.value)} className={selectClass}>
-                          {africanCountries.map(c => <option key={c} value={c}>{c}</option>)}
-                        </select>
+                        <Label className={labelClass}>Trading/Common Name (if different)</Label>
+                        <Input value={tradingName} onChange={e => setTradingName(e.target.value)} placeholder="Leave blank if same as legal name" className={inputClass} />
                       </div>
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <Label className={labelClass}>Province/Region</Label>
-                        {country === "South Africa" ? (
-                          <select value={region} onChange={e => setRegion(e.target.value)} className={selectClass}>
-                            <option value="">Select province</option>
-                            {saProvinces.map(p => <option key={p} value={p}>{p}</option>)}
+                        <Label className={labelClass}>Organisation Type *</Label>
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-1">
+                          {[
+                            { v: "NPO", icon: "🏛️", desc: "Non-Profit Organisation" },
+                            { v: "NPC", icon: "🏢", desc: "Non-Profit Company" },
+                            { v: "CBO", icon: "🏘️", desc: "Community-Based Organisation" },
+                            { v: "Trust", icon: "📋", desc: "Charitable Trust" },
+                            { v: "Section 21", icon: "📄", desc: "Former NPC" },
+                            { v: "INGO", icon: "🌍", desc: "International NGO" },
+                            { v: "Other", icon: "✏️", desc: "Other" },
+                          ].map(t => (
+                            <button key={t.v} onClick={() => setOrgType(t.v)}
+                              className={`p-2 rounded-lg text-xs border text-left ${orgType === t.v ? "border-primary bg-primary/10 text-foreground" : "border-border/30 text-muted-foreground hover:bg-secondary/30"}`}>
+                              <span className="text-sm">{t.icon}</span> <span className="font-medium">{t.v}</span>
+                              <div className="text-[10px] text-muted-foreground mt-0.5">{t.desc}</div>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <Label className={labelClass}>Registration Number *</Label>
+                          <Input value={regNumber} onChange={e => setRegNumber(e.target.value)} placeholder="e.g. 123-456 NPO" className={inputClass} />
+                        </div>
+                        <div>
+                          <Label className={labelClass}>Country *</Label>
+                          <select value={country} onChange={e => setCountry(e.target.value)} className={selectClass}>
+                            {africanCountries.map(c => <option key={c} value={c}>{c}</option>)}
                           </select>
-                        ) : (
-                          <Input value={region} onChange={e => setRegion(e.target.value)} placeholder="Region" className={inputClass} />
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <Label className={labelClass}>Province/Region</Label>
+                          {country === "South Africa" ? (
+                            <select value={region} onChange={e => setRegion(e.target.value)} className={selectClass}>
+                              <option value="">Select</option>
+                              {saProvinces.map(p => <option key={p} value={p}>{p}</option>)}
+                            </select>
+                          ) : <Input value={region} onChange={e => setRegion(e.target.value)} placeholder="Region" className={inputClass} />}
+                        </div>
+                        <div>
+                          <Label className={labelClass}>Year Established *</Label>
+                          <Input type="number" value={yearEstablished} onChange={e => setYearEstablished(e.target.value)} placeholder="2015" className={inputClass} />
+                        </div>
+                      </div>
+                      <div>
+                        <Label className={labelClass}>Tax Status *</Label>
+                        <div className="flex gap-2 mt-1 flex-wrap">
+                          {[
+                            { v: "Tax exempt", icon: "✅", desc: "PBO approved" },
+                            { v: "Not tax exempt", icon: "➖", desc: "Registered but not PBO" },
+                            { v: "Unsure", icon: "❓", desc: "I need to check" },
+                          ].map(t => (
+                            <button key={t.v} onClick={() => setTaxStatus(t.v)}
+                              className={`px-3 py-2 rounded-lg text-xs border ${taxStatus === t.v ? "border-primary bg-primary/10 text-foreground" : "border-border/30 text-muted-foreground"}`}>
+                              {t.icon} {t.v}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                      {taxStatus === "Tax exempt" && (
+                        <div>
+                          <Label className={labelClass}>PBO Number</Label>
+                          <Input value={pboNumber} onChange={e => setPboNumber(e.target.value)} placeholder="e.g. 930 123 456" className={inputClass} />
+                        </div>
+                      )}
+                      <div className="flex items-center justify-between p-3 rounded-lg border border-border/30">
+                        <div>
+                          <div className="text-xs text-foreground">Is your organisation audited?</div>
+                          <div className="text-[10px] text-muted-foreground">Required by most funders above R250,000</div>
+                        </div>
+                        <Switch checked={isAudited} onCheckedChange={setIsAudited} />
+                      </div>
+                      {isAudited && (
+                        <div>
+                          <Label className={labelClass}>Last Audit Year</Label>
+                          <Input type="number" value={lastAuditYear} onChange={e => setLastAuditYear(e.target.value)} placeholder="2025" className={inputClass} />
+                        </div>
+                      )}
+                      <div>
+                        <Label className={labelClass}>Physical Address (optional)</Label>
+                        <Textarea value={physicalAddress} onChange={e => setPhysicalAddress(e.target.value)} placeholder="Street address, suburb, city, postal code" className="bg-secondary/30 border-border/50 min-h-[60px] text-foreground text-sm" />
+                      </div>
+                    </div>
+                  )}
+
+                  {/* ═══ STEP 2: Mission & Theory of Change ═══ */}
+                  {step === 1 && (
+                    <div className="space-y-4 mt-4">
+                      <p className="text-xs text-muted-foreground">This is the most important step. The AI uses your mission and Theory of Change in every proposal section it writes.
+                        <WhyTooltip text="The more specific you are, the more compelling your proposals will be." />
+                      </p>
+                      <div>
+                        <div className="flex items-center justify-between mb-1">
+                          <Label className={labelClass}>Mission Statement *</Label>
+                          <AIButton onClick={generateMission} loading={aiLoading === "mission"} label="Help me write this" />
+                        </div>
+                        <Textarea value={mission} onChange={e => setMission(e.target.value.slice(0, 500))}
+                          placeholder="Example: To empower young people in underserved communities through access to quality education, mentorship and life skills..."
+                          className="bg-secondary/30 border-border/50 min-h-[100px] text-foreground text-sm" />
+                        <span className="text-[10px] text-muted-foreground">{mission.length}/500</span>
+                      </div>
+                      <div>
+                        <Label className={labelClass}>Vision Statement (recommended)</Label>
+                        <Textarea value={vision} onChange={e => setVision(e.target.value.slice(0, 300))}
+                          placeholder="What does the world look like when your mission succeeds?"
+                          className="bg-secondary/30 border-border/50 min-h-[60px] text-foreground text-sm" />
+                      </div>
+                      <div>
+                        <Label className={labelClass}>Core Values (up to 6)</Label>
+                        <div className="flex flex-wrap gap-1.5 mt-1">
+                          {coreValueOptions.map(v => (
+                            <button key={v} onClick={() => setCoreValues(prev => prev.includes(v) ? prev.filter(x => x !== v) : prev.length < 6 ? [...prev, v] : prev)}
+                              className={`px-2.5 py-1 rounded-full text-[11px] border ${coreValues.includes(v) ? "border-primary bg-primary/10 text-foreground" : "border-border/30 text-muted-foreground"}`}>
+                              {v}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                      {/* Theory of Change — structured */}
+                      <div className="space-y-2">
+                        <Label className={labelClass}>Theory of Change — Structured *</Label>
+                        <p className="text-[10px] text-muted-foreground">Build your Theory of Change step by step:</p>
+                        <div className="space-y-2 p-3 rounded-lg bg-secondary/20 border border-border/20">
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs text-primary font-medium w-16">If we...</span>
+                            <Input value={tocAction} onChange={e => setTocAction(e.target.value)} placeholder="provide after-school tutoring and mentorship" className={inputClass + " flex-1"} />
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs text-primary font-medium w-16">With...</span>
+                            <Input value={tocPopulation} onChange={e => setTocPopulation(e.target.value)} placeholder="young people aged 13-18 in low-income communities" className={inputClass + " flex-1"} />
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs text-primary font-medium w-16">Then...</span>
+                            <Input value={tocChange} onChange={e => setTocChange(e.target.value)} placeholder="they will improve academically and develop resilience" className={inputClass + " flex-1"} />
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs text-primary font-medium w-16">Because...</span>
+                            <Input value={tocMechanism} onChange={e => setTocMechanism(e.target.value)} placeholder="consistent adult support addresses barriers they face" className={inputClass + " flex-1"} />
+                          </div>
+                        </div>
+                      </div>
+                      <div>
+                        <div className="flex items-center justify-between mb-1">
+                          <Label className={labelClass}>Full Theory of Change narrative</Label>
+                          <AIButton onClick={generateToC} loading={aiLoading === "toc"} label="Generate from above" />
+                        </div>
+                        <Textarea value={theoryOfChange} onChange={e => setTheoryOfChange(e.target.value.slice(0, 1500))}
+                          placeholder="A full paragraph describing how your work creates change..."
+                          className="bg-secondary/30 border-border/50 min-h-[120px] text-foreground text-sm" />
+                      </div>
+                      {/* Beneficiary groups */}
+                      <div>
+                        <Label className={labelClass}>Primary Beneficiary Groups *</Label>
+                        <div className="grid grid-cols-2 sm:grid-cols-5 gap-1.5 mt-1">
+                          {beneficiaryGroups.map(b => (
+                            <button key={b.key} onClick={() => setSelectedBeneficiaries(prev => prev.includes(b.key) ? prev.filter(x => x !== b.key) : [...prev, b.key])}
+                              className={`p-2 rounded-lg text-xs border text-center ${selectedBeneficiaries.includes(b.key) ? "border-primary bg-primary/10" : "border-border/30 text-muted-foreground"}`}>
+                              <div className="text-lg">{b.icon}</div>
+                              <div className="text-[10px]">{b.label}</div>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <Label className={labelClass}>Annual Beneficiary Reach *</Label>
+                          <Input type="number" value={beneficiaryReach} onChange={e => setBeneficiaryReach(e.target.value)} placeholder="e.g. 500" className={inputClass} />
+                        </div>
+                        <div>
+                          <Label className={labelClass}>Unit</Label>
+                          <select value={beneficiaryReachUnit} onChange={e => setBeneficiaryReachUnit(e.target.value)} className={selectClass}>
+                            <option value="individuals">Individuals</option>
+                            <option value="households">Households</option>
+                            <option value="communities">Communities</option>
+                          </select>
+                        </div>
+                      </div>
+                      <div>
+                        <Label className={labelClass}>Key Impact Statement (recommended)</Label>
+                        <Input value={impactStatement} onChange={e => setImpactStatement(e.target.value.slice(0, 200))}
+                          placeholder="e.g. We have supported 4,200 young people in the Western Cape to complete secondary school since 2016."
+                          className={inputClass} />
+                        <span className="text-[10px] text-muted-foreground">{impactStatement.length}/200 — This appears at the top of every proposal</span>
+                      </div>
+                      {/* SDGs */}
+                      <div>
+                        <Label className={labelClass}>SDG Alignment (recommended)</Label>
+                        <div className="grid grid-cols-3 sm:grid-cols-6 gap-1.5 mt-1">
+                          {sdgGoals.map((g, i) => (
+                            <button key={i} onClick={() => setSelectedSDGs(prev => prev.includes(i + 1) ? prev.filter(x => x !== i + 1) : [...prev, i + 1])}
+                              className={`p-1.5 rounded-lg text-[10px] border text-center ${selectedSDGs.includes(i + 1) ? "border-primary bg-primary/10 text-foreground" : "border-border/30 text-muted-foreground"}`}>
+                              <div className="font-bold text-xs">SDG {i + 1}</div>
+                              <div className="truncate">{g}</div>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* ═══ STEP 3: The Problem You Solve ═══ */}
+                  {step === 2 && (
+                    <div className="space-y-4 mt-4">
+                      <p className="text-xs text-muted-foreground">Funders don't fund organisations — they fund solutions to problems. This is where most proposals win or lose.
+                        <WhyTooltip text="The more specific your evidence, the stronger your proposals." />
+                      </p>
+                      <div>
+                        <div className="flex items-center justify-between mb-1">
+                          <Label className={labelClass}>Problem Statement *</Label>
+                          <AIButton onClick={generateProblemStatement} loading={aiLoading === "problem"} label="Help me describe this" />
+                        </div>
+                        <Textarea value={problemStatement} onChange={e => setProblemStatement(e.target.value)}
+                          placeholder="Describe the problem in your community as specifically as possible. Name the geography, population, and consequences..."
+                          className="bg-secondary/30 border-border/50 min-h-[140px] text-foreground text-sm" />
+                      </div>
+                      <DynamicListInput items={problemEvidence} setItems={setProblemEvidence}
+                        placeholder='e.g. "47% of Grade 12 learners failed Maths (WC Education Dept, 2023)"'
+                        label="Evidence and Statistics * (add source where possible)" max={8} minEncouraged={2} />
+                      <div>
+                        <Label className={labelClass}>Root Causes *</Label>
+                        <Textarea value={problemRootCauses} onChange={e => setProblemRootCauses(e.target.value.slice(0, 600))}
+                          placeholder="What are the root causes of this problem? (not symptoms)"
+                          className="bg-secondary/30 border-border/50 min-h-[80px] text-foreground text-sm" />
+                      </div>
+                      <div>
+                        <Label className={labelClass}>Why is this problem severe in your area? *</Label>
+                        <Textarea value={problemGeoContext} onChange={e => setProblemGeoContext(e.target.value.slice(0, 500))}
+                          placeholder="What makes this problem particularly acute in the community you serve?"
+                          className="bg-secondary/30 border-border/50 min-h-[80px] text-foreground text-sm" />
+                      </div>
+                      <div>
+                        <Label className={labelClass}>Community Voice (recommended)</Label>
+                        <Textarea value={communityVoice} onChange={e => setCommunityVoice(e.target.value.slice(0, 300))}
+                          placeholder="A direct quote from a beneficiary or community member..."
+                          className="bg-secondary/30 border-border/50 min-h-[60px] text-foreground text-sm" />
+                      </div>
+                      <div>
+                        <Label className={labelClass}>Gap in Services *</Label>
+                        <Textarea value={gapInServices} onChange={e => setGapInServices(e.target.value.slice(0, 500))}
+                          placeholder="What services exist and what critical gap does your organisation fill?"
+                          className="bg-secondary/30 border-border/50 min-h-[80px] text-foreground text-sm" />
+                      </div>
+                      <div>
+                        <Label className={labelClass}>Why Your Organisation Specifically *</Label>
+                        <Textarea value={whyYourOrg} onChange={e => setWhyYourOrg(e.target.value.slice(0, 500))}
+                          placeholder="Why is YOUR org uniquely positioned? Community roots, years of presence, trust built..."
+                          className="bg-secondary/30 border-border/50 min-h-[80px] text-foreground text-sm" />
+                      </div>
+                    </div>
+                  )}
+
+                  {/* ═══ STEP 4: Programmes ═══ */}
+                  {step === 3 && (
+                    <div className="space-y-4 mt-4">
+                      <p className="text-xs text-muted-foreground">Describe exactly what you do. The AI uses this to write your methodology — the section that tells funders how you'll spend their money.
+                        <WhyTooltip text="Be specific: not 'we run workshops' but 'we run weekly 2-hour tutoring sessions for groups of 15 learners'." />
+                      </p>
+                      {/* Focus area selection embedded here */}
+                      <div>
+                        <Label className={labelClass}>Focus Areas (select all that apply, min 2) *</Label>
+                        <div className="grid grid-cols-2 sm:grid-cols-5 gap-1.5 mt-1 max-h-64 overflow-y-auto">
+                          {focusAreas.map(f => (
+                            <button key={f.key} onClick={() => toggleFocus(f.key)}
+                              className={`p-1.5 rounded-lg text-[10px] border text-center ${selectedFocus.includes(f.key) ? "border-primary bg-primary/10 text-foreground" : "border-border/30 text-muted-foreground"}`}>
+                              <div className="text-sm">{f.icon}</div>
+                              <div className="truncate">{f.label}</div>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                      {programmes.map((prog, idx) => (
+                        <GlassCard key={idx} hoverable={false} className="p-4 space-y-3">
+                          <div className="flex items-center justify-between">
+                            <h4 className="text-sm font-medium text-foreground">Programme {idx + 1}</h4>
+                            {programmes.length > 1 && (
+                              <Button variant="ghost" size="sm" className="h-6 text-xs text-destructive" onClick={() => setProgrammes(p => p.filter((_, i) => i !== idx))}>Remove</Button>
+                            )}
+                          </div>
+                          <div>
+                            <Label className={labelClass}>Programme Name *</Label>
+                            <Input value={prog.name} onChange={e => updateProgramme(idx, "name", e.target.value)} placeholder="e.g. AfterSchool Tutoring Programme" className={inputClass} />
+                          </div>
+                          <div>
+                            <Label className={labelClass}>One-sentence description *</Label>
+                            <Input value={prog.shortDesc} onChange={e => updateProgramme(idx, "shortDesc", e.target.value.slice(0, 150))} placeholder="e.g. Daily after-school tutoring for Grade 8-12 learners" className={inputClass} />
+                          </div>
+                          <div>
+                            <Label className={labelClass}>Full Programme Description *</Label>
+                            <Textarea value={prog.fullDesc} onChange={e => updateProgramme(idx, "fullDesc", e.target.value.slice(0, 1000))}
+                              placeholder="Describe how this programme works from start to finish..."
+                              className="bg-secondary/30 border-border/50 min-h-[100px] text-foreground text-sm" />
+                          </div>
+                          <div>
+                            <Label className={labelClass}>Intervention Approach</Label>
+                            <div className="flex flex-wrap gap-1.5 mt-1">
+                              {interventionApproaches.map(a => (
+                                <button key={a} onClick={() => updateProgramme(idx, "approaches", prog.approaches.includes(a) ? prog.approaches.filter(x => x !== a) : [...prog.approaches, a])}
+                                  className={`px-2 py-1 rounded-full text-[10px] border ${prog.approaches.includes(a) ? "border-primary bg-primary/10 text-foreground" : "border-border/30 text-muted-foreground"}`}>
+                                  {a}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                          <DynamicListInput items={prog.activities} setItems={v => updateProgramme(idx, "activities", v)}
+                            placeholder="e.g. Weekly 3-hour tutoring sessions in Maths, English, Science" label="Specific Activities * (min 3)" max={8} minEncouraged={3} />
+                          <DynamicListInput items={prog.outputs} setItems={v => updateProgramme(idx, "outputs", v)}
+                            placeholder="e.g. 480 learners tutored per year across 7 schools" label="Key Outputs * (min 2)" max={6} minEncouraged={2} />
+                          <DynamicListInput items={prog.outcomes} setItems={v => updateProgramme(idx, "outcomes", v)}
+                            placeholder="e.g. Improved Mathematics results in Grade 10-12" label="Key Outcomes * (min 2)" max={6} minEncouraged={2} />
+                          <div>
+                            <Label className={labelClass}>Impact Story (recommended)</Label>
+                            <Textarea value={prog.impactStory} onChange={e => updateProgramme(idx, "impactStory", e.target.value.slice(0, 500))}
+                              placeholder="Tell us about one person whose life changed..."
+                              className="bg-secondary/30 border-border/50 min-h-[60px] text-foreground text-sm" />
+                          </div>
+                          <div className="grid grid-cols-2 gap-3">
+                            <div>
+                              <Label className={labelClass}>Geographic Areas *</Label>
+                              <Input value={prog.areas} onChange={e => updateProgramme(idx, "areas", e.target.value)} placeholder="e.g. Mitchells Plain, Bonteheuwel" className={inputClass} />
+                            </div>
+                            <div>
+                              <Label className={labelClass}>Annual Reach *</Label>
+                              <Input type="number" value={prog.reach} onChange={e => updateProgramme(idx, "reach", e.target.value)} placeholder="480" className={inputClass} />
+                            </div>
+                          </div>
+                          <div className="grid grid-cols-3 gap-3">
+                            <div>
+                              <Label className={labelClass}>Budget Range</Label>
+                              <select value={prog.budget} onChange={e => updateProgramme(idx, "budget", e.target.value)} className={selectClass}>
+                                <option value="">Select</option>
+                                <option value="under_100k">Under R100k</option>
+                                <option value="100k_250k">R100k–R250k</option>
+                                <option value="250k_500k">R250k–R500k</option>
+                                <option value="500k_1m">R500k–R1M</option>
+                                <option value="1m_3m">R1M–R3M</option>
+                                <option value="3m_plus">R3M+</option>
+                              </select>
+                            </div>
+                            <div>
+                              <Label className={labelClass}>Status *</Label>
+                              <select value={prog.status} onChange={e => updateProgramme(idx, "status", e.target.value)} className={selectClass}>
+                                <option value="Active">Active</option>
+                                <option value="Planned">Planned</option>
+                                <option value="Completed">Completed</option>
+                                <option value="Paused">Paused</option>
+                              </select>
+                            </div>
+                            <div>
+                              <Label className={labelClass}>Year Started</Label>
+                              <Input type="number" value={prog.yearStarted} onChange={e => updateProgramme(idx, "yearStarted", e.target.value)} placeholder="2018" className={inputClass} />
+                            </div>
+                          </div>
+                        </GlassCard>
+                      ))}
+                      {programmes.length < 8 && (
+                        <Button variant="outline" size="sm" className="w-full text-xs border-dashed" onClick={addProgramme}>
+                          <Plus className="h-3 w-3 mr-1" /> Add Another Programme
+                        </Button>
+                      )}
+                      {programmes.filter(p => p.name).length > 0 && (
+                        <div>
+                          <Label className={labelClass}>What makes your approach different? (recommended)</Label>
+                          <Textarea value={innovationFactor} onChange={e => setInnovationFactor(e.target.value.slice(0, 400))}
+                            placeholder="What is innovative or distinctive about how you work?"
+                            className="bg-secondary/30 border-border/50 min-h-[60px] text-foreground text-sm" />
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* ═══ STEP 5: Beneficiaries ═══ */}
+                  {step === 4 && (
+                    <div className="space-y-4 mt-4">
+                      <p className="text-xs text-muted-foreground">Funders want precision — not "disadvantaged youth" but "150 young women aged 15-24 from Gauteng townships who have dropped out of school."
+                        <WhyTooltip text="Specific numbers make the cost-per-beneficiary calculation easy for funders." />
+                      </p>
+                      <div>
+                        <Label className={labelClass}>Detailed Description of Primary Target Group *</Label>
+                        <Textarea value={primaryTargetGroup} onChange={e => setPrimaryTargetGroup(e.target.value.slice(0, 600))}
+                          placeholder="Describe exactly who you serve — age, gender, location, and the specific vulnerability..."
+                          className="bg-secondary/30 border-border/50 min-h-[120px] text-foreground text-sm" />
+                      </div>
+                      <div>
+                        <Label className={labelClass}>How Do You Select Beneficiaries? *</Label>
+                        <Textarea value={beneficiarySelection} onChange={e => setBeneficiarySelection(e.target.value.slice(0, 400))}
+                          placeholder="How do you identify and select the people you serve?"
+                          className="bg-secondary/30 border-border/50 min-h-[80px] text-foreground text-sm" />
+                      </div>
+                      <div>
+                        <Label className={labelClass}>Gender Split (% Female)</Label>
+                        <Slider value={[genderFemale]} onValueChange={v => setGenderFemale(v[0])} max={100} step={5} className="mt-2" />
+                        <div className="flex justify-between text-[10px] text-muted-foreground mt-1">
+                          <span>{genderFemale}% Female</span><span>{100 - genderFemale}% Male/Other</span>
+                        </div>
+                      </div>
+                      <div>
+                        <Label className={labelClass}>Vulnerability Factors</Label>
+                        <div className="flex flex-wrap gap-1.5 mt-1">
+                          {["Living in poverty", "Disability", "Orphaned / child-headed household", "Affected by HIV/AIDS",
+                            "Refugee / undocumented", "Affected by GBV", "School dropout risk", "NEET youth"].map(f => (
+                            <button key={f} onClick={() => setVulnerabilityFactors(prev => prev.includes(f) ? prev.filter(x => x !== f) : [...prev, f])}
+                              className={`px-2 py-1 rounded-full text-[10px] border ${vulnerabilityFactors.includes(f) ? "border-primary bg-primary/10 text-foreground" : "border-border/30 text-muted-foreground"}`}>
+                              {f}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <Label className={labelClass}>Direct Beneficiaries (annual) *</Label>
+                          <Input type="number" value={directBeneficiaries} onChange={e => setDirectBeneficiaries(e.target.value)} placeholder="e.g. 480" className={inputClass} />
+                          <span className="text-[10px] text-muted-foreground">People who directly receive your services</span>
+                        </div>
+                        <div>
+                          <Label className={labelClass}>Indirect Beneficiaries (annual)</Label>
+                          <Input type="number" value={indirectBeneficiaries} onChange={e => setIndirectBeneficiaries(e.target.value)} placeholder="e.g. 1440" className={inputClass} />
+                          <span className="text-[10px] text-muted-foreground">Family/community who benefit from ripple effect</span>
+                        </div>
+                      </div>
+                      <div>
+                        <Label className={labelClass}>How Are Beneficiaries Involved in Design? (recommended)</Label>
+                        <Textarea value={beneficiaryParticipation} onChange={e => setBeneficiaryParticipation(e.target.value.slice(0, 300))}
+                          placeholder="e.g. We conduct quarterly focus groups with participants and have a Youth Advisory Panel..."
+                          className="bg-secondary/30 border-border/50 min-h-[60px] text-foreground text-sm" />
+                      </div>
+                    </div>
+                  )}
+
+                  {/* ═══ STEP 6: Impact & Monitoring ═══ */}
+                  {step === 5 && (
+                    <div className="space-y-4 mt-4">
+                      <p className="text-xs text-muted-foreground">This is the section most NGOs dread — but it's where funders decide whether you're serious. The AI will build your logframe from this.
+                        <WhyTooltip text="An M&E section without real indicators and baselines is the number one reason proposals get rejected." />
+                      </p>
+                      <DynamicListInput items={keyOutcomes} setItems={setKeyOutcomes}
+                        placeholder="e.g. Improved academic performance" label="Key Outcomes * (3-5 changes you create)" max={5} minEncouraged={3} />
+                      {/* Indicators */}
+                      <div>
+                        <div className="flex items-center justify-between mb-1">
+                          <Label className={labelClass}>Key Performance Indicators * (min 3)</Label>
+                          <AIButton onClick={generateIndicators} loading={aiLoading === "indicators"} label="Help me build indicators" />
+                        </div>
+                        <div className="space-y-3">
+                          {indicators.map((ind, idx) => (
+                            <div key={idx} className="p-3 rounded-lg bg-secondary/20 border border-border/20 space-y-2">
+                              <div className="flex items-center justify-between">
+                                <span className="text-[10px] font-medium text-foreground">Indicator {idx + 1}</span>
+                                {indicators.length > 1 && (
+                                  <Button variant="ghost" size="sm" className="h-5 text-[10px] text-destructive" onClick={() => setIndicators(prev => prev.filter((_, i) => i !== idx))}>Remove</Button>
+                                )}
+                              </div>
+                              <Input value={ind.name} onChange={e => { const n = [...indicators]; n[idx].name = e.target.value; setIndicators(n); }}
+                                placeholder="e.g. % of participants who improve Maths by one grade level" className={inputClass} />
+                              <div className="grid grid-cols-2 gap-2">
+                                <Input value={ind.baseline} onChange={e => { const n = [...indicators]; n[idx].baseline = e.target.value; setIndicators(n); }}
+                                  placeholder="Baseline: e.g. 37% (2022)" className={inputClass} />
+                                <Input value={ind.target} onChange={e => { const n = [...indicators]; n[idx].target = e.target.value; setIndicators(n); }}
+                                  placeholder="Target: e.g. 65% by Year 1" className={inputClass} />
+                              </div>
+                              <Input value={ind.method} onChange={e => { const n = [...indicators]; n[idx].method = e.target.value; setIndicators(n); }}
+                                placeholder="How measured: e.g. School report cards collected each term" className={inputClass} />
+                              <select value={ind.frequency} onChange={e => { const n = [...indicators]; n[idx].frequency = e.target.value; setIndicators(n); }} className={selectClass}>
+                                <option value="monthly">Monthly</option>
+                                <option value="quarterly">Quarterly</option>
+                                <option value="biannually">Bi-annually</option>
+                                <option value="annually">Annually</option>
+                              </select>
+                            </div>
+                          ))}
+                        </div>
+                        {indicators.length < 8 && (
+                          <Button variant="ghost" size="sm" className="mt-1 text-xs text-primary" onClick={() => setIndicators(prev => [...prev, { name: "", type: "outcome", baseline: "", target: "", method: "", frequency: "quarterly" }])}>
+                            <Plus className="h-3 w-3 mr-1" /> Add indicator
+                          </Button>
                         )}
                       </div>
                       <div>
-                        <Label className={labelClass}>Year Established</Label>
-                        <Input type="number" value={yearEstablished} onChange={e => setYearEstablished(e.target.value)} placeholder="2015" className={inputClass} />
-                      </div>
-                    </div>
-                    <div>
-                      <Label className={labelClass}>Tax Status</Label>
-                      <div className="flex gap-2 mt-1">
-                        {["Tax exempt", "Not tax exempt", "Unknown"].map(t => (
-                          <button key={t} onClick={() => setTaxStatus(t)}
-                            className={`px-3 py-1.5 rounded-lg text-xs border ${taxStatus === t ? "border-primary bg-primary/10 text-foreground" : "border-border/30 text-muted-foreground"}`}>
-                            {t}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                    {taxStatus === "Tax exempt" && (
-                      <div>
-                        <Label className={labelClass}>PBO Number</Label>
-                        <Input value={pboNumber} onChange={e => setPboNumber(e.target.value)} placeholder="PBO 123456789" className={inputClass} />
-                      </div>
-                    )}
-                    <div className="flex items-center justify-between p-3 rounded-lg border border-border/30">
-                      <div>
-                        <div className="text-xs text-foreground">Is your organisation audited?</div>
-                        <div className="text-[10px] text-muted-foreground">Many funders require audited financials</div>
-                      </div>
-                      <Switch checked={isAudited} onCheckedChange={setIsAudited} />
-                    </div>
-                    {isAudited && (
-                      <div>
-                        <Label className={labelClass}>Last Audit Year</Label>
-                        <Input type="number" value={lastAuditYear} onChange={e => setLastAuditYear(e.target.value)} placeholder="2025" className={inputClass} />
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {/* STEP 1: Mission & Vision */}
-                {step === 1 && (
-                  <div className="space-y-4 mt-4">
-                    <p className="text-xs text-muted-foreground">This is the most important section — it's what we use to write your proposals and match you to funders.
-                      <WhyTooltip text="Your mission and Theory of Change directly inform every AI-generated proposal section. The more specific you are, the more compelling your proposals." />
-                    </p>
-                    <div>
-                      <div className="flex items-center justify-between mb-1">
-                        <Label className={labelClass}>Mission Statement *</Label>
-                        <Button variant="ghost" size="sm" className="h-6 text-xs text-primary" onClick={generateMission} disabled={generatingMission}>
-                          <Sparkles className="h-3 w-3 mr-1" /> {generatingMission ? "Writing..." : "AI Assist"}
-                        </Button>
-                      </div>
-                      <Textarea value={mission} onChange={e => setMission(e.target.value.slice(0, 500))}
-                        placeholder="Describe your organisation's mission in 2-3 sentences..."
-                        className="bg-secondary/30 border-border/50 min-h-[100px] text-foreground" />
-                      <span className="text-[10px] text-muted-foreground">{mission.length}/500</span>
-                    </div>
-                    <div>
-                      <Label className={labelClass}>Vision Statement (optional)</Label>
-                      <Textarea value={vision} onChange={e => setVision(e.target.value.slice(0, 300))}
-                        placeholder="What does the future look like when your mission succeeds?"
-                        className="bg-secondary/30 border-border/50 min-h-[60px] text-foreground" />
-                      <span className="text-[10px] text-muted-foreground">{vision.length}/300</span>
-                    </div>
-                    <div>
-                      <Label className={labelClass}>Core Values (pick up to 6)</Label>
-                      <div className="flex flex-wrap gap-2 mt-1">
-                        {coreValueOptions.map(v => (
-                          <button key={v} onClick={() => setCoreValues(prev => prev.includes(v) ? prev.filter(x => x !== v) : prev.length < 6 ? [...prev, v] : prev)}
-                            className={`text-[10px] px-2.5 py-1 rounded-full border ${coreValues.includes(v) ? "bg-primary/15 border-primary/40 text-primary" : "border-border/30 text-muted-foreground hover:bg-secondary/30"}`}>
-                            {v}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                    <div>
-                      <Label className={labelClass}>Theory of Change</Label>
-                      <Textarea value={theoryOfChange} onChange={e => setTheoryOfChange(e.target.value.slice(0, 1000))}
-                        placeholder="If we [activity], then [population] will [outcome], leading to [long-term impact]..."
-                        className="bg-secondary/30 border-border/50 min-h-[80px] text-foreground" />
-                      <span className="text-[10px] text-muted-foreground">{theoryOfChange.length}/1000</span>
-                    </div>
-                    <div>
-                      <Label className={labelClass}>Primary Beneficiary Groups</Label>
-                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mt-1">
-                        {beneficiaryGroups.map(b => (
-                          <button key={b.key} onClick={() => setSelectedBeneficiaries(prev => prev.includes(b.key) ? prev.filter(x => x !== b.key) : [...prev, b.key])}
-                            className={`flex items-center gap-2 p-2 rounded-lg text-xs border ${selectedBeneficiaries.includes(b.key) ? "bg-primary/10 border-primary/40 text-foreground" : "border-border/30 text-muted-foreground hover:bg-secondary/30"}`}>
-                            <span>{b.icon}</span><span>{b.label}</span>
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <Label className={labelClass}>Annual Beneficiary Reach</Label>
-                        <Input type="number" value={beneficiaryReach} onChange={e => setBeneficiaryReach(e.target.value)} placeholder="e.g. 12000" className={inputClass} />
-                      </div>
-                      <div>
-                        <Label className={labelClass}>Key Impact Statement</Label>
-                        <Input value={impactStatement} onChange={e => setImpactStatement(e.target.value.slice(0, 200))} placeholder="We have supported 12,000 young people..." className={inputClass} />
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* STEP 2: Focus Areas */}
-                {step === 2 && (
-                  <div className="space-y-4 mt-4">
-                    <p className="text-xs text-muted-foreground">Select everything that applies. More selections = better matches.
-                      <WhyTooltip text="The 25 focus areas map directly to our funder database. Each selection narrows and improves your match scores." />
-                    </p>
-                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                      {focusAreas.map(area => (
-                        <button key={area.key} onClick={() => toggleFocus(area.key)}
-                          className={`flex items-center gap-2 p-2.5 rounded-lg text-xs text-left transition-all ${
-                            selectedFocus.includes(area.key) ? "bg-primary/15 border border-primary/40 text-foreground" : "bg-secondary/30 border border-border/30 text-muted-foreground hover:bg-secondary/50"
-                          }`}>
-                          <span>{area.icon}</span>
-                          <div>
-                            <div>{area.label}</div>
-                            {selectedFocus.includes(area.key) && (
-                              <select className="text-[9px] bg-transparent text-primary mt-0.5" onClick={e => e.stopPropagation()}
-                                value={focusPriority[area.key] || "primary"}
-                                onChange={e => setFocusPriority(prev => ({ ...prev, [area.key]: e.target.value }))}>
-                                <option value="primary">Primary</option>
-                                <option value="secondary">Secondary</option>
-                              </select>
-                            )}
-                          </div>
-                        </button>
-                      ))}
-                    </div>
-                    <p className="text-[10px] text-muted-foreground">{selectedFocus.length} selected · Minimum 2 required</p>
-
-                    <div className="pt-4 border-t border-border/30">
-                      <Label className={labelClass}>Sustainable Development Goals (pick up to 3)</Label>
-                      <div className="grid grid-cols-3 sm:grid-cols-4 gap-1.5 mt-2">
-                        {sdgGoals.map((sdg, i) => (
-                          <button key={i} onClick={() => setSelectedSDGs(prev => prev.includes(i + 1) ? prev.filter(x => x !== i + 1) : prev.length < 3 ? [...prev, i + 1] : prev)}
-                            className={`p-1.5 rounded text-[9px] border text-center ${selectedSDGs.includes(i + 1) ? "bg-primary/15 border-primary/40 text-foreground" : "border-border/30 text-muted-foreground hover:bg-secondary/30"}`}>
-                            SDG {i + 1}: {sdg}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* STEP 3: Programmes */}
-                {step === 3 && (
-                  <div className="space-y-4 mt-4">
-                    <p className="text-xs text-muted-foreground">Tell us about the work you actually do. This powers the proposal writer.
-                      <WhyTooltip text="We use your programme details to generate section-specific proposal content. When AI writes your Methodology section, it draws from your actual programme descriptions." />
-                    </p>
-                    {programmes.map((prog, idx) => (
-                      <div key={idx} className="p-4 rounded-lg border border-border/30 bg-secondary/10 space-y-3">
-                        <div className="flex items-center justify-between">
-                          <span className="text-xs font-medium text-foreground">Programme {idx + 1}</span>
-                          {programmes.length > 1 && (
-                            <button onClick={() => removeProgramme(idx)} className="text-[10px] text-destructive hover:underline">Remove</button>
-                          )}
+                        <Label className={labelClass}>Data Collection Methods *</Label>
+                        <div className="flex flex-wrap gap-1.5 mt-1">
+                          {dataCollectionOptions.map(m => (
+                            <button key={m} onClick={() => setDataCollectionMethods(prev => prev.includes(m) ? prev.filter(x => x !== m) : [...prev, m])}
+                              className={`px-2 py-1 rounded-full text-[10px] border ${dataCollectionMethods.includes(m) ? "border-primary bg-primary/10 text-foreground" : "border-border/30 text-muted-foreground"}`}>
+                              {m}
+                            </button>
+                          ))}
                         </div>
-                        <div className="grid grid-cols-2 gap-3">
-                          <div>
-                            <Label className={labelClass}>Name *</Label>
-                            <Input value={prog.name} onChange={e => updateProgramme(idx, "name", e.target.value)} placeholder="e.g. AfterSchool Programme" className={inputClass} />
-                          </div>
-                          <div>
-                            <Label className={labelClass}>Status</Label>
-                            <select value={prog.status} onChange={e => updateProgramme(idx, "status", e.target.value)} className={selectClass}>
-                              <option>Active</option><option>Planned</option><option>Completed</option>
-                            </select>
-                          </div>
+                      </div>
+                      <div>
+                        <Label className={labelClass}>Do you have a formal M&E framework? *</Label>
+                        <div className="flex gap-2 mt-1">
+                          {["yes", "in_development", "no"].map(v => (
+                            <button key={v} onClick={() => setHasMEFramework(v)}
+                              className={`px-3 py-1.5 rounded-lg text-xs border ${hasMEFramework === v ? "border-primary bg-primary/10 text-foreground" : "border-border/30 text-muted-foreground"}`}>
+                              {v === "yes" ? "Yes" : v === "in_development" ? "In development" : "No"}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                      <div>
+                        <Label className={labelClass}>Reporting Frequency *</Label>
+                        <select value={reportingFrequency} onChange={e => setReportingFrequency(e.target.value)} className={selectClass}>
+                          <option value="">Select</option>
+                          <option value="monthly">Monthly</option>
+                          <option value="quarterly">Quarterly</option>
+                          <option value="biannual">Bi-annual</option>
+                          <option value="annual">Annual</option>
+                          <option value="depends">Depends on funder</option>
+                        </select>
+                      </div>
+                      <div>
+                        <Label className={labelClass}>3 Past Impact Achievements (recommended)</Label>
+                        {pastImpactAchievements.map((a, i) => (
+                          <Input key={i} value={a} onChange={e => { const n = [...pastImpactAchievements]; n[i] = e.target.value; setPastImpactAchievements(n); }}
+                            placeholder={`Achievement ${i + 1}: e.g. 91% of 2-year participants passed Grade 12`}
+                            className={inputClass + " mb-2"} />
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* ═══ STEP 7: Budget & Finance ═══ */}
+                  {step === 6 && (
+                    <div className="space-y-4 mt-4">
+                      <p className="text-xs text-muted-foreground">This helps match you to funders who fund at the right scale and powers the budget narrative section.
+                        <WhyTooltip text="Funders assess whether your ask matches your capacity." />
+                      </p>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <Label className={labelClass}>Annual Budget *</Label>
+                          <Input type="number" value={annualBudget} onChange={e => setAnnualBudget(e.target.value)} placeholder="e.g. 1200000" className={inputClass} />
                         </div>
                         <div>
-                          <Label className={labelClass}>Brief Description</Label>
-                          <Input value={prog.description} onChange={e => updateProgramme(idx, "description", e.target.value.slice(0, 200))} placeholder="What does this programme do?" className={inputClass} />
-                        </div>
-                        <div className="grid grid-cols-3 gap-3">
-                          <div>
-                            <Label className={labelClass}>Target Beneficiaries</Label>
-                            <Input type="number" value={prog.beneficiaries} onChange={e => updateProgramme(idx, "beneficiaries", e.target.value)} placeholder="500" className={inputClass} />
-                          </div>
-                          <div>
-                            <Label className={labelClass}>Year Started</Label>
-                            <Input type="number" value={prog.yearStarted} onChange={e => updateProgramme(idx, "yearStarted", e.target.value)} placeholder="2020" className={inputClass} />
-                          </div>
-                          <div>
-                            <Label className={labelClass}>Annual Budget</Label>
-                            <select value={prog.budget} onChange={e => updateProgramme(idx, "budget", e.target.value)} className={selectClass}>
-                              <option value="">Select</option>
-                              <option>Under R100k</option><option>R100k-R500k</option><option>R500k-R2M</option><option>R2M+</option>
-                            </select>
-                          </div>
+                          <Label className={labelClass}>Currency</Label>
+                          <select value={budgetCurrency} onChange={e => setBudgetCurrency(e.target.value)} className={selectClass}>
+                            <option value="ZAR">ZAR (Rand)</option>
+                            <option value="USD">USD</option>
+                            <option value="EUR">EUR</option>
+                            <option value="GBP">GBP</option>
+                          </select>
                         </div>
                       </div>
-                    ))}
-                    {programmes.length < 8 && (
-                      <Button variant="outline" size="sm" className="border-border/50 text-xs" onClick={addProgramme}>
-                        + Add Programme
-                      </Button>
-                    )}
-                    <div className="pt-4 border-t border-border/30 grid grid-cols-3 gap-4">
                       <div>
-                        <Label className={labelClass}>Annual Programme Budget (ZAR)</Label>
-                        <Input type="number" value={annualBudget} onChange={e => setAnnualBudget(e.target.value)} placeholder="e.g. 2500000" className={inputClass} />
-                      </div>
-                      <div>
-                        <Label className={labelClass}>Monthly Operational Costs (ZAR)</Label>
-                        <Input type="number" value={operationalExpenses} onChange={e => setOperationalExpenses(e.target.value)} placeholder="e.g. 85000" className={inputClass} />
-                      </div>
-                      <div>
-                        <Label className={labelClass}>Current Funding Gap (ZAR)</Label>
-                        <Input type="number" value={fundingGap} onChange={e => setFundingGap(e.target.value)} placeholder="e.g. 500000" className={inputClass} />
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* STEP 4: Geographic Footprint */}
-                {step === 4 && (
-                  <div className="space-y-4 mt-4">
-                    <p className="text-xs text-muted-foreground">Where does your work happen? This dramatically affects which funders match you.
-                      <WhyTooltip text="Funders in our database are tagged by Geographical Area (National, WC, KZN, GTG, etc.). Your footprint determines eligibility for location-specific grants." />
-                    </p>
-                    <div>
-                      <Label className={labelClass}>Primary Country: <span className="text-foreground">{country}</span></Label>
-                    </div>
-                    {country === "South Africa" && (
-                      <div>
-                        <Label className={labelClass}>Provinces of Operation</Label>
-                        <div className="grid grid-cols-3 gap-2 mt-1">
-                          {saProvinces.map(p => (
-                            <button key={p} onClick={() => setRegionsOfOperation(prev => prev.includes(p) ? prev.filter(x => x !== p) : [...prev, p])}
-                              className={`p-2 rounded-lg text-xs border ${regionsOfOperation.includes(p) ? "bg-primary/10 border-primary/40 text-foreground" : "border-border/30 text-muted-foreground hover:bg-secondary/30"}`}>
-                              {p}
-                            </button>
-                          ))}
+                        <Label className={labelClass}>Budget Breakdown</Label>
+                        <div className="space-y-2 mt-1">
+                          <div className="flex items-center gap-2"><span className="text-[10px] text-muted-foreground w-24">Staff costs</span><Slider value={[staffPercent]} onValueChange={v => setStaffPercent(v[0])} max={100} step={5} className="flex-1" /><span className="text-xs text-foreground w-10">{staffPercent}%</span></div>
+                          <div className="flex items-center gap-2"><span className="text-[10px] text-muted-foreground w-24">Programme costs</span><Slider value={[programmesPercent]} onValueChange={v => setProgrammesPercent(v[0])} max={100} step={5} className="flex-1" /><span className="text-xs text-foreground w-10">{programmesPercent}%</span></div>
+                          <div className="flex items-center gap-2"><span className="text-[10px] text-muted-foreground w-24">Overheads</span><Slider value={[overheadsPercent]} onValueChange={v => setOverheadsPercent(v[0])} max={100} step={5} className="flex-1" /><span className="text-xs text-foreground w-10">{overheadsPercent}%</span></div>
                         </div>
                       </div>
-                    )}
-                    <div>
-                      <Label className={labelClass}>Specific Cities/Communities (optional)</Label>
-                      <Input value={cities} onChange={e => setCities(e.target.value)} placeholder="e.g. Cape Town, Khayelitsha, Stellenbosch" className={inputClass} />
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="flex items-center justify-between p-3 rounded-lg border border-border/30">
-                        <span className="text-xs text-foreground">Work in rural areas?</span>
-                        <Switch checked={worksRural} onCheckedChange={setWorksRural} />
+                      <div>
+                        <Label className={labelClass}>Funding Sources (%)</Label>
+                        <div className="space-y-2 mt-1">
+                          <div className="flex items-center gap-2"><span className="text-[10px] text-muted-foreground w-24">Grants</span><Slider value={[pctGrants]} onValueChange={v => setPctGrants(v[0])} max={100} step={5} className="flex-1" /><span className="text-xs text-foreground w-10">{pctGrants}%</span></div>
+                          <div className="flex items-center gap-2"><span className="text-[10px] text-muted-foreground w-24">Government</span><Slider value={[pctGovernment]} onValueChange={v => setPctGovernment(v[0])} max={100} step={5} className="flex-1" /><span className="text-xs text-foreground w-10">{pctGovernment}%</span></div>
+                          <div className="flex items-center gap-2"><span className="text-[10px] text-muted-foreground w-24">Corporate CSR</span><Slider value={[pctCorporate]} onValueChange={v => setPctCorporate(v[0])} max={100} step={5} className="flex-1" /><span className="text-xs text-foreground w-10">{pctCorporate}%</span></div>
+                          <div className="flex items-center gap-2"><span className="text-[10px] text-muted-foreground w-24">Self-generated</span><Slider value={[pctSelfGenerated]} onValueChange={v => setPctSelfGenerated(v[0])} max={100} step={5} className="flex-1" /><span className="text-xs text-foreground w-10">{pctSelfGenerated}%</span></div>
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <Label className={labelClass}>Current Funding Gap *</Label>
+                          <Input type="number" value={fundingGap} onChange={e => setFundingGap(e.target.value)} placeholder="e.g. 350000" className={inputClass} />
+                        </div>
+                        <div>
+                          <Label className={labelClass}>Typical Grant Size Sought</Label>
+                          <select value={typicalGrantSize} onChange={e => setTypicalGrantSize(e.target.value)} className={selectClass}>
+                            <option value="">Select</option>
+                            <option value="under_50k">Under R50k</option>
+                            <option value="50k_250k">R50k–R250k</option>
+                            <option value="250k_1m">R250k–R1M</option>
+                            <option value="1m_5m">R1M–R5M</option>
+                            <option value="over_5m">Over R5M</option>
+                          </select>
+                        </div>
+                      </div>
+                      <div>
+                        <Label className={labelClass}>Financial Management System</Label>
+                        <select value={financialSystem} onChange={e => setFinancialSystem(e.target.value)} className={selectClass}>
+                          <option value="">Select</option>
+                          <option value="pastel">Pastel / Sage</option>
+                          <option value="quickbooks">QuickBooks</option>
+                          <option value="xero">Xero</option>
+                          <option value="excel">Excel / Manual</option>
+                          <option value="other">Other</option>
+                        </select>
                       </div>
                       <div className="flex items-center justify-between p-3 rounded-lg border border-border/30">
-                        <span className="text-xs text-foreground">Work in urban/township areas?</span>
-                        <Switch checked={worksUrban} onCheckedChange={setWorksUrban} />
+                        <div className="text-xs text-foreground">Dedicated bank account for grants?</div>
+                        <Switch checked={hasDedicatedBank} onCheckedChange={setHasDedicatedBank} />
                       </div>
-                    </div>
-                    <div className="flex items-center justify-between p-3 rounded-lg border border-border/30">
-                      <span className="text-xs text-foreground">Work in other African countries?</span>
-                      <Switch checked={worksOtherAfrican} onCheckedChange={setWorksOtherAfrican} />
-                    </div>
-                    {worksOtherAfrican && (
-                      <div>
-                        <Label className={labelClass}>Select countries</Label>
-                        <div className="grid grid-cols-3 gap-1.5 mt-1 max-h-40 overflow-y-auto">
-                          {africanCountries.filter(c => c !== country).map(c => (
-                            <button key={c} onClick={() => setOtherAfricanCountries(prev => prev.includes(c) ? prev.filter(x => x !== c) : [...prev, c])}
-                              className={`p-1.5 rounded text-[10px] border ${otherAfricanCountries.includes(c) ? "bg-primary/10 border-primary/40 text-foreground" : "border-border/30 text-muted-foreground"}`}>
-                              {c}
-                            </button>
-                          ))}
+                      <div className="flex items-center justify-between p-3 rounded-lg border border-border/30">
+                        <div className="text-xs text-foreground">Can you provide co-funding?</div>
+                        <Switch checked={cofundingAvailable} onCheckedChange={setCofundingAvailable} />
+                      </div>
+                      {cofundingAvailable && (
+                        <div>
+                          <Label className={labelClass}>Co-funding Description</Label>
+                          <Textarea value={cofundingDescription} onChange={e => setCofundingDescription(e.target.value.slice(0, 300))}
+                            placeholder="What in-kind or cash co-funding can you bring?"
+                            className="bg-secondary/30 border-border/50 min-h-[60px] text-foreground text-sm" />
                         </div>
+                      )}
+                      {/* Document uploads */}
+                      <div className="space-y-2 p-3 rounded-lg bg-secondary/20 border border-border/20">
+                        <Label className={labelClass}>Upload Key Documents (optional but recommended)</Label>
+                        {[
+                          { key: "financials", label: "Latest Audited Financials (PDF)" },
+                          { key: "npo_cert", label: "NPO Registration Certificate" },
+                          { key: "annual_report", label: "Latest Annual Report" },
+                        ].map(doc => (
+                          <div key={doc.key} className="flex items-center gap-2">
+                            <label className="flex items-center gap-2 cursor-pointer flex-1 p-2 rounded-lg border border-dashed border-border/30 hover:bg-secondary/20 text-xs text-muted-foreground">
+                              <Upload className="h-3 w-3" />
+                              {uploadedDocs[doc.key] ? <span className="text-emerald-400">✓ {doc.label}</span> : doc.label}
+                              <input type="file" className="hidden" accept=".pdf,.doc,.docx" onChange={e => handleDocUpload(doc.key, e.target.files?.[0])} />
+                            </label>
+                            {uploadingDoc === doc.key && <span className="text-[10px] text-primary animate-pulse">Uploading...</span>}
+                          </div>
+                        ))}
                       </div>
-                    )}
-                    <div className="flex items-center justify-between p-3 rounded-lg border border-border/30">
-                      <span className="text-xs text-foreground">Work internationally (outside Africa)?</span>
-                      <Switch checked={worksInternationally} onCheckedChange={setWorksInternationally} />
                     </div>
-                  </div>
-                )}
+                  )}
 
-                {/* STEP 5: Capacity & Financials */}
-                {step === 5 && (
-                  <div className="space-y-4 mt-4">
-                    <p className="text-xs text-muted-foreground">This helps us match you to funders who fund at the right scale.
-                      <WhyTooltip text="Knowing your capacity means AI can write truthful, credible capacity sections. It also prevents you applying to funders who require scale you don't yet have." />
-                    </p>
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                      <div>
-                        <Label className={labelClass}>Full-time Staff</Label>
-                        <Input type="number" value={fteCount} onChange={e => setFteCount(e.target.value)} placeholder="12" className={inputClass} />
+                  {/* ═══ STEP 8: Team & Capacity ═══ */}
+                  {step === 7 && (
+                    <div className="space-y-4 mt-4">
+                      <p className="text-xs text-muted-foreground">Funders assess whether you have the team to deliver. A credible staff section can overcome other weaknesses in a proposal.
+                        <WhyTooltip text="Knowing your capacity means AI can write truthful, credible capacity sections." />
+                      </p>
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                        <div><Label className={labelClass}>Full-time Staff</Label><Input type="number" value={fteCount} onChange={e => setFteCount(e.target.value)} placeholder="8" className={inputClass} /></div>
+                        <div><Label className={labelClass}>Part-time</Label><Input type="number" value={parttimeCount} onChange={e => setParttimeCount(e.target.value)} placeholder="4" className={inputClass} /></div>
+                        <div><Label className={labelClass}>Volunteers</Label><Input type="number" value={volunteerCount} onChange={e => setVolunteerCount(e.target.value)} placeholder="12" className={inputClass} /></div>
+                        <div><Label className={labelClass}>Board Members</Label><Input type="number" value={boardCount} onChange={e => setBoardCount(e.target.value)} placeholder="7" className={inputClass} /></div>
+                      </div>
+                      <div className="flex items-center justify-between p-3 rounded-lg border border-border/30">
+                        <div className="text-xs text-foreground">Do you have a dedicated grant writer?</div>
+                        <Switch checked={hasGrantWriter} onCheckedChange={setHasGrantWriter} />
                       </div>
                       <div>
-                        <Label className={labelClass}>Part-time Staff</Label>
-                        <Input type="number" value={parttimeCount} onChange={e => setParttimeCount(e.target.value)} placeholder="5" className={inputClass} />
-                      </div>
-                      <div>
-                        <Label className={labelClass}>Volunteers</Label>
-                        <Input type="number" value={volunteerCount} onChange={e => setVolunteerCount(e.target.value)} placeholder="20" className={inputClass} />
-                      </div>
-                      <div>
-                        <Label className={labelClass}>Board Members</Label>
-                        <Input type="number" value={boardCount} onChange={e => setBoardCount(e.target.value)} placeholder="7" className={inputClass} />
-                      </div>
-                    </div>
-                    <div className="flex items-center justify-between p-3 rounded-lg border border-border/30">
-                      <span className="text-xs text-foreground">Dedicated grant writer on staff?</span>
-                      <Switch checked={hasGrantWriter} onCheckedChange={setHasGrantWriter} />
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <Label className={labelClass}>CEO/Executive Director</Label>
+                        <Label className={labelClass}>Executive Director / CEO Name *</Label>
                         <Input value={ceoName} onChange={e => setCeoName(e.target.value)} placeholder="Full name" className={inputClass} />
                       </div>
                       <div>
-                        <Label className={labelClass}>Finance Contact (optional)</Label>
-                        <Input value={financeContact} onChange={e => setFinanceContact(e.target.value)} placeholder="Full name" className={inputClass} />
-                      </div>
-                    </div>
-                    <div>
-                      <Label className={labelClass}>Annual Income (last year, ZAR)</Label>
-                      <Input type="number" value={annualIncome} onChange={e => setAnnualIncome(e.target.value)} placeholder="e.g. 3500000" className={inputClass} />
-                    </div>
-                    <div className="space-y-3">
-                      <Label className={labelClass}>Income Sources (%)</Label>
-                      <div className="space-y-2">
-                        <div className="flex items-center gap-3">
-                          <span className="text-[10px] text-muted-foreground w-20">Grants</span>
-                          <Slider value={[pctGrants]} max={100} step={5} onValueChange={v => setPctGrants(v[0])} className="flex-1" />
-                          <span className="text-xs text-foreground w-8 text-right">{pctGrants}%</span>
+                        <div className="flex items-center justify-between mb-1">
+                          <Label className={labelClass}>Executive Director Bio (100 words)</Label>
+                          <AIButton onClick={generateCeoBio} loading={aiLoading === "bio"} label="Write bio" />
                         </div>
-                        <div className="flex items-center gap-3">
-                          <span className="text-[10px] text-muted-foreground w-20">Government</span>
-                          <Slider value={[pctGovernment]} max={100} step={5} onValueChange={v => setPctGovernment(v[0])} className="flex-1" />
-                          <span className="text-xs text-foreground w-8 text-right">{pctGovernment}%</span>
-                        </div>
-                        <div className="flex items-center gap-3">
-                          <span className="text-[10px] text-muted-foreground w-20">Corporate CSR</span>
-                          <Slider value={[pctCorporate]} max={100} step={5} onValueChange={v => setPctCorporate(v[0])} className="flex-1" />
-                          <span className="text-xs text-foreground w-8 text-right">{pctCorporate}%</span>
-                        </div>
-                        <div className="flex items-center gap-3">
-                          <span className="text-[10px] text-muted-foreground w-20">Other</span>
-                          <span className="text-xs text-foreground">{Math.max(0, 100 - pctGrants - pctGovernment - pctCorporate)}%</span>
-                        </div>
+                        <Textarea value={ceoBio} onChange={e => setCeoBio(e.target.value.slice(0, 800))}
+                          placeholder="A professional biography for proposals..."
+                          className="bg-secondary/30 border-border/50 min-h-[80px] text-foreground text-sm" />
                       </div>
-                    </div>
-                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                      <div className="flex items-center justify-between p-3 rounded-lg border border-border/30">
-                        <span className="text-[10px] text-foreground">3-year strategic plan?</span>
-                        <Switch checked={hasStrategicPlan} onCheckedChange={setHasStrategicPlan} />
-                      </div>
-                      <div className="flex items-center justify-between p-3 rounded-lg border border-border/30">
-                        <span className="text-[10px] text-foreground">M&E framework?</span>
-                        <Switch checked={hasMEFramework} onCheckedChange={setHasMEFramework} />
-                      </div>
-                      <div className="flex items-center justify-between p-3 rounded-lg border border-border/30">
-                        <span className="text-[10px] text-foreground">BBBEE certificate?</span>
-                        <Switch checked={hasBBBEE} onCheckedChange={setHasBBBEE} />
-                      </div>
-                    </div>
-                    {hasBBBEE && (
+                      {/* Key staff */}
                       <div>
-                        <Label className={labelClass}>BBBEE Level</Label>
-                        <select value={bbbeeLevel} onChange={e => setBbbeeLevel(e.target.value)} className={selectClass}>
-                          <option value="">Select level</option>
-                          {[1,2,3,4,5,6,7,8].map(l => <option key={l} value={l}>Level {l}</option>)}
-                        </select>
-                      </div>
-                    )}
-
-                    {/* Document Uploads */}
-                    <div className="pt-4 border-t border-border/30">
-                      <h3 className="text-sm font-semibold text-foreground mb-2">Upload Key Documents</h3>
-                      <p className="text-[10px] text-muted-foreground mb-3">These are stored securely and used to enhance your proposals and verify your profile.</p>
-                      <div className="space-y-3">
-                        {[
-                          { key: "financials", label: "Latest Audited Financials (PDF)", accept: ".pdf" },
-                          { key: "npo_cert", label: "NPO Registration Certificate (PDF)", accept: ".pdf" },
-                          { key: "annual_report", label: "Latest Annual Report (PDF)", accept: ".pdf" },
-                          { key: "constitution", label: "Constitution / Founding Document (PDF)", accept: ".pdf" },
-                          { key: "tax_cert", label: "Tax Exemption Certificate (PDF)", accept: ".pdf,.jpg,.png" },
-                        ].map(doc => (
-                          <div key={doc.key} className="flex items-center gap-3 p-3 rounded-lg border border-border/30">
-                            <div className="flex-1">
-                              <div className="text-xs text-foreground">{doc.label}</div>
-                              {uploadedDocs[doc.key] ? (
-                                <div className="text-[10px] text-success flex items-center gap-1 mt-0.5">
-                                  <Check className="h-3 w-3" /> Uploaded
-                                </div>
-                              ) : (
-                                <div className="text-[10px] text-muted-foreground mt-0.5">Optional but recommended</div>
-                              )}
+                        <Label className={labelClass}>Key Staff Members</Label>
+                        {keyStaff.map((s, i) => (
+                          <div key={i} className="grid grid-cols-4 gap-2 mt-2">
+                            <Input value={s.name} onChange={e => { const n = [...keyStaff]; n[i].name = e.target.value; setKeyStaff(n); }} placeholder="Name" className={inputClass} />
+                            <Input value={s.title} onChange={e => { const n = [...keyStaff]; n[i].title = e.target.value; setKeyStaff(n); }} placeholder="Title" className={inputClass} />
+                            <Input value={s.qualification} onChange={e => { const n = [...keyStaff]; n[i].qualification = e.target.value; setKeyStaff(n); }} placeholder="Qualification" className={inputClass} />
+                            <div className="flex gap-1">
+                              <Input value={s.experience} onChange={e => { const n = [...keyStaff]; n[i].experience = e.target.value; setKeyStaff(n); }} placeholder="Yrs exp" className={inputClass} />
+                              <Button variant="ghost" size="sm" className="h-9 w-9 p-0 text-destructive" onClick={() => setKeyStaff(prev => prev.filter((_, j) => j !== i))}><X className="h-3 w-3" /></Button>
                             </div>
-                            <label className="cursor-pointer">
-                              <input
-                                type="file"
-                                accept={doc.accept}
-                                className="hidden"
-                                onChange={(e) => handleDocUpload(doc.key, e.target.files?.[0])}
-                                disabled={uploadingDoc === doc.key}
-                              />
-                              <span className={`text-xs px-3 py-1.5 rounded-lg border transition-colors ${
-                                uploadingDoc === doc.key ? "border-primary/30 text-muted-foreground" :
-                                uploadedDocs[doc.key] ? "border-success/30 text-success hover:bg-success/5" :
-                                "border-border/50 text-primary hover:bg-primary/5"
-                              }`}>
-                                {uploadingDoc === doc.key ? "Uploading..." : uploadedDocs[doc.key] ? "Replace" : "Upload"}
-                              </span>
-                            </label>
                           </div>
+                        ))}
+                        {keyStaff.length < 6 && (
+                          <Button variant="ghost" size="sm" className="mt-1 text-xs text-primary" onClick={() => setKeyStaff(prev => [...prev, { name: "", title: "", qualification: "", experience: "" }])}>
+                            <Plus className="h-3 w-3 mr-1" /> Add staff member
+                          </Button>
+                        )}
+                      </div>
+                      {country === "South Africa" && (
+                        <div className="flex items-center justify-between p-3 rounded-lg border border-border/30">
+                          <div>
+                            <div className="text-xs text-foreground">B-BBEE Compliant?</div>
+                            <div className="text-[10px] text-muted-foreground">Required by most SA corporate funders</div>
+                          </div>
+                          <Switch checked={hasBBBEE} onCheckedChange={setHasBBBEE} />
+                        </div>
+                      )}
+                      {hasBBBEE && (
+                        <div>
+                          <Label className={labelClass}>B-BBEE Level</Label>
+                          <select value={bbbeeLevel} onChange={e => setBbbeeLevel(e.target.value)} className={selectClass}>
+                            <option value="">Select</option>
+                            {[1,2,3,4,5,6,7,8].map(l => <option key={l} value={String(l)}>Level {l}</option>)}
+                          </select>
+                        </div>
+                      )}
+                      <div>
+                        <Label className={labelClass}>Policies in Place</Label>
+                        <div className="flex flex-wrap gap-1.5 mt-1">
+                          {policyOptions.map(p => (
+                            <button key={p} onClick={() => setSelectedPolicies(prev => prev.includes(p) ? prev.filter(x => x !== p) : [...prev, p])}
+                              className={`px-2 py-1 rounded-full text-[10px] border ${selectedPolicies.includes(p) ? "border-primary bg-primary/10 text-foreground" : "border-border/30 text-muted-foreground"}`}>
+                              ✅ {p}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                      <div>
+                        <Label className={labelClass}>Strategic Plan?</Label>
+                        <div className="flex gap-2 mt-1">
+                          {["yes", "in_development", "no"].map(v => (
+                            <button key={v} onClick={() => setHasStrategicPlan(v)}
+                              className={`px-3 py-1.5 rounded-lg text-xs border ${hasStrategicPlan === v ? "border-primary bg-primary/10" : "border-border/30 text-muted-foreground"}`}>
+                              {v === "yes" ? "Yes" : v === "in_development" ? "In development" : "No"}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                      {hasStrategicPlan === "yes" && (
+                        <div>
+                          <Label className={labelClass}>Strategic Plan Period</Label>
+                          <Input value={strategicPlanPeriod} onChange={e => setStrategicPlanPeriod(e.target.value)} placeholder="e.g. 2024-2027" className={inputClass} />
+                        </div>
+                      )}
+                      <div>
+                        <Label className={labelClass}>3 Most Significant Organisational Achievements *</Label>
+                        {orgAchievements.map((a, i) => (
+                          <Input key={i} value={a} onChange={e => { const n = [...orgAchievements]; n[i] = e.target.value; setOrgAchievements(n); }}
+                            placeholder={`Achievement ${i + 1}`} className={inputClass + " mb-2"} />
                         ))}
                       </div>
                     </div>
-                  </div>
-                )}
+                  )}
 
-                {/* STEP 6: Funding History & Partnerships */}
-                {step === 6 && (
-                  <div className="space-y-4 mt-4">
-                    <p className="text-xs text-muted-foreground">Almost done! This significantly improves match quality and unlocks partnership features.
-                      <WhyTooltip text="Funding history helps us calibrate your match scores. Partnership preferences unlock our NGO consortium matching system." />
-                    </p>
-
-                    <div className="flex items-center justify-between p-3 rounded-lg border border-border/30">
-                      <span className="text-xs text-foreground">Have you received grants before?</span>
-                      <Switch checked={hasReceivedGrants} onCheckedChange={setHasReceivedGrants} />
-                    </div>
-
-                    {hasReceivedGrants && (
-                      <div className="space-y-3 p-4 rounded-lg border border-border/30 bg-secondary/10">
-                        <div>
-                          <Label className={labelClass}>Past Funders (comma-separated)</Label>
-                          <Input value={pastFunders} onChange={e => setPastFunders(e.target.value)} placeholder="e.g. DG Murray Trust, NLC, Anglo American" className={inputClass} />
-                        </div>
-                        <div className="grid grid-cols-2 gap-3">
-                          <div>
-                            <Label className={labelClass}>Largest Grant Received</Label>
-                            <select value={largestGrant} onChange={e => setLargestGrant(e.target.value)} className={selectClass}>
-                              <option value="">Select range</option>
-                              <option>Under R50k</option><option>R50k-R250k</option><option>R250k-R1M</option><option>R1M-R5M</option><option>R5M+</option>
-                            </select>
-                          </div>
-                          <div>
-                            <Label className={labelClass}>Total Funding (last 3 years)</Label>
-                            <select value={totalFunding3yr} onChange={e => setTotalFunding3yr(e.target.value)} className={selectClass}>
-                              <option value="">Select range</option>
-                              <option>Under R50k</option><option>R50k-R250k</option><option>R250k-R1M</option><option>R1M-R5M</option><option>R5M+</option>
-                            </select>
-                          </div>
-                        </div>
-                        <div>
-                          <Label className={labelClass}>What are you most proud of achieving with past funding?</Label>
-                          <Textarea value={fundingAchievement} onChange={e => setFundingAchievement(e.target.value.slice(0, 300))}
-                            placeholder="e.g. Supported 12,000 youth to complete secondary school..."
-                            className="bg-secondary/30 border-border/50 min-h-[60px] text-foreground" />
-                        </div>
+                  {/* ═══ STEP 9: Past Funding & Partnerships ═══ */}
+                  {step === 8 && (
+                    <div className="space-y-4 mt-4">
+                      <p className="text-xs text-muted-foreground">Your track record with funders is one of the strongest signals of credibility. Even if limited, telling this story well makes a big difference.
+                        <WhyTooltip text="Past funders act as references. This powers your track record and sustainability sections." />
+                      </p>
+                      <div className="flex items-center justify-between p-3 rounded-lg border border-border/30">
+                        <div className="text-xs text-foreground">Have you received grants before?</div>
+                        <Switch checked={hasReceivedGrants} onCheckedChange={setHasReceivedGrants} />
                       </div>
-                    )}
+                      {hasReceivedGrants && (
+                        <>
+                          <div>
+                            <Label className={labelClass}>Past Funders (up to 6)</Label>
+                            {pastFundersDetailed.map((f, i) => (
+                              <div key={i} className="grid grid-cols-5 gap-2 mt-2">
+                                <Input value={f.name} onChange={e => { const n = [...pastFundersDetailed]; n[i].name = e.target.value; setPastFundersDetailed(n); }} placeholder="Funder name" className={inputClass} />
+                                <select value={f.amount} onChange={e => { const n = [...pastFundersDetailed]; n[i].amount = e.target.value; setPastFundersDetailed(n); }} className={selectClass}>
+                                  <option value="">Amount</option>
+                                  <option value="under_50k">Under R50k</option>
+                                  <option value="50k_250k">R50k–R250k</option>
+                                  <option value="250k_1m">R250k–R1M</option>
+                                  <option value="1m_plus">R1M+</option>
+                                </select>
+                                <Input value={f.year} onChange={e => { const n = [...pastFundersDetailed]; n[i].year = e.target.value; setPastFundersDetailed(n); }} placeholder="Year" className={inputClass} />
+                                <Input value={f.project} onChange={e => { const n = [...pastFundersDetailed]; n[i].project = e.target.value; setPastFundersDetailed(n); }} placeholder="Project" className={inputClass} />
+                                <div className="flex gap-1">
+                                  <select value={f.outcome} onChange={e => { const n = [...pastFundersDetailed]; n[i].outcome = e.target.value; setPastFundersDetailed(n); }} className={selectClass}>
+                                    <option value="">Outcome</option>
+                                    <option value="completed">Completed</option>
+                                    <option value="ongoing">Ongoing</option>
+                                    <option value="not_renewed">Not renewed</option>
+                                  </select>
+                                  <Button variant="ghost" size="sm" className="h-9 w-9 p-0 text-destructive" onClick={() => setPastFundersDetailed(prev => prev.filter((_, j) => j !== i))}><X className="h-3 w-3" /></Button>
+                                </div>
+                              </div>
+                            ))}
+                            {pastFundersDetailed.length < 6 && (
+                              <Button variant="ghost" size="sm" className="mt-1 text-xs text-primary"
+                                onClick={() => setPastFundersDetailed(prev => [...prev, { name: "", amount: "", year: "", project: "", outcome: "" }])}>
+                                <Plus className="h-3 w-3 mr-1" /> Add past funder
+                              </Button>
+                            )}
+                          </div>
+                          <div className="grid grid-cols-2 gap-4">
+                            <div>
+                              <Label className={labelClass}>Largest Grant Managed</Label>
+                              <select value={largestGrant} onChange={e => setLargestGrant(e.target.value)} className={selectClass}>
+                                <option value="">Select</option>
+                                <option value="under_50k">Under R50k</option>
+                                <option value="50k_250k">R50k–R250k</option>
+                                <option value="250k_1m">R250k–R1M</option>
+                                <option value="1m_5m">R1M–R5M</option>
+                                <option value="over_5m">R5M+</option>
+                              </select>
+                            </div>
+                            <div>
+                              <Label className={labelClass}>Total Funding (Last 3 Years)</Label>
+                              <select value={totalFunding3yr} onChange={e => setTotalFunding3yr(e.target.value)} className={selectClass}>
+                                <option value="">Select</option>
+                                <option value="under_500k">Under R500k</option>
+                                <option value="500k_2m">R500k–R2M</option>
+                                <option value="2m_5m">R2M–R5M</option>
+                                <option value="5m_10m">R5M–R10M</option>
+                                <option value="over_10m">Over R10M</option>
+                              </select>
+                            </div>
+                          </div>
+                          <div>
+                            <Label className={labelClass}>How do you manage grant funds and reporting? *</Label>
+                            <Textarea value={grantManagement} onChange={e => setGrantManagement(e.target.value.slice(0, 400))}
+                              placeholder="Describe your financial controls, reporting process, and experience..."
+                              className="bg-secondary/30 border-border/50 min-h-[80px] text-foreground text-sm" />
+                          </div>
+                          <div>
+                            <Label className={labelClass}>Most Proud Achievement with Past Funding *</Label>
+                            <Textarea value={proudAchievement} onChange={e => setProudAchievement(e.target.value.slice(0, 400))}
+                              placeholder="Your best paragraph — this closes your executive summary..."
+                              className="bg-secondary/30 border-border/50 min-h-[80px] text-foreground text-sm" />
+                          </div>
+                          <div>
+                            <Label className={labelClass}>Lessons Learned (recommended)</Label>
+                            <Textarea value={lessonsLearned} onChange={e => setLessonsLearned(e.target.value.slice(0, 300))}
+                              placeholder="What have you learned about what works and what doesn't?"
+                              className="bg-secondary/30 border-border/50 min-h-[60px] text-foreground text-sm" />
+                          </div>
+                        </>
+                      )}
 
-                    <div className="pt-4 border-t border-border/30">
-                      <h3 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
-                        <Users className="h-4 w-4 text-accent-amber" /> Partnership Appetite
-                      </h3>
-                      <div className="space-y-3">
+                      {/* Partnership section */}
+                      <div className="pt-4 border-t border-border/20">
+                        <h3 className="text-sm font-medium text-foreground mb-3">Partnership Appetite</h3>
                         <div>
-                          <Label className={labelClass}>Open to partnering with other NGOs?</Label>
+                          <Label className={labelClass}>Are you open to partnering with other NGOs?</Label>
                           <div className="flex gap-2 mt-1">
-                            {[{ val: true, label: "Yes" }, { val: false, label: "No" }, { val: null, label: "Maybe" }].map(opt => (
-                              <button key={String(opt.val)} onClick={() => setPartnershipOpen(opt.val)}
-                                className={`px-4 py-1.5 rounded-lg text-xs border ${partnershipOpen === opt.val ? "bg-accent-amber/15 border-accent-amber/40 text-foreground" : "border-border/30 text-muted-foreground"}`}>
-                                {opt.label}
+                            {[
+                              { v: "open", label: "Open to partnerships" },
+                              { v: "selective", label: "Selective" },
+                              { v: "not_looking", label: "Not currently" },
+                            ].map(t => (
+                              <button key={t.v} onClick={() => setPartnershipAppetite(t.v)}
+                                className={`px-3 py-1.5 rounded-lg text-xs border ${partnershipAppetite === t.v ? "border-amber-500 bg-amber-500/10 text-foreground" : "border-border/30 text-muted-foreground"}`}>
+                                {t.label}
                               </button>
                             ))}
                           </div>
                         </div>
-
-                        {partnershipOpen !== false && (
+                        {(partnershipAppetite === "open" || partnershipAppetite === "selective") && (
                           <>
-                            <div>
+                            <div className="mt-3">
                               <Label className={labelClass}>Partnership Role Preference</Label>
-                              <div className="grid grid-cols-2 gap-2 mt-1">
-                                {["Lead organisation", "Sub-grantee", "Equal partners", "Open to any"].map(r => (
-                                  <button key={r} onClick={() => setPartnershipRole(r)}
-                                    className={`p-2 rounded-lg text-xs border ${partnershipRole === r ? "bg-accent-amber/15 border-accent-amber/40 text-foreground" : "border-border/30 text-muted-foreground"}`}>
-                                    {r}
+                              <div className="grid grid-cols-3 gap-2 mt-1">
+                                {[
+                                  { v: "lead", icon: "🚀", label: "Lead Organisation" },
+                                  { v: "equal", icon: "🤝", label: "Equal Partners" },
+                                  { v: "sub", icon: "🧩", label: "Sub-grantee" },
+                                ].map(r => (
+                                  <button key={r.v} onClick={() => setPartnershipRole(r.v)}
+                                    className={`p-2 rounded-lg text-xs border text-center ${partnershipRole === r.v ? "border-amber-500 bg-amber-500/10" : "border-border/30 text-muted-foreground"}`}>
+                                    <div className="text-sm">{r.icon}</div>
+                                    <div>{r.label}</div>
                                   </button>
                                 ))}
                               </div>
                             </div>
-                            <div>
+                            <div className="mt-3">
                               <Label className={labelClass}>What do you bring to a partnership?</Label>
-                              <div className="flex flex-wrap gap-2 mt-1">
-                                {["Community relationships", "Technical expertise", "Geographic reach", "Beneficiary networks", "Research capability", "Finance management", "M&E", "Advocacy"].map(s => (
-                                  <button key={s} onClick={() => setPartnershipStrengths(prev => prev.includes(s) ? prev.filter(x => x !== s) : [...prev, s])}
-                                    className={`text-[10px] px-2.5 py-1 rounded-full border ${partnershipStrengths.includes(s) ? "bg-accent-amber/15 border-accent-amber/40 text-foreground" : "border-border/30 text-muted-foreground"}`}>
+                              <div className="flex flex-wrap gap-1.5 mt-1">
+                                {["Community relationships", "Technical expertise", "Geographic reach", "Beneficiary networks",
+                                  "Research capability", "Finance management", "M&E", "Advocacy", "Cultural/language access"].map(s => (
+                                  <button key={s} onClick={() => setPartnershipBrings(prev => prev.includes(s) ? prev.filter(x => x !== s) : [...prev, s])}
+                                    className={`px-2 py-1 rounded-full text-[10px] border ${partnershipBrings.includes(s) ? "border-amber-500 bg-amber-500/10 text-foreground" : "border-border/30 text-muted-foreground"}`}>
                                     {s}
                                   </button>
                                 ))}
                               </div>
                             </div>
-                            <div>
+                            <div className="mt-3">
                               <Label className={labelClass}>Partnership Statement (shown on your public profile)</Label>
                               <Textarea value={partnershipStatement} onChange={e => setPartnershipStatement(e.target.value.slice(0, 300))}
-                                placeholder="We bring strong community relationships in Cape Flats townships and are looking to partner with..."
-                                className="bg-secondary/30 border-border/50 min-h-[60px] text-foreground" />
-                            </div>
-                            <div className="flex items-center justify-between p-3 rounded-lg border border-accent-amber/30 bg-accent-amber/5">
-                              <div>
-                                <div className="text-xs text-foreground">Make your organisation discoverable?</div>
-                                <div className="text-[10px] text-muted-foreground">Other GrantMatch NGOs can find and message you</div>
-                              </div>
-                              <Switch checked={isDiscoverable} onCheckedChange={setIsDiscoverable} />
+                                placeholder="2-3 sentences about what you're looking for in partners..."
+                                className="bg-secondary/30 border-border/50 min-h-[60px] text-foreground text-sm" />
                             </div>
                           </>
                         )}
+                        <div className="flex items-center justify-between p-3 rounded-lg border border-border/30 mt-3">
+                          <div>
+                            <div className="text-xs text-foreground">Discoverable to other NGOs?</div>
+                            <div className="text-[10px] text-muted-foreground">Other GrantMatch users can find and message you</div>
+                          </div>
+                          <Switch checked={isDiscoverable} onCheckedChange={setIsDiscoverable} />
+                        </div>
                       </div>
                     </div>
-                  </div>
-                )}
+                  )}
 
-                {/* Navigation */}
-                <div className="flex items-center justify-between mt-8 pt-4 border-t border-border/30">
-                  <Button variant="ghost" onClick={() => setStep(Math.max(0, step - 1))} disabled={step === 0} className="text-muted-foreground">
-                    <ArrowLeft className="h-4 w-4 mr-1" /> Back
-                  </Button>
-                  <Button onClick={next} className="bg-primary text-primary-foreground hover:bg-primary/90">
-                    {step === 6 ? "Finish & see my matches ✨" : "Continue"} <ArrowRight className="ml-1 h-4 w-4" />
-                  </Button>
-                </div>
-              </GlassCard>
-            </motion.div>
-          </AnimatePresence>
+                  {/* Navigation */}
+                  <div className="flex justify-between mt-6 pt-4 border-t border-border/20">
+                    <Button variant="ghost" onClick={() => setStep(Math.max(0, step - 1))} disabled={step === 0} className="text-sm">
+                      <ArrowLeft className="h-4 w-4 mr-1" /> Back
+                    </Button>
+                    <Button onClick={next} disabled={saving} className="bg-primary text-primary-foreground text-sm">
+                      {saving ? "Saving..." : step === 8 ? "Complete Profile" : "Save & Continue"}
+                      <ArrowRight className="h-4 w-4 ml-1" />
+                    </Button>
+                  </div>
+                </GlassCard>
+              </motion.div>
+            </AnimatePresence>
+          </div>
+        </div>
+
+        {/* Right sidebar — how this helps (desktop) */}
+        <div className="hidden xl:block w-52 border-l border-border/20 p-4">
+          <GlassCard hoverable={false} className="p-3">
+            <h4 className="text-xs font-medium text-foreground mb-2 flex items-center gap-1">
+              <FileText className="h-3 w-3 text-primary" /> How this helps
+            </h4>
+            <p className="text-[10px] text-muted-foreground leading-relaxed">{steps[step].sidebar}</p>
+          </GlassCard>
         </div>
       </div>
     </div>
