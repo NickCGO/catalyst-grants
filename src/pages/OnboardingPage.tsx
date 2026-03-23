@@ -881,6 +881,50 @@ const OnboardingPage = () => {
                         </select>
                       </div>
                     )}
+
+                    {/* Document Uploads */}
+                    <div className="pt-4 border-t border-border/30">
+                      <h3 className="text-sm font-semibold text-foreground mb-2">Upload Key Documents</h3>
+                      <p className="text-[10px] text-muted-foreground mb-3">These are stored securely and used to enhance your proposals and verify your profile.</p>
+                      <div className="space-y-3">
+                        {[
+                          { key: "financials", label: "Latest Audited Financials (PDF)", accept: ".pdf" },
+                          { key: "npo_cert", label: "NPO Registration Certificate (PDF)", accept: ".pdf" },
+                          { key: "annual_report", label: "Latest Annual Report (PDF)", accept: ".pdf" },
+                          { key: "constitution", label: "Constitution / Founding Document (PDF)", accept: ".pdf" },
+                          { key: "tax_cert", label: "Tax Exemption Certificate (PDF)", accept: ".pdf,.jpg,.png" },
+                        ].map(doc => (
+                          <div key={doc.key} className="flex items-center gap-3 p-3 rounded-lg border border-border/30">
+                            <div className="flex-1">
+                              <div className="text-xs text-foreground">{doc.label}</div>
+                              {uploadedDocs[doc.key] ? (
+                                <div className="text-[10px] text-success flex items-center gap-1 mt-0.5">
+                                  <Check className="h-3 w-3" /> Uploaded
+                                </div>
+                              ) : (
+                                <div className="text-[10px] text-muted-foreground mt-0.5">Optional but recommended</div>
+                              )}
+                            </div>
+                            <label className="cursor-pointer">
+                              <input
+                                type="file"
+                                accept={doc.accept}
+                                className="hidden"
+                                onChange={(e) => handleDocUpload(doc.key, e.target.files?.[0])}
+                                disabled={uploadingDoc === doc.key}
+                              />
+                              <span className={`text-xs px-3 py-1.5 rounded-lg border transition-colors ${
+                                uploadingDoc === doc.key ? "border-primary/30 text-muted-foreground" :
+                                uploadedDocs[doc.key] ? "border-success/30 text-success hover:bg-success/5" :
+                                "border-border/50 text-primary hover:bg-primary/5"
+                              }`}>
+                                {uploadingDoc === doc.key ? "Uploading..." : uploadedDocs[doc.key] ? "Replace" : "Upload"}
+                              </span>
+                            </label>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
                   </div>
                 )}
 
