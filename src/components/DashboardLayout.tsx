@@ -30,7 +30,9 @@ const navItems = [
   { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
   { title: "Find Grants", url: "/grants", icon: Search },
   { title: "Applications", url: "/applications", icon: ClipboardList },
-  { title: "Proposal Writer", url: "/writer", icon: PenTool, badge: "Phase 2" },
+  { title: "Proposal Writer", url: "/writer", icon: PenTool },
+  { title: "Reports", url: "/reports", icon: FileText },
+  { title: "Email Hub", url: "/email", icon: Mail },
   { title: "News", url: "/news", icon: Newspaper },
   { title: "Settings", url: "/settings", icon: Settings },
 ];
