@@ -254,13 +254,152 @@ const OnboardingPage = () => {
     if (programmes.length > 1) setProgrammes(prev => prev.filter((_, i) => i !== idx));
   };
 
-  const next = () => {
-    if (step < 6) setStep(step + 1);
-    else {
+  const [saving, setSaving] = useState(false);
+
+  const saveToSupabase = async () => {
+    setSaving(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast({ title: "Not logged in", description: "Please log in first.", variant: "destructive" });
+        navigate("/login");
+        return;
+      }
+
+      const orgData = {
+        name: orgName,
+        trading_name: tradingName || null,
+        org_type: orgType || null,
+        registration_number: regNumber || null,
+        country,
+        region: region || null,
+        founded_year: yearEstablished ? parseInt(yearEstablished) : null,
+        tax_status: taxStatus || null,
+        pbo_number: pboNumber || null,
+        is_audited: isAudited,
+        last_audit_year: lastAuditYear ? parseInt(lastAuditYear) : null,
+        mission_statement: mission || null,
+        vision_statement: vision || null,
+        core_values: coreValues.length > 0 ? coreValues : null,
+        theory_of_change: theoryOfChange || null,
+        beneficiary_groups: selectedBeneficiaries.length > 0 ? selectedBeneficiaries : null,
+        annual_beneficiary_reach: beneficiaryReach ? parseInt(beneficiaryReach) : null,
+        impact_statement: impactStatement || null,
+        focus_areas: selectedFocus.length > 0 ? selectedFocus : null,
+        focus_priority: Object.keys(focusPriority).length > 0 ? focusPriority : null,
+        sdgs: selectedSDGs.length > 0 ? selectedSDGs : null,
+        programmes: programmes.filter(p => p.name).map(p => p.name),
+        programme_details: programmes.filter(p => p.name),
+        annual_budget: annualBudget ? parseFloat(annualBudget) : null,
+        operational_expenses: operationalExpenses ? parseFloat(operationalExpenses) : null,
+        funding_gap: fundingGap ? parseFloat(fundingGap) : null,
+        regions_of_operation: regionsOfOperation.length > 0 ? regionsOfOperation : null,
+        cities: cities ? cities.split(",").map(c => c.trim()) : null,
+        works_rural: worksRural,
+        works_urban: worksUrban,
+        works_other_african: worksOtherAfrican,
+        other_african_countries: otherAfricanCountries.length > 0 ? otherAfricanCountries : null,
+        works_internationally: worksInternationally,
+        fte_count: fteCount ? parseInt(fteCount) : null,
+        parttime_count: parttimeCount ? parseInt(parttimeCount) : null,
+        volunteer_count: volunteerCount ? parseInt(volunteerCount) : null,
+        board_count: boardCount ? parseInt(boardCount) : null,
+        has_grant_writer: hasGrantWriter,
+        ceo_name: ceoName || null,
+        finance_contact: financeContact || null,
+        annual_income: annualIncome ? parseFloat(annualIncome) : null,
+        pct_grants: pctGrants,
+        pct_government: pctGovernment,
+        pct_corporate: pctCorporate,
+        has_strategic_plan: hasStrategicPlan,
+        has_me_framework: hasMEFramework,
+        has_bbbee: hasBBBEE,
+        bbbee_level: bbbeeLevel ? parseInt(bbbeeLevel) : null,
+        past_funders: pastFunders ? pastFunders.split(",").map(f => f.trim()) : null,
+        largest_grant_range: largestGrant || null,
+        total_funding_3yr: totalFunding3yr || null,
+        funding_achievement: fundingAchievement || null,
+        partnership_open: partnershipOpen,
+        partnership_role: partnershipRole || null,
+        partner_types: partnerTypes.length > 0 ? partnerTypes : null,
+        partnership_strengths: partnershipStrengths.length > 0 ? partnershipStrengths : null,
+        partnership_statement: partnershipStatement || null,
+        is_discoverable: isDiscoverable,
+        onboarding_complete: true,
+        onboarding_step: 7,
+        profile_completeness: completeness,
+      };
+
+      // Check if org exists
+      const { data: existingOrg } = await supabase
+        .from("organisations")
+        .select("id")
+        .eq("user_id", user.id)
+        .maybeSingle();
+
+      if (existingOrg) {
+        await supabase.from("organisations").update(orgData).eq("id", existingOrg.id);
+      } else {
+        await supabase.from("organisations").insert({ ...orgData, user_id: user.id });
+      }
+
       toast({ title: "🎉 Onboarding complete!", description: "Calculating your matches..." });
       setTimeout(() => navigate("/dashboard"), 2000);
+    } catch (error: any) {
+      toast({ title: "Save failed", description: error.message, variant: "destructive" });
+    }
+    setSaving(false);
+  };
+
+  const next = () => {
+    if (step < 6) {
+      setStep(step + 1);
+      // Save progress at each step
+      saveProgress(step + 1);
+    } else {
+      saveToSupabase();
     }
   };
+
+  const saveProgress = async (currentStep: number) => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      const { data: existingOrg } = await supabase
+        .from("organisations")
+        .select("id")
+        .eq("user_id", user.id)
+        .maybeSingle();
+      if (existingOrg) {
+        await supabase.from("organisations").update({
+          onboarding_step: currentStep,
+          profile_completeness: completeness,
+          name: orgName || "My Organisation",
+        }).eq("id", existingOrg.id);
+      }
+    } catch { /* silent */ }
+  };
+
+  // Load existing org data on mount
+  useEffect(() => {
+    const loadOrg = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) { navigate("/login"); return; }
+      const { data: org } = await supabase
+        .from("organisations")
+        .select("*")
+        .eq("user_id", user.id)
+        .maybeSingle();
+      if (org) {
+        if (org.name) setOrgName(org.name);
+        if (org.country) setCountry(org.country);
+        if (org.region) setRegion(org.region);
+        if (org.onboarding_step) setStep(org.onboarding_step);
+        if (org.onboarding_complete) navigate("/dashboard");
+      }
+    };
+    loadOrg();
+  }, [navigate]);
 
   const inputClass = "mt-1 bg-secondary/30 border-border/50 text-foreground";
   const labelClass = "text-xs text-muted-foreground";
