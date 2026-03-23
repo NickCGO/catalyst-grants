@@ -19,6 +19,8 @@ import TeamManagementPage from "./pages/TeamManagementPage";
 import TasksPage from "./pages/TasksPage";
 import CRMPage from "./pages/CRMPage";
 import CRMDetailPage from "./pages/CRMDetailPage";
+import AnalyticsPage from "./pages/AnalyticsPage";
+import PartnershipsPage from "./pages/PartnershipsPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
