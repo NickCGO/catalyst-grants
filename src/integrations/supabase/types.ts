@@ -546,59 +546,306 @@ export type Database = {
           },
         ]
       }
+      notifications: {
+        Row: {
+          body: string | null
+          created_at: string | null
+          id: string
+          link: string | null
+          org_id: string | null
+          read: boolean | null
+          title: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          body?: string | null
+          created_at?: string | null
+          id?: string
+          link?: string | null
+          org_id?: string | null
+          read?: boolean | null
+          title: string
+          type: string
+          user_id: string
+        }
+        Update: {
+          body?: string | null
+          created_at?: string | null
+          id?: string
+          link?: string | null
+          org_id?: string | null
+          read?: boolean | null
+          title?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notifications_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organisations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       organisations: {
         Row: {
+          annual_beneficiary_reach: number | null
+          annual_budget: number | null
+          annual_income: number | null
+          bbbee_level: number | null
+          beneficiary_groups: string[] | null
+          board_count: number | null
+          ceo_name: string | null
+          cities: string[] | null
+          core_values: string[] | null
           country: string | null
           created_at: string | null
+          finance_contact: string | null
           focus_areas: string[] | null
+          focus_priority: Json | null
           founded_year: number | null
+          fte_count: number | null
+          funding_achievement: string | null
+          funding_gap: number | null
+          geo_summary: string | null
+          has_bbbee: boolean | null
+          has_grant_writer: boolean | null
+          has_me_framework: boolean | null
+          has_strategic_plan: boolean | null
           id: string
+          impact_statement: string | null
+          is_audited: boolean | null
+          is_discoverable: boolean | null
+          largest_grant_range: string | null
+          last_audit_year: number | null
           logo_url: string | null
           mission_statement: string | null
           name: string
           onboarding_complete: boolean | null
+          onboarding_step: number | null
+          operational_expenses: number | null
           org_size: string | null
+          org_type: string | null
+          other_african_countries: string[] | null
+          partner_types: string[] | null
+          partnership_open: boolean | null
+          partnership_role: string | null
+          partnership_statement: string | null
+          partnership_strengths: string[] | null
+          parttime_count: number | null
+          past_funders: string[] | null
+          pbo_number: string | null
+          pct_corporate: number | null
+          pct_government: number | null
+          pct_grants: number | null
+          profile_completeness: number | null
+          programme_details: Json | null
           programmes: string[] | null
           region: string | null
+          regions_of_operation: string[] | null
           registration_number: string | null
+          sdgs: number[] | null
+          tax_status: string | null
+          theory_of_change: string | null
+          total_funding_3yr: string | null
+          trading_name: string | null
           user_id: string
+          vision_statement: string | null
+          volunteer_count: number | null
           website: string | null
+          works_internationally: boolean | null
+          works_other_african: boolean | null
+          works_rural: boolean | null
+          works_urban: boolean | null
         }
         Insert: {
+          annual_beneficiary_reach?: number | null
+          annual_budget?: number | null
+          annual_income?: number | null
+          bbbee_level?: number | null
+          beneficiary_groups?: string[] | null
+          board_count?: number | null
+          ceo_name?: string | null
+          cities?: string[] | null
+          core_values?: string[] | null
           country?: string | null
           created_at?: string | null
+          finance_contact?: string | null
           focus_areas?: string[] | null
+          focus_priority?: Json | null
           founded_year?: number | null
+          fte_count?: number | null
+          funding_achievement?: string | null
+          funding_gap?: number | null
+          geo_summary?: string | null
+          has_bbbee?: boolean | null
+          has_grant_writer?: boolean | null
+          has_me_framework?: boolean | null
+          has_strategic_plan?: boolean | null
           id?: string
+          impact_statement?: string | null
+          is_audited?: boolean | null
+          is_discoverable?: boolean | null
+          largest_grant_range?: string | null
+          last_audit_year?: number | null
           logo_url?: string | null
           mission_statement?: string | null
           name: string
           onboarding_complete?: boolean | null
+          onboarding_step?: number | null
+          operational_expenses?: number | null
           org_size?: string | null
+          org_type?: string | null
+          other_african_countries?: string[] | null
+          partner_types?: string[] | null
+          partnership_open?: boolean | null
+          partnership_role?: string | null
+          partnership_statement?: string | null
+          partnership_strengths?: string[] | null
+          parttime_count?: number | null
+          past_funders?: string[] | null
+          pbo_number?: string | null
+          pct_corporate?: number | null
+          pct_government?: number | null
+          pct_grants?: number | null
+          profile_completeness?: number | null
+          programme_details?: Json | null
           programmes?: string[] | null
           region?: string | null
+          regions_of_operation?: string[] | null
           registration_number?: string | null
+          sdgs?: number[] | null
+          tax_status?: string | null
+          theory_of_change?: string | null
+          total_funding_3yr?: string | null
+          trading_name?: string | null
           user_id: string
+          vision_statement?: string | null
+          volunteer_count?: number | null
           website?: string | null
+          works_internationally?: boolean | null
+          works_other_african?: boolean | null
+          works_rural?: boolean | null
+          works_urban?: boolean | null
         }
         Update: {
+          annual_beneficiary_reach?: number | null
+          annual_budget?: number | null
+          annual_income?: number | null
+          bbbee_level?: number | null
+          beneficiary_groups?: string[] | null
+          board_count?: number | null
+          ceo_name?: string | null
+          cities?: string[] | null
+          core_values?: string[] | null
           country?: string | null
           created_at?: string | null
+          finance_contact?: string | null
           focus_areas?: string[] | null
+          focus_priority?: Json | null
           founded_year?: number | null
+          fte_count?: number | null
+          funding_achievement?: string | null
+          funding_gap?: number | null
+          geo_summary?: string | null
+          has_bbbee?: boolean | null
+          has_grant_writer?: boolean | null
+          has_me_framework?: boolean | null
+          has_strategic_plan?: boolean | null
           id?: string
+          impact_statement?: string | null
+          is_audited?: boolean | null
+          is_discoverable?: boolean | null
+          largest_grant_range?: string | null
+          last_audit_year?: number | null
           logo_url?: string | null
           mission_statement?: string | null
           name?: string
           onboarding_complete?: boolean | null
+          onboarding_step?: number | null
+          operational_expenses?: number | null
           org_size?: string | null
+          org_type?: string | null
+          other_african_countries?: string[] | null
+          partner_types?: string[] | null
+          partnership_open?: boolean | null
+          partnership_role?: string | null
+          partnership_statement?: string | null
+          partnership_strengths?: string[] | null
+          parttime_count?: number | null
+          past_funders?: string[] | null
+          pbo_number?: string | null
+          pct_corporate?: number | null
+          pct_government?: number | null
+          pct_grants?: number | null
+          profile_completeness?: number | null
+          programme_details?: Json | null
           programmes?: string[] | null
           region?: string | null
+          regions_of_operation?: string[] | null
           registration_number?: string | null
+          sdgs?: number[] | null
+          tax_status?: string | null
+          theory_of_change?: string | null
+          total_funding_3yr?: string | null
+          trading_name?: string | null
           user_id?: string
+          vision_statement?: string | null
+          volunteer_count?: number | null
           website?: string | null
+          works_internationally?: boolean | null
+          works_other_african?: boolean | null
+          works_rural?: boolean | null
+          works_urban?: boolean | null
         }
         Relationships: []
+      }
+      proposal_comments: {
+        Row: {
+          content: string
+          created_at: string | null
+          created_by: string
+          id: string
+          proposal_id: string
+          resolved: boolean | null
+          resolved_at: string | null
+          resolved_by: string | null
+          section_key: string | null
+        }
+        Insert: {
+          content: string
+          created_at?: string | null
+          created_by: string
+          id?: string
+          proposal_id: string
+          resolved?: boolean | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          section_key?: string | null
+        }
+        Update: {
+          content?: string
+          created_at?: string | null
+          created_by?: string
+          id?: string
+          proposal_id?: string
+          resolved?: boolean | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          section_key?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "proposal_comments_proposal_id_fkey"
+            columns: ["proposal_id"]
+            isOneToOne: false
+            referencedRelation: "proposals"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       proposal_scores: {
         Row: {
@@ -769,6 +1016,170 @@ export type Database = {
           },
           {
             foreignKeyName: "proposals_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organisations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tasks: {
+        Row: {
+          application_id: string | null
+          assigned_by: string | null
+          assigned_to: string | null
+          completed_at: string | null
+          created_at: string | null
+          description: string | null
+          due_date: string | null
+          id: string
+          org_id: string
+          priority: string | null
+          proposal_id: string | null
+          status: string | null
+          title: string
+        }
+        Insert: {
+          application_id?: string | null
+          assigned_by?: string | null
+          assigned_to?: string | null
+          completed_at?: string | null
+          created_at?: string | null
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          org_id: string
+          priority?: string | null
+          proposal_id?: string | null
+          status?: string | null
+          title: string
+        }
+        Update: {
+          application_id?: string | null
+          assigned_by?: string | null
+          assigned_to?: string | null
+          completed_at?: string | null
+          created_at?: string | null
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          org_id?: string
+          priority?: string | null
+          proposal_id?: string | null
+          status?: string | null
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tasks_application_id_fkey"
+            columns: ["application_id"]
+            isOneToOne: false
+            referencedRelation: "applications"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tasks_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organisations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tasks_proposal_id_fkey"
+            columns: ["proposal_id"]
+            isOneToOne: false
+            referencedRelation: "proposals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      team_invitations: {
+        Row: {
+          accepted: boolean | null
+          created_at: string | null
+          expires_at: string | null
+          id: string
+          invite_token: string | null
+          invited_email: string
+          org_id: string
+          role: string
+        }
+        Insert: {
+          accepted?: boolean | null
+          created_at?: string | null
+          expires_at?: string | null
+          id?: string
+          invite_token?: string | null
+          invited_email: string
+          org_id: string
+          role?: string
+        }
+        Update: {
+          accepted?: boolean | null
+          created_at?: string | null
+          expires_at?: string | null
+          id?: string
+          invite_token?: string | null
+          invited_email?: string
+          org_id?: string
+          role?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "team_invitations_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organisations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      team_members: {
+        Row: {
+          avatar_url: string | null
+          email: string
+          full_name: string | null
+          id: string
+          invited_at: string | null
+          invited_by: string | null
+          joined_at: string | null
+          last_active: string | null
+          org_id: string
+          role: string
+          status: string | null
+          user_id: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          email: string
+          full_name?: string | null
+          id?: string
+          invited_at?: string | null
+          invited_by?: string | null
+          joined_at?: string | null
+          last_active?: string | null
+          org_id: string
+          role?: string
+          status?: string | null
+          user_id: string
+        }
+        Update: {
+          avatar_url?: string | null
+          email?: string
+          full_name?: string | null
+          id?: string
+          invited_at?: string | null
+          invited_by?: string | null
+          joined_at?: string | null
+          last_active?: string | null
+          org_id?: string
+          role?: string
+          status?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "team_members_org_id_fkey"
             columns: ["org_id"]
             isOneToOne: false
             referencedRelation: "organisations"
