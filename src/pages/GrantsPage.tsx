@@ -341,7 +341,7 @@ const GrantsPage = () => {
                       )}
                       <FunderCard {...f}
                         onSave={() => handleSave(f.id)}
-                        onApply={() => handleApply(f.id, f.name)}
+                        onApply={() => handleApply({ id: f.id, donor_name: f.name, category: f.category, method_of_approach: f.method, geographical_area: f.geography, application_period: f.applicationPeriod, funder_focus: f.funderFocus, website: f.website, contact_person: f.contact, email: f.email })}
                         onView={() => navigate(`/grants/${f.id}`)} />
                     </motion.div>
                   ))}
