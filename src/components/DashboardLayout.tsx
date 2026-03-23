@@ -2,7 +2,7 @@ import { ReactNode, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import {
   LayoutDashboard, Search, ClipboardList, PenTool, Newspaper, Settings,
-  Sparkles, LogOut, FileText, Mail, Bell, CheckSquare, Users,
+  Sparkles, LogOut, FileText, Mail, Bell, CheckSquare, Users, Handshake,
 } from "lucide-react";
 import {
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent,
