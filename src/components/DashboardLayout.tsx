@@ -70,11 +70,6 @@ function AppSidebarContent() {
                       {!collapsed && (
                         <span className="flex-1">{item.title}</span>
                       )}
-                      {!collapsed && item.badge && (
-                        <span className="text-[9px] px-1.5 py-0.5 rounded bg-primary/15 text-primary font-medium">
-                          {item.badge}
-                        </span>
-                      )}
                     </NavLink>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
