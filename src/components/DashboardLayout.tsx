@@ -201,7 +201,7 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
     }
   }, [loading, orgLoading, user, org, navigate]);
 
-  if (loading) {
+  if (loading || orgLoading) {
     return (
       <div className="min-h-screen gradient-bg flex items-center justify-center">
         <div className="text-center space-y-4">
