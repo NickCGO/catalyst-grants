@@ -186,13 +186,20 @@ interface DashboardLayoutProps {
 
 const DashboardLayout = ({ children }: DashboardLayoutProps) => {
   const { user, loading } = useAuth();
+  const { org, loading: orgLoading } = useOrganisation();
   const navigate = useNavigate();
 
   useEffect(() => {
     if (!loading && !user) {
       navigate("/login");
+      return;
     }
-  }, [loading, user, navigate]);
+    if (!loading && !orgLoading && user) {
+      if (!org || !org.onboarding_complete) {
+        navigate("/onboarding");
+      }
+    }
+  }, [loading, orgLoading, user, org, navigate]);
 
   if (loading) {
     return (
