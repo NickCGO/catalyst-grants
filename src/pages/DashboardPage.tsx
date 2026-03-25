@@ -171,7 +171,7 @@ const DashboardPage = () => {
       <div className="max-w-7xl mx-auto">
         <motion.div className="mb-8" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
           <h1 className="text-2xl font-bold text-foreground">
-            Good morning, {org?.name || "there"} 👋
+            {getGreeting()}, {org?.name || "there"} 👋
           </h1>
           <p className="text-sm text-muted-foreground mt-1">
             {new Date().toLocaleDateString("en-ZA", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}
@@ -311,6 +311,13 @@ const DashboardPage = () => {
     </DashboardLayout>
   );
 };
+
+function getGreeting(): string {
+  const hour = new Date().getHours();
+  if (hour < 12) return "Good morning";
+  if (hour < 17) return "Good afternoon";
+  return "Good evening";
+}
 
 function formatTimeAgo(date: Date): string {
   const diff = Date.now() - date.getTime();

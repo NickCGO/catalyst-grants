@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Mail, Plus, Copy, ExternalLink, FileText, Send, Loader2, Sparkles } from "lucide-react";
+import { Mail, Plus, Copy, Send, Loader2, Sparkles, FileText } from "lucide-react";
 import DashboardLayout from "@/components/DashboardLayout";
 import GlassCard from "@/components/GlassCard";
 import { Button } from "@/components/ui/button";
@@ -22,12 +22,36 @@ const purposes = [
 ];
 
 const templates = [
-  { name: "Cold Introduction to SA Corporate", preview: "Dear [Contact], I am writing to introduce our organisation..." },
-  { name: "Letter of Enquiry (LOE)", preview: "We write to enquire about potential funding alignment..." },
-  { name: "Follow-up After 3 Weeks", preview: "I hope this message finds you well. We submitted our proposal..." },
-  { name: "Decline Response (Gracious)", preview: "Thank you for considering our application. While we are disappointed..." },
-  { name: "Grant Acceptance Thank-You", preview: "We are deeply grateful to confirm receipt of the grant award..." },
-  { name: "Report Submission Cover Note", preview: "Please find attached our impact report for the period..." },
+  {
+    name: "Cold Introduction to Corporate Funder",
+    purpose: "Introduction / Letter of Intent",
+    context: "First contact with a corporate funder. Introduce your organisation, highlight alignment with their CSI priorities, and request a meeting.",
+  },
+  {
+    name: "Letter of Enquiry (LOE)",
+    purpose: "Introduction / Letter of Intent",
+    context: "A formal Letter of Enquiry to a foundation or trust. Briefly outline your organisation, the problem you address, your proposed solution, and the funding amount sought.",
+  },
+  {
+    name: "Follow-up After 3 Weeks",
+    purpose: "Follow-up on submitted proposal",
+    context: "Polite follow-up 3 weeks after submitting a proposal. Reference the submission date, express continued interest, and offer to provide additional information.",
+  },
+  {
+    name: "Decline Response (Gracious)",
+    purpose: "Request for feedback on declined application",
+    context: "Respond graciously to a declined application. Thank them for considering your proposal, ask for feedback to improve future applications, and express interest in future opportunities.",
+  },
+  {
+    name: "Grant Acceptance Thank-You",
+    purpose: "Acknowledge successful grant",
+    context: "Formal acknowledgment of a successful grant award. Express gratitude, confirm understanding of reporting requirements, and mention next steps.",
+  },
+  {
+    name: "Report Submission Cover Note",
+    purpose: "Request for reporting extension",
+    context: "A cover note to accompany an impact or narrative report submission. Summarize key achievements, highlight beneficiary impact, and reference attached documents.",
+  },
 ];
 
 const EmailHubPage = () => {
@@ -42,7 +66,6 @@ const EmailHubPage = () => {
   const [generated, setGenerated] = useState(false);
   const [funders, setFunders] = useState<any[]>([]);
 
-  // Load real funders from applications/relationships
   useEffect(() => {
     if (!org) return;
     const load = async () => {
@@ -61,17 +84,28 @@ const EmailHubPage = () => {
     load();
   }, [org]);
 
-  const generateEmail = async () => {
+  const generateEmail = async (templateContext?: string) => {
     setGenerating(true);
     try {
       const orgName = org?.name || "Our Organisation";
+      const orgContext = `Organisation: ${orgName}, Country: ${org?.country || "Africa"}. Focus areas: ${(org?.focus_areas || []).join(", ") || "Not specified"}. Mission: ${org?.mission_statement || "Not specified"}.`;
+      const extra = templateContext ? `\nTemplate context: ${templateContext}` : "";
+
       const result = await callAI([
-        { role: "system", content: "You are a professional communications writer for African NGOs. Write clear, warm, respectful emails. Return JSON with 'subject' and 'body' keys." },
-        { role: "user", content: `Write a professional email from ${orgName} to ${funder || "the funder"}. Purpose: ${purpose}. Notes: ${notes || "None"}. Organisation: ${orgName}, ${org?.country || "South Africa"}. Focus: ${(org?.focus_areas || []).join(", ")}. Length: 150-250 words. Return JSON: {"subject":"...","body":"..."}` },
+        {
+          role: "system",
+          content: "You are a professional communications writer for African NGOs. Write clear, warm, respectful, professional emails. Return valid JSON with 'subject' and 'body' keys only. No markdown wrapping.",
+        },
+        {
+          role: "user",
+          content: `Write a professional email from ${orgName} to ${funder || "the funder"}.\nPurpose: ${purpose}.\nAdditional notes: ${notes || "None"}.\n${orgContext}${extra}\nLength: 150-250 words.\nReturn JSON: {"subject":"...","body":"..."}`,
+        },
       ]);
+
       try {
         const jsonMatch = result.match(/```(?:json)?\s*([\s\S]*?)```/) || [null, result];
-        const parsed = JSON.parse(jsonMatch[1]?.trim() || result.trim());
+        const cleaned = (jsonMatch[1] || result).trim();
+        const parsed = JSON.parse(cleaned);
         setSubject(parsed.subject || "");
         setBody(parsed.body || "");
       } catch {
@@ -83,6 +117,13 @@ const EmailHubPage = () => {
       toast({ title: "Failed to generate email", variant: "destructive" });
     }
     setGenerating(false);
+  };
+
+  const useTemplate = (template: typeof templates[0]) => {
+    setPurpose(template.purpose);
+    setNotes(template.context);
+    setShowDrafter(true);
+    setGenerated(false);
   };
 
   const copyToClipboard = () => {
@@ -100,7 +141,13 @@ const EmailHubPage = () => {
             </h1>
             <p className="text-sm text-muted-foreground mt-1">AI-drafted funder communications</p>
           </div>
-          <Button className="bg-primary text-primary-foreground hover:bg-primary/90" onClick={() => { setShowDrafter(true); setGenerated(false); setPurpose(""); setNotes(""); setFunder(""); }}>
+          <Button className="bg-primary text-primary-foreground hover:bg-primary/90" onClick={() => {
+            setShowDrafter(true);
+            setGenerated(false);
+            setPurpose("");
+            setNotes("");
+            setFunder("");
+          }}>
             <Plus className="h-4 w-4 mr-1" /> Draft Email
           </Button>
         </div>
@@ -128,11 +175,11 @@ const EmailHubPage = () => {
                     </select>
                   </div>
                   <div>
-                    <Label className="text-xs text-muted-foreground">Additional Notes (optional)</Label>
-                    <Textarea value={notes} onChange={e => setNotes(e.target.value)} placeholder="e.g. mention our Q4 programme report" className="bg-secondary/30 border-border/50" />
+                    <Label className="text-xs text-muted-foreground">Additional Notes / Context (optional)</Label>
+                    <Textarea value={notes} onChange={e => setNotes(e.target.value)} placeholder="e.g. mention our Q4 programme report, specific grant reference..." className="bg-secondary/30 border-border/50" />
                   </div>
                   <div className="flex gap-2">
-                    <Button onClick={generateEmail} disabled={generating || !purpose} className="bg-primary text-primary-foreground">
+                    <Button onClick={() => generateEmail()} disabled={generating || !purpose} className="bg-primary text-primary-foreground">
                       {generating ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Sparkles className="h-4 w-4 mr-1" />}
                       Generate
                     </Button>
@@ -158,6 +205,9 @@ const EmailHubPage = () => {
                         <Send className="h-3 w-3 mr-1" /> Open in Email
                       </Button>
                     </a>
+                    <Button variant="ghost" size="sm" onClick={() => { setGenerated(false); }} className="text-muted-foreground">
+                      ← Edit Inputs
+                    </Button>
                     <Button variant="ghost" size="sm" onClick={() => setShowDrafter(false)} className="ml-auto text-muted-foreground">Close</Button>
                   </div>
                 </div>
@@ -177,10 +227,10 @@ const EmailHubPage = () => {
                   <FileText className="h-4 w-4 text-primary shrink-0" />
                   <div className="flex-1">
                     <div className="text-sm font-medium text-foreground">{t.name}</div>
-                    <div className="text-xs text-muted-foreground truncate">{t.preview}</div>
+                    <div className="text-xs text-muted-foreground truncate">{t.context}</div>
                   </div>
                   <Button variant="ghost" size="sm" className="text-xs text-primary"
-                    onClick={() => { setShowDrafter(true); setGenerated(false); }}>
+                    onClick={() => useTemplate(t)}>
                     Use →
                   </Button>
                 </GlassCard>

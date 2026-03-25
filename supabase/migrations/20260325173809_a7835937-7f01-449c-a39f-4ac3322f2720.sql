@@ -1,0 +1,1 @@
+ALTER TABLE public.organisations ALTER COLUMN annual_budget_currency SET DEFAULT 'USD';

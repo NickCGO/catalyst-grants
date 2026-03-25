@@ -55,7 +55,6 @@ const AuthPage = () => {
       } else {
         const data = await signIn(email, password);
         if (data.user) {
-          // Check if onboarding is complete
           const { supabase } = await import("@/integrations/supabase/client");
           const { data: org } = await supabase
             .from("organisations")
@@ -63,9 +62,7 @@ const AuthPage = () => {
             .eq("user_id", data.user.id)
             .maybeSingle();
 
-          if (org && !org.onboarding_complete) {
-            navigate("/onboarding");
-          } else if (!org) {
+          if (!org || !org.onboarding_complete) {
             navigate("/onboarding");
           } else {
             navigate("/dashboard");
