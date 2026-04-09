@@ -11,9 +11,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 
 /* ─── Helpers ─── */
-const fadeUp = (delay = 0) => ({
+const fadeUpVariants = (delay = 0) => ({
   hidden: { opacity: 0, y: 30 },
-  visible: { opacity: 1, y: 0, transition: { delay, duration: 0.6, ease: "easeOut" } },
+  visible: { opacity: 1, y: 0, transition: { delay, duration: 0.6, ease: "easeOut" as const } },
 });
 
 /* ─── Nav ─── */
