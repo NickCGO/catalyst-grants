@@ -1749,6 +1749,45 @@ export type Database = {
           },
         ]
       }
+      waitlist: {
+        Row: {
+          committed_to_pay: boolean | null
+          country: string | null
+          created_at: string | null
+          email: string
+          id: string
+          name: string | null
+          organisation: string | null
+          position: number | null
+          referral_source: string | null
+          role: string | null
+        }
+        Insert: {
+          committed_to_pay?: boolean | null
+          country?: string | null
+          created_at?: string | null
+          email: string
+          id?: string
+          name?: string | null
+          organisation?: string | null
+          position?: number | null
+          referral_source?: string | null
+          role?: string | null
+        }
+        Update: {
+          committed_to_pay?: boolean | null
+          country?: string | null
+          created_at?: string | null
+          email?: string
+          id?: string
+          name?: string | null
+          organisation?: string | null
+          position?: number | null
+          referral_source?: string | null
+          role?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
