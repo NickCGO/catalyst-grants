@@ -394,19 +394,19 @@ const LandingPage = () => {
         <div className="relative z-10 w-full max-w-7xl mx-auto px-6 lg:px-12 py-16">
           <div className="grid lg:grid-cols-[55%_45%] gap-12 items-center">
             <div>
-              <motion.div {...fadeUp(0.1)} initial="hidden" animate="visible">
+              <motion.div variants={fadeUpVariants(0.1)} initial="hidden" animate="visible">
                 <span className="inline-flex items-center gap-2 text-sm text-[#F59E0B] border border-[#F59E0B]/30 rounded-full px-4 py-1.5 mb-6">🌍 Built for African NGOs</span>
               </motion.div>
-              <motion.h1 {...fadeUp(0.2)} initial="hidden" animate="visible" className="text-[40px] lg:text-[64px] font-bold text-[#F1F5F9] leading-[1.1] mb-6">
+              <motion.h1 variants={fadeUpVariants(0.2)} initial="hidden" animate="visible" className="text-[40px] lg:text-[64px] font-bold text-[#F1F5F9] leading-[1.1] mb-6">
                 Stop losing grants<br />to better-written<br /><span className="text-[#0EA5E9]">proposals.</span>
               </motion.h1>
-              <motion.p {...fadeUp(0.35)} initial="hidden" animate="visible" className="text-lg lg:text-xl text-[#94A3B8] mb-4 max-w-lg">
+              <motion.p variants={fadeUpVariants(0.35)} initial="hidden" animate="visible" className="text-lg lg:text-xl text-[#94A3B8] mb-4 max-w-lg">
                 GrantMatch finds 2,448 funders matched to your mission, then writes the proposals for you. Finally, a fair fight for African NGOs.
               </motion.p>
-              <motion.div {...fadeUp(0.35)} initial="hidden" animate="visible" className="flex items-center gap-3 text-sm text-[#64748B] mb-8">
+              <motion.div variants={fadeUpVariants(0.35)} initial="hidden" animate="visible" className="flex items-center gap-3 text-sm text-[#64748B] mb-8">
                 <span>✦ 2,448 funders in the database</span><span>·</span><span>✦ Match scores updated monthly</span>
               </motion.div>
-              <motion.div {...fadeUp(0.5)} initial="hidden" animate="visible">
+              <motion.div variants={fadeUpVariants(0.5)} initial="hidden" animate="visible">
                 <button onClick={scrollToPricing} className="bg-gradient-to-r from-[#0EA5E9] to-[#0284C7] text-white text-lg font-semibold px-8 py-4 rounded-xl shadow-[0_0_32px_rgba(14,165,233,0.3)] hover:scale-[1.02] transition-transform">
                   Claim your spot: $50/month at launch →
                 </button>
@@ -415,7 +415,7 @@ const LandingPage = () => {
                   <span>Lock in your price before we launch. Cancel any time. No charge until launch day.</span>
                 </div>
               </motion.div>
-              <motion.div {...fadeUp(0.6)} initial="hidden" animate="visible" className="mt-6 flex items-center gap-2">
+              <motion.div variants={fadeUpVariants(0.6)} initial="hidden" animate="visible" className="mt-6 flex items-center gap-2">
                 <div className="flex -space-x-2">
                   {["🟤", "🟡", "🟢", "🔵", "🟣"].map((c, i) => (
                     <div key={i} className="h-8 w-8 rounded-full bg-[#1E293B] border-2 border-[#0F172A] flex items-center justify-center text-sm">{c}</div>
@@ -424,7 +424,7 @@ const LandingPage = () => {
                 <span className="text-sm text-[#94A3B8]">+<AnimatedCounter end={waitlistCount} className="text-[#F1F5F9] font-semibold" /> NGOs already waiting</span>
               </motion.div>
             </div>
-            <motion.div {...fadeUp(0.4)} initial="hidden" animate="visible" className="hidden lg:block">
+            <motion.div variants={fadeUpVariants(0.4)} initial="hidden" animate="visible" className="hidden lg:block">
               <DashboardMock />
             </motion.div>
           </div>
@@ -437,7 +437,7 @@ const LandingPage = () => {
       {/* ── PAIN ── */}
       <section className="relative z-10 py-24 px-6">
         <div className="max-w-6xl mx-auto">
-          <motion.div {...fadeUp()} initial="hidden" whileInView="visible" viewport={{ once: true }} className="text-center mb-16">
+          <motion.div variants={fadeUpVariants()} initial="hidden" whileInView="visible" viewport={{ once: true }} className="text-center mb-16">
             <p className="text-xs font-semibold tracking-widest text-[#F59E0B] mb-3">THE PROBLEM</p>
             <h2 className="text-[28px] lg:text-[40px] font-bold text-[#F1F5F9] max-w-3xl mx-auto">African NGOs do incredible work. And spend half their time lost in the funding maze.</h2>
           </motion.div>
@@ -447,7 +447,7 @@ const LandingPage = () => {
               { stat: "1 in 5", label: "Applications succeed on average for African NGOs", copy: "The odds are brutal. Not because your work isn't good enough. Because most proposals don't show it clearly." },
               { stat: "$2.4M", label: "Average funding gap African NGOs report annually", copy: "The money is out there. 312 funders are actively accepting applications right now. Most NGOs never find them in time." },
             ].map((card, i) => (
-              <motion.div key={i} {...fadeUp(i * 0.1)} initial="hidden" whileInView="visible" viewport={{ once: true }}>
+              <motion.div key={i} variants={fadeUpVariants(i * 0.1)} initial="hidden" whileInView="visible" viewport={{ once: true }}>
                 <div className="glass-card p-6 h-full">
                   <div className="text-4xl font-bold text-[#F59E0B] mb-2">{card.stat}</div>
                   <div className="text-sm font-semibold text-[#F1F5F9] mb-2">{card.label}</div>
@@ -463,7 +463,7 @@ const LandingPage = () => {
       {/* ── SOLUTION ── */}
       <section className="relative z-10 py-24 px-6">
         <div className="max-w-6xl mx-auto">
-          <motion.div {...fadeUp()} initial="hidden" whileInView="visible" viewport={{ once: true }} className="text-center mb-16">
+          <motion.div variants={fadeUpVariants()} initial="hidden" whileInView="visible" viewport={{ once: true }} className="text-center mb-16">
             <p className="text-xs font-semibold tracking-widest text-[#0EA5E9] mb-3">THE SOLUTION</p>
             <h2 className="text-[28px] lg:text-[40px] font-bold text-[#F1F5F9] mb-4">GrantMatch does the heavy lifting. You focus on the work.</h2>
             <p className="text-lg text-[#94A3B8] max-w-2xl mx-auto">Match with the right funders. Write proposals that win. Track everything in one place. In a fraction of the time.</p>
@@ -474,7 +474,7 @@ const LandingPage = () => {
               { icon: FileText, color: "#14B8A6", title: "AI writes your proposals", copy: "Full proposals, letters of enquiry, concept notes. Generated in minutes from your profile. Reviewed by you. Submitted when you're ready." },
               { icon: BarChart2, color: "#10B981", title: "Track every application", copy: "Kanban pipeline, deadline calendar, funder relationship history. Know exactly where every application stands and what to do next." },
             ].map((p, i) => (
-              <motion.div key={i} {...fadeUp(i * 0.1)} initial="hidden" whileInView="visible" viewport={{ once: true }}>
+              <motion.div key={i} variants={fadeUpVariants(i * 0.1)} initial="hidden" whileInView="visible" viewport={{ once: true }}>
                 <div className="glass-card p-6 h-full">
                   <div className="h-12 w-12 rounded-xl flex items-center justify-center mb-4" style={{ backgroundColor: `${p.color}20` }}>
                     <p.icon className="h-6 w-6" style={{ color: p.color }} />
@@ -491,7 +491,7 @@ const LandingPage = () => {
       {/* ── FEATURE SHOWCASE ── */}
       <section className="relative z-10 py-24 px-6">
         <div className="max-w-6xl mx-auto">
-          <motion.div {...fadeUp()} initial="hidden" whileInView="visible" viewport={{ once: true }} className="text-center mb-12">
+          <motion.div variants={fadeUpVariants()} initial="hidden" whileInView="visible" viewport={{ once: true }} className="text-center mb-12">
             <p className="text-xs font-semibold tracking-widest text-[#14B8A6] mb-3">SEE IT IN ACTION</p>
             <h2 className="text-[28px] lg:text-[40px] font-bold text-[#F1F5F9]">Built for the way African NGOs actually work.</h2>
           </motion.div>
@@ -518,7 +518,7 @@ const LandingPage = () => {
       {/* ── HOW IT WORKS ── */}
       <section className="relative z-10 py-24 px-6">
         <div className="max-w-5xl mx-auto">
-          <motion.div {...fadeUp()} initial="hidden" whileInView="visible" viewport={{ once: true }} className="text-center mb-16">
+          <motion.div variants={fadeUpVariants()} initial="hidden" whileInView="visible" viewport={{ once: true }} className="text-center mb-16">
             <p className="text-xs font-semibold tracking-widest text-[#10B981] mb-3">GET STARTED IN MINUTES</p>
             <h2 className="text-[28px] lg:text-[40px] font-bold text-[#F1F5F9]">From signup to your first matched grant in under 10 minutes.</h2>
           </motion.div>
@@ -529,7 +529,7 @@ const LandingPage = () => {
               { num: "02", icon: Search, title: "See your matched funders", copy: "GrantMatch scores all 2,448 funders against your profile instantly. You see the ones most likely to fund you, ranked by match score, with application windows clearly shown." },
               { num: "03", icon: Send, title: "Write and submit with AI", copy: "Click apply on any funder. GrantMatch reads their requirements and opens the right document type. Full proposal, letter of enquiry, or concept note, generated and ready to review." },
             ].map((step, i) => (
-              <motion.div key={i} {...fadeUp(i * 0.15)} initial="hidden" whileInView="visible" viewport={{ once: true }} className="relative text-center">
+              <motion.div key={i} variants={fadeUpVariants(i * 0.15)} initial="hidden" whileInView="visible" viewport={{ once: true }} className="relative text-center">
                 <div className="text-5xl font-bold text-[#0EA5E9] mb-4">{step.num}</div>
                 <div className="h-14 w-14 rounded-2xl bg-[#0EA5E9]/10 flex items-center justify-center mx-auto mb-4">
                   <step.icon className="h-7 w-7 text-[#0EA5E9]" />
@@ -546,7 +546,7 @@ const LandingPage = () => {
       {/* ── PRICING ── */}
       <section id="pricing" className="relative z-10 py-24 px-6">
         <div className="max-w-6xl mx-auto">
-          <motion.div {...fadeUp()} initial="hidden" whileInView="visible" viewport={{ once: true }} className="text-center mb-16">
+          <motion.div variants={fadeUpVariants()} initial="hidden" whileInView="visible" viewport={{ once: true }} className="text-center mb-16">
             <p className="text-xs font-semibold tracking-widest text-[#F59E0B] mb-3">JOIN THE WAITLIST</p>
             <h2 className="text-[28px] lg:text-[40px] font-bold text-[#F1F5F9] mb-4">Lock in $50/month before we launch.</h2>
             <p className="text-lg text-[#94A3B8] max-w-2xl mx-auto">After launch, pricing starts at $99/month. Waitlist members who commit now keep $50/month for life. That is our promise.</p>
@@ -554,7 +554,7 @@ const LandingPage = () => {
 
           <div className="grid lg:grid-cols-2 gap-8 max-w-5xl mx-auto">
             {/* Pricing card */}
-            <motion.div {...fadeUp(0.1)} initial="hidden" whileInView="visible" viewport={{ once: true }}>
+            <motion.div variants={fadeUpVariants(0.1)} initial="hidden" whileInView="visible" viewport={{ once: true }}>
               <div className="rounded-2xl border-2 border-[#0EA5E9] p-8 bg-[#1E293B]/50 backdrop-blur-xl shadow-[0_0_40px_rgba(14,165,233,0.15)] h-full">
                 <p className="text-xs font-semibold tracking-widest text-[#0EA5E9] mb-6">WAITLIST FOUNDING MEMBER</p>
                 <div className="flex items-baseline gap-1 mb-1">
@@ -593,7 +593,7 @@ const LandingPage = () => {
             </motion.div>
 
             {/* Form */}
-            <motion.div {...fadeUp(0.2)} initial="hidden" whileInView="visible" viewport={{ once: true }}>
+            <motion.div variants={fadeUpVariants(0.2)} initial="hidden" whileInView="visible" viewport={{ once: true }}>
               <div className="glass-card p-8 h-full">
                 {successData ? <WaitlistSuccess data={successData} /> : (
                   <WaitlistForm onSuccess={(data) => {
@@ -617,7 +617,7 @@ const LandingPage = () => {
       {/* ── TESTIMONIALS ── */}
       <section className="relative z-10 py-24 px-6">
         <div className="max-w-5xl mx-auto">
-          <motion.div {...fadeUp()} initial="hidden" whileInView="visible" viewport={{ once: true }} className="text-center mb-16">
+          <motion.div variants={fadeUpVariants()} initial="hidden" whileInView="visible" viewport={{ once: true }} className="text-center mb-16">
             <p className="text-xs font-semibold tracking-widest text-[#14B8A6] mb-3">EARLY VOICES</p>
             <h2 className="text-[28px] lg:text-[40px] font-bold text-[#F1F5F9]">Heard from the community.</h2>
           </motion.div>
@@ -627,7 +627,7 @@ const LandingPage = () => {
               { name: "Kofi A.", title: "Fundraising Manager", org: "Accra Education Trust", country: "Ghana", quote: "The concept note alone would save my team two weeks per application cycle. We apply to 14 funders per year. That is almost a full month back." },
               { name: "Amara D.", title: "Programme Director", org: "Nairobi Community Health Network", country: "Kenya", quote: "Most grant tools are built for American nonprofits and badly adapted for Africa. GrantMatch starting from African funders first changes everything." },
             ].map((t, i) => (
-              <motion.div key={i} {...fadeUp(i * 0.1)} initial="hidden" whileInView="visible" viewport={{ once: true }}>
+              <motion.div key={i} variants={fadeUpVariants(i * 0.1)} initial="hidden" whileInView="visible" viewport={{ once: true }}>
                 <div className="glass-card p-6 h-full flex flex-col">
                   <div className="flex gap-1 mb-4">{Array(5).fill(0).map((_, j) => <Star key={j} className="h-4 w-4 text-[#F59E0B] fill-[#F59E0B]" />)}</div>
                   <p className="text-sm text-[#94A3B8] italic mb-6 flex-1">"{t.quote}"</p>
