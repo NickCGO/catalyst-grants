@@ -241,7 +241,7 @@ function WaitlistForm({ onSuccess }: { onSuccess: (data: { name: string; email: 
     try {
       // Get current count for position
       const { count } = await supabase.from("waitlist").select("*", { count: "exact", head: true });
-      const position = (count || 0) + 1;
+      const position = 6 + (count || 0) + 1;
 
       const { error } = await supabase.from("waitlist").insert({
         email, name, organisation: org, country, role,
