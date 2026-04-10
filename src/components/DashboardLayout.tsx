@@ -208,20 +208,29 @@ interface DashboardLayoutProps {
 
 const DashboardLayout = ({ children }: DashboardLayoutProps) => {
   const { user, loading } = useAuth();
-  const { org, loading: orgLoading } = useOrganisation();
+  const { org, loading: orgLoading, refetch } = useOrganisation();
   const navigate = useNavigate();
+  const [verified, setVerified] = useState(false);
 
   useEffect(() => {
     if (!loading && !user) {
       navigate("/login");
       return;
     }
-    if (!loading && !orgLoading && user) {
+    // On mount, refetch org to get fresh onboarding_complete status
+    if (!loading && user && !verified) {
+      refetch();
+      setVerified(true);
+    }
+  }, [loading, user, verified, refetch, navigate]);
+
+  useEffect(() => {
+    if (verified && !orgLoading && user) {
       if (!org || !org.onboarding_complete) {
         navigate("/onboarding");
       }
     }
-  }, [loading, orgLoading, user, org, navigate]);
+  }, [verified, orgLoading, org, user, navigate]);
 
   if (loading || orgLoading) {
     return (
