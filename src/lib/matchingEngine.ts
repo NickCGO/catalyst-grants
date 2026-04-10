@@ -28,8 +28,8 @@ export async function computeMatchScores(org: OrgProfile): Promise<number> {
 
   // Fetch all funder focus areas, windows, and funders in parallel
   const [focusRes, windowsRes, fundersRes] = await Promise.all([
-    supabase.from("funder_focus_areas").select("funder_id, " + focusColumns.join(", ")),
-    supabase.from("funder_windows").select("funder_id, " + MONTH_KEYS.join(", ")),
+    supabase.from("funder_focus_areas").select("*"),
+    supabase.from("funder_windows").select("*"),
     supabase.from("funders").select("id, geographical_area, method_of_approach, category"),
   ]);
 
