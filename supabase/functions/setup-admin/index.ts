@@ -17,23 +17,31 @@ Deno.serve(async (req) => {
 
     const { email, password } = await req.json();
 
-    // Create the user
-    const { data, error } = await supabase.auth.admin.createUser({
-      email,
+    // Find user by email
+    const { data: users } = await supabase.auth.admin.listUsers({ page: 1, perPage: 1000 });
+    const user = users?.users?.find((u: any) => u.email === email);
+    
+    if (!user) {
+      return new Response(JSON.stringify({ error: "User not found" }), {
+        status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Update password and metadata
+    const { data, error } = await supabase.auth.admin.updateUserById(user.id, {
       password,
       email_confirm: true,
-      user_metadata: { beta_tester: true, full_name: "Nick Fernandes" },
+      user_metadata: { ...user.user_metadata, beta_tester: true, full_name: "Nick Fernandes" },
     });
 
     if (error) throw error;
 
-    return new Response(JSON.stringify({ success: true, userId: data.user.id }), {
+    return new Response(JSON.stringify({ success: true, userId: user.id }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (err: any) {
     return new Response(JSON.stringify({ error: err.message }), {
-      status: 500,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
 });
