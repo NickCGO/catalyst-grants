@@ -674,8 +674,8 @@ const OnboardingPage = () => {
         }
       }
 
-      toast({ title: "🎉 Onboarding complete!", description: "Calculating your matches..." });
-      setTimeout(() => navigate("/dashboard"), 2000);
+      toast({ title: "🎉 Onboarding complete!", description: "Welcome to your dashboard!" });
+      navigate("/dashboard", { replace: true });
     } catch (error: any) {
       toast({ title: "Save failed", description: error.message, variant: "destructive" });
     }
