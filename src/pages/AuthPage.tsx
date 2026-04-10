@@ -24,13 +24,7 @@ const AuthPage = () => {
 
   useEffect(() => {
     if (!authLoading && user) {
-      // Check if beta tester
-      const isBeta = user.user_metadata?.beta_tester === true;
-      if (isBeta) {
-        navigate("/dashboard");
-      } else {
-        setWaitlistMessage(true);
-      }
+      navigate("/dashboard");
     }
   }, [authLoading, user, navigate]);
 
@@ -50,18 +44,12 @@ const AuthPage = () => {
       } else {
         const data = await signIn(email, password);
         if (data.user) {
-          const isBeta = data.user.user_metadata?.beta_tester === true;
-          if (isBeta) {
-            // Check onboarding
-            const { supabase } = await import("@/integrations/supabase/client");
-            const { data: org } = await supabase.from("organisations").select("onboarding_complete").eq("user_id", data.user.id).maybeSingle();
-            if (!org || !org.onboarding_complete) {
-              navigate("/onboarding");
-            } else {
-              navigate("/dashboard");
-            }
+          const { supabase } = await import("@/integrations/supabase/client");
+          const { data: org } = await supabase.from("organisations").select("onboarding_complete").eq("user_id", data.user.id).maybeSingle();
+          if (!org || !org.onboarding_complete) {
+            navigate("/onboarding");
           } else {
-            setWaitlistMessage(true);
+            navigate("/dashboard");
           }
         }
       }
