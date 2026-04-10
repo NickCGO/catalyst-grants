@@ -13,7 +13,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "@/hooks/use-toast";
 import {
   Users, ListChecks, Database, BarChart3, Shield, Search,
-  Trash2, UserCheck, UserX, ArrowLeft, Download, RefreshCw, Plus,
+  Trash2, UserCheck, UserX, Download, RefreshCw, Plus,
 } from "lucide-react";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
