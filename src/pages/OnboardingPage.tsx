@@ -187,8 +187,8 @@ const OnboardingPage = () => {
   const [step, setStep] = useState(0);
   const [orgId, setOrgId] = useState<string | null>(null);
   const navigate = useNavigate();
-  const inputClass = "mt-1 bg-secondary/30 border-border/50 text-foreground text-sm";
-  const labelClass = "text-xs text-muted-foreground";
+  const inputClass = "mt-1 bg-secondary/30 border-border/50 text-foreground text-sm placeholder:text-muted-foreground/60";
+  const labelClass = "text-sm font-semibold text-foreground";
   const selectClass = "w-full mt-1 px-3 py-2 rounded-lg bg-secondary/30 border border-border/50 text-sm text-foreground";
 
   // ── Step 1: Legal Identity ──
@@ -711,6 +711,35 @@ const OnboardingPage = () => {
         </div>
       </div>
 
+      {/* Info quality note + document upload */}
+      <div className="mx-auto max-w-2xl px-4 sm:px-6 pt-4">
+        <div className="flex items-start gap-3 p-4 rounded-xl bg-primary/5 border border-primary/20">
+          <Info className="h-5 w-5 text-primary mt-0.5 shrink-0" />
+          <div className="flex-1">
+            <p className="text-sm text-foreground font-medium mb-1">Why so many questions?</p>
+            <p className="text-xs text-muted-foreground leading-relaxed">Although it is a lot of info upfront, a good quality amount of information will help us design great proposals tailored specifically to your organisation. The more detail you provide, the stronger your AI-generated proposals will be.</p>
+            <div className="mt-3">
+              <label className="flex items-center gap-2 cursor-pointer text-xs text-primary hover:text-primary/80 transition-colors">
+                <Upload className="h-4 w-4" />
+                <span className="font-medium">Upload an Annual Report to pre-fill fields</span>
+                <input
+                  type="file"
+                  accept=".pdf,.docx,.doc"
+                  className="hidden"
+                  onChange={async (e) => {
+                    const file = e.target.files?.[0];
+                    if (!file) return;
+                    toast({ title: "📄 Document received", description: `Processing ${file.name}... Fields will be pre-filled shortly.` });
+                    // TODO: Integrate document parser to extract org info and pre-fill fields
+                    toast({ title: "Coming soon", description: "Document parsing will be available in the next update. Please fill in the fields manually for now." });
+                  }}
+                />
+              </label>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div className="flex-1 flex">
         {/* Left sidebar — step nav (desktop) */}
         <div className="hidden lg:block w-56 border-r border-border/20 p-4 space-y-1">
@@ -855,8 +884,8 @@ const OnboardingPage = () => {
                         </div>
                       )}
                       <div>
-                        <Label className={labelClass}>Physical Address (optional)</Label>
-                        <Textarea value={physicalAddress} onChange={e => setPhysicalAddress(e.target.value)} placeholder="Street address, suburb, city, postal code" className="bg-secondary/30 border-border/50 min-h-[60px] text-foreground text-sm" />
+                        <Label className={labelClass}>Physical/Business Address *</Label>
+                        <Textarea value={physicalAddress} onChange={e => setPhysicalAddress(e.target.value)} placeholder="Street address, suburb, city, postal code" className="bg-secondary/30 border-border/50 min-h-[60px] text-foreground text-sm placeholder:text-muted-foreground/60" required />
                       </div>
                     </div>
                   )}
