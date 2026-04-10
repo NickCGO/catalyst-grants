@@ -123,6 +123,17 @@ Deno.serve(async (req) => {
         return new Response(JSON.stringify({ success: true }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
       }
 
+      case "create_user": {
+        const { data: newUser, error: createErr } = await supabase.auth.admin.createUser({
+          email: params.email,
+          password: params.password,
+          email_confirm: true,
+          user_metadata: params.metadata || {},
+        });
+        if (createErr) throw createErr;
+        return new Response(JSON.stringify(newUser), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+
       case "promote_to_beta": {
         // Find auth user by email, set beta_tester: true
         const { data: users } = await supabase.auth.admin.listUsers({ page: 1, perPage: 1000 });
