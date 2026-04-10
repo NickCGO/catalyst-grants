@@ -24,6 +24,7 @@ import AnalyticsPage from "./pages/AnalyticsPage";
 import PartnershipsPage from "./pages/PartnershipsPage";
 import PartnershipWorkspacePage from "./pages/PartnershipWorkspacePage";
 import NGOPublicProfilePage from "./pages/NGOPublicProfilePage";
+import AdminPage from "./pages/AdminPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -80,6 +81,9 @@ const App = () => (
           {/* Legacy routes */}
           <Route path="/team" element={<TeamManagementPage />} />
           <Route path="/tasks" element={<TasksPage />} />
+
+          {/* Admin */}
+          <Route path="/admin" element={<AdminPage />} />
 
           <Route path="*" element={<NotFound />} />
         </Routes>
