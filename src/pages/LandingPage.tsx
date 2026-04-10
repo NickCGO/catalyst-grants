@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowRight, Target, FileText, BarChart2, Lock, Check, Star, Users, Search, Send, ChevronRight, Loader2, Copy, ExternalLink } from "lucide-react";
+import { ArrowRight, Target, FileText, BarChart2, Lock, Check, Users, Search, Send, ChevronRight, Loader2, Copy, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
