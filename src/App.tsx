@@ -24,6 +24,7 @@ import AnalyticsPage from "./pages/AnalyticsPage";
 import PartnershipsPage from "./pages/PartnershipsPage";
 import PartnershipWorkspacePage from "./pages/PartnershipWorkspacePage";
 import NGOPublicProfilePage from "./pages/NGOPublicProfilePage";
+import AdminPage from "./pages/AdminPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
