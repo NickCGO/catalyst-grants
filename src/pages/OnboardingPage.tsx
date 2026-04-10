@@ -855,8 +855,8 @@ const OnboardingPage = () => {
                         </div>
                       )}
                       <div>
-                        <Label className={labelClass}>Physical Address (optional)</Label>
-                        <Textarea value={physicalAddress} onChange={e => setPhysicalAddress(e.target.value)} placeholder="Street address, suburb, city, postal code" className="bg-secondary/30 border-border/50 min-h-[60px] text-foreground text-sm" />
+                        <Label className={labelClass}>Physical/Business Address *</Label>
+                        <Textarea value={physicalAddress} onChange={e => setPhysicalAddress(e.target.value)} placeholder="Street address, suburb, city, postal code" className="bg-secondary/30 border-border/50 min-h-[60px] text-foreground text-sm placeholder:text-muted-foreground/60" required />
                       </div>
                     </div>
                   )}
