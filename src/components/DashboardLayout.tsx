@@ -1,4 +1,4 @@
-import { ReactNode, useEffect, useState } from "react";
+import { ReactNode, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard, Search, ClipboardList, PenTool, Newspaper, Settings,
@@ -208,29 +208,20 @@ interface DashboardLayoutProps {
 
 const DashboardLayout = ({ children }: DashboardLayoutProps) => {
   const { user, loading } = useAuth();
-  const { org, loading: orgLoading, refetch } = useOrganisation();
+  const { org, loading: orgLoading } = useOrganisation();
   const navigate = useNavigate();
-  const [verified, setVerified] = useState(false);
 
   useEffect(() => {
     if (!loading && !user) {
-      navigate("/login");
-      return;
+      navigate("/login", { replace: true });
     }
-    // On mount, refetch org to get fresh onboarding_complete status
-    if (!loading && user && !verified) {
-      refetch();
-      setVerified(true);
-    }
-  }, [loading, user, verified, refetch, navigate]);
+  }, [loading, user, navigate]);
 
   useEffect(() => {
-    if (verified && !orgLoading && user) {
-      if (!org || !org.onboarding_complete) {
-        navigate("/onboarding");
-      }
+    if (!loading && !orgLoading && user && !org?.onboarding_complete) {
+      navigate("/onboarding", { replace: true });
     }
-  }, [verified, orgLoading, org, user, navigate]);
+  }, [loading, orgLoading, user, org, navigate]);
 
   if (loading || orgLoading) {
     return (
@@ -244,7 +235,6 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
   }
 
   if (!user) return null;
-
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full gradient-bg">
