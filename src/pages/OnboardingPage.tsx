@@ -643,9 +643,11 @@ const OnboardingPage = () => {
       };
 
       if (orgId) {
-        await supabase.from("organisations").update(orgData).eq("id", orgId);
+        const { error: updateErr } = await supabase.from("organisations").update(orgData).eq("id", orgId);
+        if (updateErr) throw updateErr;
       } else {
-        const { data } = await supabase.from("organisations").insert({ ...orgData, user_id: user.id }).select("id").single();
+        const { data, error: insertErr } = await supabase.from("organisations").insert({ ...orgData, user_id: user.id }).select("id").single();
+        if (insertErr) throw insertErr;
         if (data) setOrgId(data.id);
       }
 
@@ -672,8 +674,8 @@ const OnboardingPage = () => {
         }
       }
 
-      toast({ title: "🎉 Onboarding complete!", description: "Calculating your matches..." });
-      setTimeout(() => navigate("/dashboard"), 2000);
+      toast({ title: "🎉 Onboarding complete!", description: "Welcome to your dashboard!" });
+      navigate("/dashboard", { replace: true });
     } catch (error: any) {
       toast({ title: "Save failed", description: error.message, variant: "destructive" });
     }
