@@ -691,6 +691,148 @@ const OnboardingPage = () => {
     setSelectedFocus(prev => prev.includes(key) ? prev.filter(k => k !== key) : [...prev, key]);
   };
 
+  const fillDummyData = () => {
+    // Step 1: Legal Identity
+    setOrgName("Bright Futures Foundation");
+    setTradingName("BFF");
+    setOrgType("NPC");
+    setRegNumber("2018/123456/08");
+    setCountry("South Africa");
+    setRegion("Western Cape");
+    setYearEstablished("2018");
+    setTaxStatus("Tax exempt - Section 18A");
+    setPboNumber("930067890");
+    setIsAudited(true);
+    setLastAuditYear("2025");
+    setPhysicalAddress("42 Hope Street, Woodstock, Cape Town, 7925");
+    // Step 2: Mission & ToC
+    setMission("Bright Futures Foundation empowers vulnerable youth in under-resourced communities through quality education, life skills training, and mentorship programmes. We build resilient young leaders who break cycles of poverty and contribute positively to their communities.");
+    setVision("A South Africa where every young person has the opportunity and support to reach their full potential, regardless of their background.");
+    setCoreValues(["Ubuntu", "Dignity", "Empowerment", "Accountability", "Innovation"]);
+    setTocAction("provide after-school education, mentorship and life skills programmes");
+    setTocPopulation("youth aged 13-24 in under-resourced communities in Cape Town");
+    setTocChange("they will complete school, gain employable skills, and become community leaders");
+    setTocMechanism("consistent support, safe spaces, and positive role models build confidence and capability");
+    setTheoryOfChange("In the Western Cape, youth unemployment exceeds 55% and school dropout rates in township communities are alarmingly high. We believe that if we provide consistent after-school academic support, life skills training, and mentorship to youth aged 13-24 in under-resourced communities, then they will complete their schooling, develop employable skills, and become active community leaders. This is because consistent engagement with caring adults in safe spaces builds self-confidence, academic competence, and social-emotional resilience — the foundations needed to break intergenerational cycles of poverty.");
+    setSelectedBeneficiaries(["youth_13_24", "children_0_12", "women_girls", "community"]);
+    setBeneficiaryReach("2500");
+    setBeneficiaryReachUnit("individuals");
+    setImpactStatement("Since 2018, we have supported over 8,000 young people, achieving a 92% school retention rate and placing 340 youth in employment or further education.");
+    setSelectedSDGs([1, 4, 5, 8, 10, 11]);
+    setPrimarySDGs(["Quality Education", "No Poverty", "Decent Work"]);
+    setSelectedFocus(["youth", "education_ecd", "poverty_livelihood", "entrepreneur_skills_vocational", "community_development"]);
+    setFocusPriority({ youth: "primary", education_ecd: "primary", poverty_livelihood: "secondary", entrepreneur_skills_vocational: "secondary", community_development: "tertiary" });
+    // Step 3: Problem
+    setProblemStatement("In the Cape Flats and surrounding township communities, over 60% of young people are not in education, employment, or training (NEET). Gang violence, substance abuse, and a lack of safe recreational spaces leave youth vulnerable to exploitation. Schools are under-resourced with learner-to-teacher ratios exceeding 45:1, and fewer than 40% of Grade 12 learners achieve a Bachelor's pass. Without targeted intervention, these young people face a future of unemployment and social exclusion.");
+    setProblemEvidence([
+      "Western Cape Education Department data shows only 38.2% Bachelor pass rate in quintile 1-3 schools (2024).",
+      "Stats SA Q4 2024 reports 55.3% youth unemployment rate for 15-24 age group in Western Cape.",
+      "SAPS crime statistics show 47% of violent crime in Cape Town involves youth under 25.",
+    ]);
+    setProblemRootCauses("Structural inequality rooted in apartheid-era spatial planning continues to concentrate poverty. Under-resourced schools, absent parents due to shift work, gang recruitment from age 10, lack of safe after-school spaces, and limited exposure to career opportunities create a cycle of hopelessness.");
+    setProblemGeoContext("We operate in Khayelitsha, Nyanga, Gugulethu, Mitchells Plain, and Manenberg — five of Cape Town's most underserved communities with the highest crime and unemployment rates.");
+    setCommunityVoice("\"Before BFF, I had nowhere to go after school. Now I have a second family and I'm going to university.\" — Thandi, 19, Khayelitsha");
+    setGapInServices("Most existing youth programmes operate only during school hours or focus on a single intervention. There is no integrated model combining academic support, psychosocial services, and career pathways in these communities.");
+    setWhyYourOrg("We are trusted community insiders with 6 years of proven track record. Our staff come from the communities we serve, and our integrated model addresses academic, social, and economic barriers simultaneously.");
+    // Step 4: Programmes
+    setProgrammes([
+      {
+        name: "After-School Academy", shortDesc: "Daily academic support and homework assistance for grades 7-12",
+        fullDesc: "Our flagship programme provides structured after-school academic support 5 days a week across 8 community centres. Trained facilitators offer homework help, exam preparation, and supplementary lessons in Maths, English, and Science. Each learner receives an individualised learning plan.",
+        approaches: ["Direct service delivery", "Peer education"], activities: ["Daily homework sessions", "Weekly tutoring in Maths & Science", "Monthly career talks"],
+        outputs: ["1,200 learners supported annually", "4,800 tutoring sessions delivered"], outcomes: ["85% of participants pass all subjects", "92% school retention rate"],
+        impactStory: "Sipho joined our programme in Grade 9 struggling with Maths. After 2 years of consistent support, he achieved 78% in Matric Maths and is now studying Engineering at UCT on a bursary.",
+        areas: "Khayelitsha, Nyanga, Gugulethu", reach: "1200", reachUnit: "individuals", budget: "R1,800,000", status: "Active", yearStarted: "2018", partners: "WCED, Teach SA",
+      },
+      {
+        name: "Youth Leadership Accelerator", shortDesc: "18-month leadership and employability programme for 18-24 year olds",
+        fullDesc: "An intensive programme that combines life skills workshops, digital literacy training, entrepreneurship modules, and workplace readiness. Participants complete a community project and receive mentorship from industry professionals.",
+        approaches: ["Capacity building / training", "Community mobilisation"], activities: ["Weekly life skills workshops", "Monthly entrepreneurship masterclasses", "Quarterly community projects"],
+        outputs: ["200 youth trained annually", "40 community projects completed"], outcomes: ["70% employment or further education within 6 months", "50 micro-enterprises launched"],
+        impactStory: "Ayanda completed our accelerator and started a mobile car wash business employing 3 other youth from her community.",
+        areas: "Mitchells Plain, Manenberg", reach: "200", reachUnit: "individuals", budget: "R950,000", status: "Active", yearStarted: "2020", partners: "Harambee, Youth Employment Service",
+      },
+    ]);
+    setInnovationFactor("We use a peer-education model where graduated participants become facilitators, creating a self-sustaining pipeline of community leaders who understand local challenges firsthand.");
+    // Step 5: Beneficiaries
+    setPrimaryTargetGroup("Youth aged 13-24 from low-income households in Cape Town's township communities, with priority given to orphans, child-headed households, and those at risk of gang recruitment.");
+    setBeneficiarySelection("Referrals from schools, social workers, and community leaders. Selection criteria include household income below R5,000/month, school attendance challenges, and geographic location within our operational areas.");
+    setGenderFemale(58);
+    setDirectBeneficiaries("2500");
+    setIndirectBeneficiaries("7500");
+    setBeneficiaryParticipation("Youth Advisory Council meets monthly to shape programme design. Annual satisfaction surveys. Participant representatives sit on our programme committee.");
+    setVulnerabilityFactors(["Orphans & vulnerable children", "Child-headed households", "Gang-affected youth", "School dropouts", "GBV survivors"]);
+    // Step 6: Impact & M&E
+    setKeyOutcomes(["Improved academic performance (average 15% grade increase)", "Increased school retention to 92%", "70% of graduates employed or in further education within 12 months"]);
+    setIndicators([
+      { name: "School retention rate", type: "outcome", baseline: "72%", target: "92%", method: "School records tracking", frequency: "quarterly" },
+      { name: "Grade improvement", type: "outcome", baseline: "Average 45%", target: "Average 60%", method: "Pre/post assessments", frequency: "quarterly" },
+      { name: "Youth employed/studying post-programme", type: "outcome", baseline: "30%", target: "70%", method: "6-month follow-up surveys", frequency: "biannually" },
+    ]);
+    setDataCollectionMethods(["Pre/post surveys or assessments", "Attendance registers", "School or institution records", "Individual interviews", "Digital data collection (KoBoToolbox, ODK, Google Forms)"]);
+    setHasMEFramework("yes");
+    setMneDescription("We use a custom outcomes framework aligned to the National Youth Policy. Data is collected via KoBoToolbox, analysed quarterly, and reported to stakeholders. An independent evaluation was conducted in 2024 by UCT's Development Policy Research Unit.");
+    setReportingFrequency("quarterly");
+    setBaselineData("Baseline assessments conducted at enrolment capture academic levels, socio-economic status, psychosocial wellbeing (using the SDQ), and digital literacy. Community baselines updated biennially using Stats SA ward-level data.");
+    setPastImpactAchievements(["92% school retention rate vs 72% community average", "340 youth placed in employment or further education since 2020", "Named Best Youth Programme by Western Cape Department of Social Development 2024"]);
+    // Step 7: Budget & Finance
+    setAnnualBudget("4200000");
+    setBudgetCurrency("USD");
+    setStaffPercent(35);
+    setProgrammesPercent(50);
+    setOverheadsPercent(15);
+    setPctGrants(60);
+    setPctGovernment(15);
+    setPctCorporate(20);
+    setPctSelfGenerated(5);
+    setFundingGap("1200000");
+    setTypicalGrantSize("R200,000 - R500,000");
+    setFinancialSystem("Pastel Accounting with monthly reconciliation. Dedicated finance officer. Annual external audit by PKF.");
+    setHasDedicatedBank(true);
+    setCofundingAvailable(true);
+    setCofundingDescription("We can co-fund up to 30% of project costs through existing operational budget and in-kind contributions including venue space and staff time.");
+    // Step 8: Team & Capacity
+    setFteCount("12");
+    setParttimeCount("8");
+    setVolunteerCount("45");
+    setBoardCount("7");
+    setHasGrantWriter(true);
+    setCeoName("Nomvula Mkhize");
+    setCeoBio("Nomvula Mkhize has led Bright Futures Foundation since its inception in 2018. With 15 years of experience in youth development and a Master's in Social Development from UCT, she has secured over R20 million in grant funding. Previously, she managed programmes at the DG Murray Trust and served on the Western Cape Youth Commission.");
+    setKeyStaff([
+      { name: "James Petersen", title: "Programme Director", qualification: "BA Social Work (UWC)", experience: "10 years in youth development" },
+      { name: "Fatima Adams", title: "M&E Manager", qualification: "MPH (Stellenbosch)", experience: "8 years in programme evaluation" },
+      { name: "Thabo Ndlovu", title: "Finance Officer", qualification: "BCom Accounting (UNISA)", experience: "6 years in NGO finance" },
+    ]);
+    setHasBBBEE(true);
+    setBbbeeLevel("2");
+    setSelectedPolicies(["Child protection / safeguarding", "Financial management", "HR / employment", "Anti-fraud and corruption", "Data protection (POPIA)", "Health & safety"]);
+    setHasStrategicPlan("yes");
+    setStrategicPlanPeriod("2024-2028");
+    setOrgAchievements(["Recipient of the National Lottery Commission Community Builder Award 2023", "Featured in Mail & Guardian Top 200 NGOs 2024", "Successfully managed 14 grants simultaneously with zero compliance findings"]);
+    setGovernanceStructure("7-member Board of Directors meeting quarterly, with Finance, Programme, and HR sub-committees. Board includes legal, financial, education, and community representation. Annual AGM with published financial statements.");
+    // Step 9: Past Funding & Partnerships
+    setHasReceivedGrants(true);
+    setPastFundersDetailed([
+      { name: "National Lottery Commission", amount: "R2,500,000", year: "2023", project: "After-School Academy Expansion", outcome: "Expanded from 4 to 8 centres" },
+      { name: "DG Murray Trust", amount: "R1,200,000", year: "2022", project: "Youth Leadership Accelerator", outcome: "200 youth trained, 70% employment rate" },
+      { name: "FirstRand Foundation", amount: "R800,000", year: "2024", project: "Digital Skills Programme", outcome: "150 youth gained digital certificates" },
+    ]);
+    setLargestGrant("R2,500,000");
+    setTotalFunding3yr("R8,500,000");
+    setGrantManagement("Dedicated grant management system with milestone tracking, financial reporting aligned to donor templates, and quarterly narrative reports. 100% compliance record across all grants.");
+    setProudAchievement("Securing multi-year funding from the DG Murray Trust based on our independently verified outcomes data — they cited our M&E rigour as the deciding factor.");
+    setLessonsLearned("Early programme iterations focused too heavily on academics alone. We learned that holistic support addressing psychosocial needs, family dynamics, and career exposure is essential for sustainable impact. This insight transformed our model.");
+    setPartnershipAppetite("open");
+    setPartnershipRole("lead");
+    setPartnershipBrings(["Strong community networks and trust", "Proven programme model with outcome data", "M&E expertise and systems"]);
+    setPartnershipSeeks(["Technical skills training capacity", "Corporate mentorship networks", "Digital platform development"]);
+    setPartnershipStatement("We actively seek partnerships that complement our youth development expertise with technical and vocational training capacity. Our community trust and programme infrastructure provide an ideal platform for partners looking to reach underserved youth in Cape Town.");
+    setIsDiscoverable(true);
+
+    toast({ title: "🧪 Dummy data loaded!", description: "All 9 steps pre-filled with test data. Review and submit." });
+  };
+
   // ── RENDER ──
   return (
     <div className="min-h-screen gradient-bg flex flex-col">
@@ -703,6 +845,9 @@ const OnboardingPage = () => {
           <span className="text-sm font-semibold text-foreground">GrantMatch</span>
         </div>
         <div className="flex items-center gap-3">
+          <Button variant="outline" size="sm" className="text-xs border-amber-500/50 text-amber-600 hover:bg-amber-50" onClick={fillDummyData}>
+            🧪 Insert Dummy Data
+          </Button>
           <span className="text-xs text-muted-foreground hidden sm:inline">Profile: {completeness}%</span>
           <Progress value={completeness} className="w-20 sm:w-28 h-1.5" />
           <Button variant="ghost" size="sm" className="text-xs text-muted-foreground" onClick={() => { saveProgress(step); toast({ title: "Progress saved!" }); navigate("/dashboard"); }}>
