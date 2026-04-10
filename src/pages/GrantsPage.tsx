@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
-import { Search, SlidersHorizontal, Users, Loader2 } from "lucide-react";
+import { Search, SlidersHorizontal, Users, Loader2, Sparkles } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import DashboardLayout from "@/components/DashboardLayout";
 import FunderCard from "@/components/FunderCard";
@@ -15,6 +15,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { supabase } from "@/integrations/supabase/client";
 import { useOrganisation } from "@/hooks/useAuth";
 import { toast } from "sonner";
+import { computeMatchScores } from "@/lib/matchingEngine";
 
 const categories = ["SACorp", "United Kingdom", "USA", "Europe Trusts/ Foundation", "SA Trusts/ Foundations", "Other", "Foreign Missions"];
 
@@ -92,6 +93,7 @@ const GrantsPage = () => {
   const [loading, setLoading] = useState(true);
   const [matchScores, setMatchScores] = useState<Record<string, number>>({});
   const [applyModal, setApplyModal] = useState<any>(null);
+  const [computing, setComputing] = useState(false);
   const { org } = useOrganisation();
   const navigate = useNavigate();
 
@@ -104,19 +106,61 @@ const GrantsPage = () => {
   // Reset page on filter change
   useEffect(() => { setPage(0); }, [selectedCategories, selectedFocusAreas, consortiumOnly, sortBy]);
 
-  // Load match scores for user's org
+  // Load match scores for user's org — compute if none exist
   useEffect(() => {
     if (!org?.id) return;
-    supabase.from("grant_matches").select("funder_id, match_score").eq("org_id", org.id)
-      .then(({ data }) => {
-        if (data) {
-          const map: Record<string, number> = {};
-          data.forEach(r => { if (r.funder_id && r.match_score != null) map[r.funder_id] = r.match_score; });
-          setMatchScores(map);
-          setSortBy("score");
-        }
-      });
+    const loadScores = async () => {
+      const { data, count } = await supabase
+        .from("grant_matches")
+        .select("funder_id, match_score", { count: "exact" })
+        .eq("org_id", org.id);
+
+      if (data && data.length > 0) {
+        const map: Record<string, number> = {};
+        data.forEach(r => { if (r.funder_id && r.match_score != null) map[r.funder_id] = r.match_score; });
+        setMatchScores(map);
+        setSortBy("score");
+      } else if (org.focus_areas && org.focus_areas.length > 0) {
+        // Auto-compute matches on first visit
+        runMatching();
+      }
+    };
+    loadScores();
   }, [org?.id]);
+
+  const runMatching = async () => {
+    if (!org?.id || computing) return;
+    setComputing(true);
+    try {
+      const count = await computeMatchScores({
+        id: org.id,
+        focus_areas: org.focus_areas,
+        country: org.country,
+        region: org.region,
+        regions_of_operation: org.regions_of_operation,
+        works_rural: org.works_rural,
+        works_urban: org.works_urban,
+        works_internationally: org.works_internationally,
+        works_other_african: org.works_other_african,
+      });
+      toast.success(`Matched against ${count} funders!`);
+      // Reload scores
+      const { data } = await supabase
+        .from("grant_matches")
+        .select("funder_id, match_score")
+        .eq("org_id", org.id);
+      if (data) {
+        const map: Record<string, number> = {};
+        data.forEach(r => { if (r.funder_id && r.match_score != null) map[r.funder_id] = r.match_score; });
+        setMatchScores(map);
+        setSortBy("score");
+      }
+    } catch (err) {
+      toast.error("Matching failed — try again");
+      console.error(err);
+    }
+    setComputing(false);
+  };
 
   // Fetch funders
   const fetchFunders = useCallback(async () => {
@@ -216,7 +260,6 @@ const GrantsPage = () => {
       org_id: org.id, funder_id: funderId, is_saved: true, match_score: matchScores[funderId] || 0,
     }, { onConflict: "org_id,funder_id" });
     if (error) {
-      // If upsert fails due to no unique constraint, try insert
       await supabase.from("grant_matches").insert({
         org_id: org.id, funder_id: funderId, is_saved: true, match_score: matchScores[funderId] || 0,
       });
@@ -238,12 +281,25 @@ const GrantsPage = () => {
   return (
     <DashboardLayout>
       <div className="max-w-7xl mx-auto">
-        <motion.div className="mb-6" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
-          <h1 className="text-2xl font-bold text-foreground">Find Your Funding Match</h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            {totalCount.toLocaleString()} funders
-            {consortiumOnly && <span className="text-amber-400 ml-1">· Consortium filter active</span>}
-          </p>
+        <motion.div className="mb-6 flex items-center justify-between" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
+          <div>
+            <h1 className="text-2xl font-bold text-foreground">Find Your Funding Match</h1>
+            <p className="text-sm text-muted-foreground mt-1">
+              {totalCount.toLocaleString()} funders
+              {Object.keys(matchScores).length > 0 && <span className="text-primary ml-1">· {Object.keys(matchScores).length} scored</span>}
+              {consortiumOnly && <span className="text-amber-400 ml-1">· Consortium filter active</span>}
+            </p>
+          </div>
+          <Button
+            onClick={runMatching}
+            disabled={computing || !org?.id}
+            variant="outline"
+            size="sm"
+            className="gap-2"
+          >
+            {computing ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Sparkles className="h-3.5 w-3.5" />}
+            {computing ? "Computing..." : "Recalculate Matches"}
+          </Button>
         </motion.div>
 
         <div className="flex gap-6">

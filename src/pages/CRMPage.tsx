@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import {
   Users, Plus, Search, AlertCircle, Calendar, Phone,
   Mail, FileText, TrendingUp, Star, Clock, ChevronRight, MessageSquare,
@@ -38,6 +38,7 @@ const interactionTypeLabels: Record<string, string> = {
 
 const CRMPage = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [relationships, setRelationships] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedStatus, setSelectedStatus] = useState<string | null>(null);
@@ -47,28 +48,37 @@ const CRMPage = () => {
   const [newInteraction, setNewInteraction] = useState({ type: "email_sent", summary: "", outcome: "", sentiment: "unknown", date: new Date().toISOString().split("T")[0] });
   const [orgId, setOrgId] = useState<string | null>(null);
 
+  // Add relationship state
+  const [addOpen, setAddOpen] = useState(false);
+  const [funderSearch, setFunderSearch] = useState("");
+  const [funderResults, setFunderResults] = useState<any[]>([]);
+  const [searchingFunders, setSearchingFunders] = useState(false);
+
+  const loadRelationships = async (oid: string) => {
+    const { data: rels } = await supabase.from("funder_relationships").select("*").eq("org_id", oid);
+    if (!rels || rels.length === 0) { setRelationships([]); setLoading(false); return; }
+
+    const funderIds = [...new Set(rels.map(r => r.funder_id))];
+    const { data: funders } = await supabase.from("funders").select("id, donor_name, category").in("id", funderIds);
+    const funderMap = Object.fromEntries((funders || []).map(f => [f.id, f]));
+
+    const enriched = rels.map(r => ({
+      ...r,
+      funder_name: funderMap[r.funder_id]?.donor_name || "Unknown",
+      category: funderMap[r.funder_id]?.category || "",
+    }));
+
+    setRelationships(enriched);
+    setLoading(false);
+  };
+
   useEffect(() => {
     if (!user) return;
     const load = async () => {
       const { data: org } = await supabase.from("organisations").select("id").eq("user_id", user.id).maybeSingle();
       if (!org) { setLoading(false); return; }
       setOrgId(org.id);
-
-      const { data: rels } = await supabase.from("funder_relationships").select("*").eq("org_id", org.id);
-      if (!rels || rels.length === 0) { setLoading(false); return; }
-
-      const funderIds = [...new Set(rels.map(r => r.funder_id))];
-      const { data: funders } = await supabase.from("funders").select("id, donor_name, category").in("id", funderIds);
-      const funderMap = Object.fromEntries((funders || []).map(f => [f.id, f]));
-
-      const enriched = rels.map(r => ({
-        ...r,
-        funder_name: funderMap[r.funder_id]?.donor_name || "Unknown",
-        category: funderMap[r.funder_id]?.category || "",
-      }));
-
-      setRelationships(enriched);
-      setLoading(false);
+      await loadRelationships(org.id);
     };
     load();
   }, [user]);
@@ -89,7 +99,7 @@ const CRMPage = () => {
     .sort((a: any, b: any) => (a.next_action_date || "").localeCompare(b.next_action_date || ""))
     .slice(0, 5);
 
-  const formatCurrency = (v: number) => v >= 1000000 ? `R${(v / 1000000).toFixed(1)}M` : v >= 1000 ? `R${(v / 1000).toFixed(0)}k` : `R${v}`;
+  const formatCurrency = (v: number) => v >= 1000000 ? `$${(v / 1000000).toFixed(1)}M` : v >= 1000 ? `$${(v / 1000).toFixed(0)}k` : `$${v}`;
 
   const handleLogInteraction = async () => {
     if (!selectedRel || !orgId) return;
@@ -105,11 +115,45 @@ const CRMPage = () => {
       created_by: user?.id,
     });
     if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
-    // Update last_interaction_date
     await supabase.from("funder_relationships").update({ last_interaction_date: newInteraction.date }).eq("id", selectedRel.id);
     toast({ title: "Interaction logged", description: `${interactionTypeLabels[newInteraction.type]} recorded` });
     setLogOpen(false);
     setNewInteraction({ type: "email_sent", summary: "", outcome: "", sentiment: "unknown", date: new Date().toISOString().split("T")[0] });
+  };
+
+  // Search funders to add
+  const searchFunders = async () => {
+    if (!funderSearch || funderSearch.length < 2) return;
+    setSearchingFunders(true);
+    const existingFunderIds = relationships.map(r => r.funder_id);
+    const { data } = await supabase
+      .from("funders")
+      .select("id, donor_name, category")
+      .ilike("donor_name", `%${funderSearch}%`)
+      .limit(10);
+    setFunderResults((data || []).filter(f => !existingFunderIds.includes(f.id)));
+    setSearchingFunders(false);
+  };
+
+  useEffect(() => {
+    const t = setTimeout(searchFunders, 300);
+    return () => clearTimeout(t);
+  }, [funderSearch]);
+
+  const addRelationship = async (funder: any) => {
+    if (!orgId) return;
+    const { error } = await supabase.from("funder_relationships").insert({
+      org_id: orgId,
+      funder_id: funder.id,
+      relationship_status: "prospect",
+      health_score: 50,
+    });
+    if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
+    toast({ title: "Relationship added!", description: `${funder.donor_name} added as a prospect` });
+    setAddOpen(false);
+    setFunderSearch("");
+    setFunderResults([]);
+    await loadRelationships(orgId);
   };
 
   if (loading) return (
@@ -123,9 +167,14 @@ const CRMPage = () => {
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        <div>
-          <h1 className="text-2xl font-semibold text-foreground">Funder CRM</h1>
-          <p className="text-sm text-muted-foreground mt-1">Manage relationships with {relationships.length} funders</p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-semibold text-foreground">Funder CRM</h1>
+            <p className="text-sm text-muted-foreground mt-1">Manage relationships with {relationships.length} funders</p>
+          </div>
+          <Button onClick={() => setAddOpen(true)} className="bg-primary text-primary-foreground">
+            <Plus className="h-4 w-4 mr-1" /> Add Funder
+          </Button>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
@@ -156,7 +205,10 @@ const CRMPage = () => {
 
             {filtered.length === 0 ? (
               <GlassCard className="p-8 text-center">
-                <p className="text-sm text-muted-foreground">No funder relationships yet. Add funders from the Grants page to start tracking.</p>
+                <p className="text-sm text-muted-foreground mb-4">No funder relationships yet. Add funders to start tracking.</p>
+                <Button onClick={() => setAddOpen(true)}>
+                  <Plus className="h-4 w-4 mr-1" /> Add Your First Funder
+                </Button>
               </GlassCard>
             ) : (
               <div className="space-y-3">
@@ -266,6 +318,44 @@ const CRMPage = () => {
                 </div>
               </div>
               <Button className="w-full bg-primary text-primary-foreground" onClick={handleLogInteraction}>Log Interaction</Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Add Funder Relationship Modal */}
+        <Dialog open={addOpen} onOpenChange={setAddOpen}>
+          <DialogContent className="bg-card border-border">
+            <DialogHeader>
+              <DialogTitle className="text-foreground">Add Funder to CRM</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4 mt-2">
+              <div>
+                <Label className="text-xs text-muted-foreground">Search for a funder</Label>
+                <div className="relative mt-1">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+                  <Input value={funderSearch} onChange={e => setFunderSearch(e.target.value)} placeholder="Type funder name..." className="pl-9 bg-secondary/30 border-border/50 text-foreground" />
+                </div>
+              </div>
+              <div className="max-h-64 overflow-y-auto space-y-2">
+                {searchingFunders && <p className="text-xs text-muted-foreground text-center py-4">Searching...</p>}
+                {!searchingFunders && funderSearch.length >= 2 && funderResults.length === 0 && (
+                  <p className="text-xs text-muted-foreground text-center py-4">No funders found</p>
+                )}
+                {funderResults.map(f => (
+                  <div key={f.id} className="flex items-center justify-between p-3 rounded-lg border border-border/20 hover:bg-secondary/20 transition-colors">
+                    <div>
+                      <p className="text-sm font-medium text-foreground">{f.donor_name}</p>
+                      <p className="text-[10px] text-muted-foreground">{f.category}</p>
+                    </div>
+                    <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => addRelationship(f)}>
+                      <Plus className="h-3 w-3 mr-1" /> Add
+                    </Button>
+                  </div>
+                ))}
+              </div>
+              <p className="text-[10px] text-muted-foreground text-center">
+                Browse all funders on the <button onClick={() => { setAddOpen(false); navigate("/grants"); }} className="text-primary hover:underline">Grants page</button>
+              </p>
             </div>
           </DialogContent>
         </Dialog>
