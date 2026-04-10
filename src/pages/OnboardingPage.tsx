@@ -643,9 +643,11 @@ const OnboardingPage = () => {
       };
 
       if (orgId) {
-        await supabase.from("organisations").update(orgData).eq("id", orgId);
+        const { error: updateErr } = await supabase.from("organisations").update(orgData).eq("id", orgId);
+        if (updateErr) throw updateErr;
       } else {
-        const { data } = await supabase.from("organisations").insert({ ...orgData, user_id: user.id }).select("id").single();
+        const { data, error: insertErr } = await supabase.from("organisations").insert({ ...orgData, user_id: user.id }).select("id").single();
+        if (insertErr) throw insertErr;
         if (data) setOrgId(data.id);
       }
 
