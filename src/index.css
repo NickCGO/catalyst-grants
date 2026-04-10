@@ -6,61 +6,61 @@
 
 @layer base {
   :root {
-    --background: 222 47% 11%;
-    --foreground: 210 40% 96%;
+    --background: 210 20% 98%;
+    --foreground: 222 47% 11%;
 
-    --card: 217 33% 17%;
-    --card-foreground: 210 40% 96%;
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 11%;
 
-    --popover: 222 47% 11%;
-    --popover-foreground: 210 40% 96%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
 
     --primary: 199 89% 48%;
-    --primary-foreground: 222 47% 11%;
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 217 33% 17%;
-    --secondary-foreground: 210 40% 96%;
+    --secondary: 210 20% 93%;
+    --secondary-foreground: 222 47% 11%;
 
-    --muted: 217 33% 17%;
-    --muted-foreground: 215 20% 65%;
+    --muted: 210 20% 93%;
+    --muted-foreground: 215 16% 47%;
 
     --accent: 199 89% 48%;
-    --accent-foreground: 222 47% 11%;
+    --accent-foreground: 0 0% 100%;
 
     --destructive: 0 84% 60%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive-foreground: 0 0% 100%;
 
-    --border: 217 19% 27%;
-    --input: 217 19% 27%;
+    --border: 214 20% 85%;
+    --input: 214 20% 85%;
     --ring: 199 89% 48%;
 
     --radius: 0.75rem;
 
     /* Custom tokens */
-    --glass-bg: 0 0% 100% / 0.04;
-    --glass-bg-hover: 0 0% 100% / 0.07;
-    --glass-border: 0 0% 100% / 0.08;
+    --glass-bg: 0 0% 100% / 0.7;
+    --glass-bg-hover: 0 0% 100% / 0.85;
+    --glass-border: 214 20% 85% / 0.6;
     --glass-border-hover: 199 89% 48% / 0.3;
     --glass-blur: 12px;
-    --glass-shadow: 0 4px 24px rgba(0, 0, 0, 0.2);
+    --glass-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
     --glass-shadow-hover: 0 0 20px rgba(14, 165, 233, 0.1);
 
-    --bg-deep: 222 47% 11%;
-    --bg-slate: 217 33% 17%;
+    --bg-deep: 210 20% 98%;
+    --bg-slate: 210 20% 93%;
     --accent-blue: 199 89% 48%;
     --accent-bright: 199 92% 61%;
     --accent-teal: 168 76% 42%;
     --accent-amber: 38 92% 50%;
     --success: 160 84% 39%;
-    --success-foreground: 210 40% 98%;
+    --success-foreground: 0 0% 100%;
 
-    --sidebar-background: 222 55% 8%;
-    --sidebar-foreground: 215 20% 65%;
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 215 16% 47%;
     --sidebar-primary: 199 89% 48%;
-    --sidebar-primary-foreground: 222 47% 11%;
-    --sidebar-accent: 217 33% 17%;
-    --sidebar-accent-foreground: 210 40% 96%;
-    --sidebar-border: 217 19% 20%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 210 20% 96%;
+    --sidebar-accent-foreground: 222 47% 11%;
+    --sidebar-border: 214 20% 90%;
     --sidebar-ring: 199 89% 48%;
   }
 }
