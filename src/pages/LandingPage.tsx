@@ -676,6 +676,7 @@ const LandingPage = () => {
             <span>Privacy Policy</span>
             <span>Terms</span>
             <span>info@grantmatch.co</span>
+            <a href="/auth" className="hover:text-[#94A3B8] transition-colors cursor-pointer">Team Login</a>
           </div>
         </div>
       </footer>
