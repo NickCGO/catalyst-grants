@@ -87,9 +87,13 @@ export function useOrganisation() {
   const { user } = useAuth();
   const [org, setOrg] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  const refetch = useCallback(() => setRefreshKey(k => k + 1), []);
 
   useEffect(() => {
     if (!user) { setLoading(false); return; }
+    setLoading(true);
     supabase
       .from("organisations")
       .select("*")
@@ -99,7 +103,7 @@ export function useOrganisation() {
         setOrg(data);
         setLoading(false);
       });
-  }, [user]);
+  }, [user, refreshKey]);
 
-  return { org, loading };
+  return { org, loading, refetch };
 }
