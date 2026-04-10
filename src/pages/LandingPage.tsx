@@ -297,7 +297,7 @@ function WaitlistForm({ onSuccess }: { onSuccess: (data: { name: string; email: 
       </div>
       <label className="flex items-start gap-3 cursor-pointer">
         <input type="checkbox" checked={committed} onChange={(e) => setCommitted(e.target.checked)} className="mt-1 h-4 w-4 rounded border-white/20 accent-[#0EA5E9]" />
-        <span className="text-xs text-[#94A3B8]">I commit to paying $50/month when GrantMatch launches. (No charge until launch day.)</span>
+        <span className="text-xs text-[#94A3B8]">I commit to paying $47/month when GrantMatch launches. (No charge until launch day.)</span>
       </label>
       <Button type="submit" disabled={submitting} className="w-full bg-gradient-to-r from-[#0EA5E9] to-[#0284C7] text-white text-base py-4 rounded-xl shadow-[0_0_32px_rgba(14,165,233,0.3)] hover:scale-[1.02] transition-transform border-0 h-auto">
         {submitting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
@@ -308,7 +308,7 @@ function WaitlistForm({ onSuccess }: { onSuccess: (data: { name: string; email: 
 }
 
 function WaitlistSuccess({ data }: { data: { name: string; email: string; position: number } }) {
-  const shareText = `I just joined the GrantMatch waitlist. It is an AI tool that finds funders for African NGOs and writes the grant proposals. Launching soon at $50/month. Join here: ${window.location.origin}`;
+  const shareText = `I just joined the GrantMatch waitlist. It is an AI tool that finds funders for African NGOs and writes the grant proposals. Launching soon at $47/month. Join here: ${window.location.origin}`;
   return (
     <div className="text-center py-8">
       <div className="text-5xl mb-4">🎉</div>
@@ -409,7 +409,7 @@ const LandingPage = () => {
               </motion.div>
               <motion.div variants={fadeUpVariants(0.5)} initial="hidden" animate="visible">
                 <button onClick={scrollToPricing} className="bg-gradient-to-r from-[#0EA5E9] to-[#0284C7] text-white text-lg font-semibold px-8 py-4 rounded-xl shadow-[0_0_32px_rgba(14,165,233,0.3)] hover:scale-[1.02] transition-transform">
-                  Claim your spot: $50/month at launch →
+                  Claim your spot: $47/month at launch →
                 </button>
                 <div className="mt-3 flex items-center gap-2 text-[13px] text-[#64748B]">
                   <Lock className="h-3 w-3" />
@@ -549,8 +549,8 @@ const LandingPage = () => {
         <div className="max-w-6xl mx-auto">
           <motion.div variants={fadeUpVariants()} initial="hidden" whileInView="visible" viewport={{ once: true }} className="text-center mb-16">
             <p className="text-xs font-semibold tracking-widest text-[#F59E0B] mb-3">JOIN THE WAITLIST</p>
-            <h2 className="text-[28px] lg:text-[40px] font-bold text-[#F1F5F9] mb-4">Lock in $50/month before we launch.</h2>
-            <p className="text-lg text-[#94A3B8] max-w-2xl mx-auto">After launch, pricing starts at $99/month. Waitlist members who commit now keep $50/month for life. That is our promise.</p>
+            <h2 className="text-[28px] lg:text-[40px] font-bold text-[#F1F5F9] mb-4">Lock in $47/month before we launch.</h2>
+            <p className="text-lg text-[#94A3B8] max-w-2xl mx-auto">After launch, pricing starts at $99/month. Waitlist members who commit now keep $47/month for life. That is our promise.</p>
           </motion.div>
 
           <div className="grid lg:grid-cols-2 gap-8 max-w-5xl mx-auto">
@@ -559,7 +559,7 @@ const LandingPage = () => {
               <div className="rounded-2xl border-2 border-[#0EA5E9] p-8 bg-[#1E293B]/50 backdrop-blur-xl shadow-[0_0_40px_rgba(14,165,233,0.15)] h-full">
                 <p className="text-xs font-semibold tracking-widest text-[#0EA5E9] mb-6">WAITLIST FOUNDING MEMBER</p>
                 <div className="flex items-baseline gap-1 mb-1">
-                  <span className="text-5xl font-bold text-[#F1F5F9]">$50</span>
+                  <span className="text-5xl font-bold text-[#F1F5F9]">$47</span>
                   <span className="text-lg text-[#94A3B8]">/ month</span>
                 </div>
                 <p className="text-sm text-[#64748B] mb-8">(locks in at launch, cancel any time)</p>
@@ -584,7 +584,7 @@ const LandingPage = () => {
                 </div>
                 <p className="text-sm text-[#94A3B8] mb-4">vs <span className="line-through">$99/month</span> after launch</p>
                 <button onClick={scrollToPricing} className="w-full bg-gradient-to-r from-[#0EA5E9] to-[#0284C7] text-white text-base font-semibold px-6 py-4 rounded-xl shadow-[0_0_32px_rgba(14,165,233,0.3)] hover:scale-[1.02] transition-transform">
-                  Claim my spot at $50/month →
+                  Claim my spot at $47/month →
                 </button>
                 <div className="mt-3 flex items-center gap-2 text-[13px] text-[#64748B] justify-center">
                   <Lock className="h-3 w-3" />
@@ -615,38 +615,7 @@ const LandingPage = () => {
         </div>
       </section>
 
-      {/* ── TESTIMONIALS ── */}
-      <section className="relative z-10 py-24 px-6">
-        <div className="max-w-5xl mx-auto">
-          <motion.div variants={fadeUpVariants()} initial="hidden" whileInView="visible" viewport={{ once: true }} className="text-center mb-16">
-            <p className="text-xs font-semibold tracking-widest text-[#14B8A6] mb-3">EARLY VOICES</p>
-            <h2 className="text-[28px] lg:text-[40px] font-bold text-[#F1F5F9]">Heard from the community.</h2>
-          </motion.div>
-          <div className="grid md:grid-cols-3 gap-6">
-            {[
-              { name: "Thandiwe M.", title: "Executive Director", org: "Ubuntu Youth Foundation", country: "South Africa", quote: "We spent 3 months applying to funders we were not eligible for. A tool that matches us first and writes the proposal second is exactly what the sector needs." },
-              { name: "Kofi A.", title: "Fundraising Manager", org: "Accra Education Trust", country: "Ghana", quote: "The concept note alone would save my team two weeks per application cycle. We apply to 14 funders per year. That is almost a full month back." },
-              { name: "Amara D.", title: "Programme Director", org: "Nairobi Community Health Network", country: "Kenya", quote: "Most grant tools are built for American nonprofits and badly adapted for Africa. GrantMatch starting from African funders first changes everything." },
-            ].map((t, i) => (
-              <motion.div key={i} variants={fadeUpVariants(i * 0.1)} initial="hidden" whileInView="visible" viewport={{ once: true }}>
-                <div className="glass-card p-6 h-full flex flex-col">
-                  <div className="flex gap-1 mb-4">{Array(5).fill(0).map((_, j) => <Star key={j} className="h-4 w-4 text-[#F59E0B] fill-[#F59E0B]" />)}</div>
-                  <p className="text-sm text-[#94A3B8] italic mb-6 flex-1">"{t.quote}"</p>
-                  <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-full bg-[#0EA5E9]/20 flex items-center justify-center text-sm font-bold text-[#0EA5E9]">{t.name[0]}</div>
-                    <div>
-                      <div className="text-sm font-semibold text-[#F1F5F9]">{t.name}</div>
-                      <div className="text-[11px] text-[#64748B]">{t.title}, {t.org}</div>
-                      <div className="text-[10px] text-[#64748B]">{t.country}</div>
-                    </div>
-                  </div>
-                </div>
-              </motion.div>
-            ))}
-          </div>
-          <p className="text-center text-[13px] text-[#64748B] italic mt-8">Quotes from community members who have seen an early demo of GrantMatch. We will feature real case studies after launch.</p>
-        </div>
-      </section>
+      {/* Testimonials removed */}
 
       {/* ── FINAL CTA ── */}
       <section className="relative z-10 py-24 px-6">
@@ -658,7 +627,7 @@ const LandingPage = () => {
             <button onClick={scrollToPricing} className="bg-gradient-to-r from-[#0EA5E9] to-[#0284C7] text-white text-lg font-semibold px-10 py-4 rounded-xl shadow-[0_0_32px_rgba(14,165,233,0.3)] hover:scale-[1.02] transition-transform">
               Claim your founding member spot →
             </button>
-            <p className="text-[13px] text-[#64748B] mt-3">No charge until launch. Cancel any time. $50/month for life if you join now.</p>
+            <p className="text-[13px] text-[#64748B] mt-3">No charge until launch. Cancel any time. $47/month for life if you join now.</p>
             <p className="text-sm text-[#94A3B8] mt-6">🟢 <AnimatedCounter end={waitlistCount} className="text-[#F1F5F9] font-semibold" /> people on the waitlist</p>
           </div>
         </div>
