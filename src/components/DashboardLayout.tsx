@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard, Search, ClipboardList, PenTool, Newspaper, Settings,
   Sparkles, LogOut, FileText, Mail, Bell, CheckSquare, Users, Handshake, BarChart3,
+  ShieldCheck,
 } from "lucide-react";
 import {
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent,
@@ -17,6 +18,8 @@ import { useNotifications } from "@/hooks/useNotifications";
 import { formatDistanceToNow } from "date-fns";
 import { useAuth, useOrganisation } from "@/hooks/useAuth";
 import { Skeleton } from "@/components/ui/skeleton";
+
+const ADMIN_EMAILS = ["founders@grantmatch.co.za", "admin@grantmatch.co.za", "info@nickfernandes.co.za"];
 
 const navItems = [
   { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
