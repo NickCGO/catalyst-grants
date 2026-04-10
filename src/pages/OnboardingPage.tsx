@@ -729,9 +729,66 @@ const OnboardingPage = () => {
                   onChange={async (e) => {
                     const file = e.target.files?.[0];
                     if (!file) return;
-                    toast({ title: "📄 Document received", description: `Processing ${file.name}... Fields will be pre-filled shortly.` });
-                    // TODO: Integrate document parser to extract org info and pre-fill fields
-                    toast({ title: "Coming soon", description: "Document parsing will be available in the next update. Please fill in the fields manually for now." });
+                    toast({ title: "📄 Document received", description: `Processing ${file.name}... This may take a minute.` });
+                    try {
+                      const formData = new FormData();
+                      formData.append("file", file);
+                      const resp = await fetch(
+                        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/parse-document`,
+                        {
+                          method: "POST",
+                          headers: { Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}` },
+                          body: formData,
+                        }
+                      );
+                      if (!resp.ok) {
+                        const err = await resp.json().catch(() => ({ error: "Parse failed" }));
+                        throw new Error(err.error || `Error ${resp.status}`);
+                      }
+                      const { data: d } = await resp.json();
+                      if (!d) throw new Error("No data extracted");
+                      // Pre-fill all available fields
+                      if (d.org_name) setOrgName(d.org_name);
+                      if (d.trading_name) setTradingName(d.trading_name);
+                      if (d.org_type) setOrgType(d.org_type);
+                      if (d.registration_number) setRegNumber(d.registration_number);
+                      if (d.country) setCountry(d.country);
+                      if (d.region) setRegion(d.region);
+                      if (d.founded_year) setYearEstablished(String(d.founded_year));
+                      if (d.tax_status) setTaxStatus(d.tax_status);
+                      if (d.pbo_number) setPboNumber(d.pbo_number);
+                      if (d.physical_address) setPhysicalAddress(d.physical_address);
+                      if (d.mission_statement) setMission(d.mission_statement);
+                      if (d.vision_statement) setVision(d.vision_statement);
+                      if (d.core_values?.length) setCoreValues(d.core_values);
+                      if (d.problem_statement) setProblemStatement(d.problem_statement);
+                      if (d.focus_areas?.length) setSelectedFocus(d.focus_areas);
+                      if (d.beneficiary_groups?.length) setSelectedBeneficiaries(d.beneficiary_groups);
+                      if (d.annual_beneficiary_reach) setBeneficiaryReach(String(d.annual_beneficiary_reach));
+                      if (d.primary_target_group) setPrimaryTargetGroup(d.primary_target_group);
+                      if (d.annual_budget) setAnnualBudget(String(d.annual_budget));
+                      if (d.ceo_name) setCeoName(d.ceo_name);
+                      if (d.fte_count) setFteCount(String(d.fte_count));
+                      if (d.volunteer_count) setVolunteerCount(String(d.volunteer_count));
+                      if (d.board_count) setBoardCount(String(d.board_count));
+                      if (d.sdgs?.length) setSelectedSDGs(d.sdgs);
+                      if (d.theory_of_change) setTheoryOfChange(d.theory_of_change);
+                      if (d.impact_statement) setImpactStatement(d.impact_statement);
+                      if (d.key_outcomes?.length) setKeyOutcomes(d.key_outcomes.length >= 3 ? d.key_outcomes : [...d.key_outcomes, ...Array(3 - d.key_outcomes.length).fill("")]);
+                      if (d.is_audited !== undefined) setIsAudited(d.is_audited);
+                      if (d.achievements?.length) setOrgAchievements(d.achievements.length >= 3 ? d.achievements : [...d.achievements, ...Array(3 - d.achievements.length).fill("")]);
+                      if (d.programmes?.length) {
+                        setProgrammes(d.programmes.map((p: any) => ({
+                          name: p.name || "", shortDesc: p.description || "", fullDesc: p.description || "",
+                          approaches: [], activities: ["", "", ""], outputs: ["", ""], outcomes: ["", ""],
+                          impactStory: "", areas: "", reach: "", reachUnit: "individuals",
+                          budget: "", status: "Active", yearStarted: "", partners: "",
+                        })));
+                      }
+                      toast({ title: "✅ Fields pre-filled!", description: "Review and edit the extracted data across all steps." });
+                    } catch (err: any) {
+                      toast({ title: "Parse failed", description: err.message, variant: "destructive" });
+                    }
                   }}
                 />
               </label>
