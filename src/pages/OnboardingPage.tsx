@@ -845,6 +845,9 @@ const OnboardingPage = () => {
           <span className="text-sm font-semibold text-foreground">GrantMatch</span>
         </div>
         <div className="flex items-center gap-3">
+          <Button variant="outline" size="sm" className="text-xs border-amber-500/50 text-amber-600 hover:bg-amber-50" onClick={fillDummyData}>
+            🧪 Insert Dummy Data
+          </Button>
           <span className="text-xs text-muted-foreground hidden sm:inline">Profile: {completeness}%</span>
           <Progress value={completeness} className="w-20 sm:w-28 h-1.5" />
           <Button variant="ghost" size="sm" className="text-xs text-muted-foreground" onClick={() => { saveProgress(step); toast({ title: "Progress saved!" }); navigate("/dashboard"); }}>
