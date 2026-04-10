@@ -187,8 +187,8 @@ const OnboardingPage = () => {
   const [step, setStep] = useState(0);
   const [orgId, setOrgId] = useState<string | null>(null);
   const navigate = useNavigate();
-  const inputClass = "mt-1 bg-secondary/30 border-border/50 text-foreground text-sm";
-  const labelClass = "text-xs text-muted-foreground";
+  const inputClass = "mt-1 bg-secondary/30 border-border/50 text-foreground text-sm placeholder:text-muted-foreground/60";
+  const labelClass = "text-sm font-semibold text-white";
   const selectClass = "w-full mt-1 px-3 py-2 rounded-lg bg-secondary/30 border border-border/50 text-sm text-foreground";
 
   // ── Step 1: Legal Identity ──
