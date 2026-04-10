@@ -52,6 +52,9 @@ const typeIcons: Record<string, string> = {
 function AppSidebarContent() {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
+  const { user } = useAuth();
+  const isAdmin = ADMIN_EMAILS.includes(user?.email ?? "");
+  const location = useLocation();
 
   return (
     <Sidebar collapsible="icon" className="border-r border-border/30">
@@ -81,6 +84,22 @@ function AppSidebarContent() {
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
+
+              {/* Admin nav item - only for admin emails */}
+              {isAdmin && (
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild>
+                    <NavLink
+                      to="/admin"
+                      className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-colors"
+                      activeClassName="text-primary bg-primary/10"
+                    >
+                      <ShieldCheck className="h-4 w-4 shrink-0" />
+                      {!collapsed && <span className="flex-1">Admin Panel</span>}
+                    </NavLink>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              )}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
