@@ -84,26 +84,58 @@ export function useRequireAuth() {
 }
 
 export function useOrganisation() {
-  const { user } = useAuth();
   const [org, setOrg] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [refreshKey, setRefreshKey] = useState(0);
 
-  const refetch = useCallback(() => setRefreshKey(k => k + 1), []);
+  const refetch = useCallback(() => setRefreshKey((k) => k + 1), []);
 
   useEffect(() => {
-    if (!user) { setLoading(false); return; }
-    setLoading(true);
-    supabase
-      .from("organisations")
-      .select("*")
-      .eq("user_id", user.id)
-      .maybeSingle()
-      .then(({ data }) => {
-        setOrg(data);
+    let isActive = true;
+
+    const loadOrganisation = async () => {
+      setLoading(true);
+
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!isActive) return;
+
+      if (!user) {
+        setOrg(null);
         setLoading(false);
-      });
-  }, [user, refreshKey]);
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from("organisations")
+        .select("*")
+        .eq("user_id", user.id)
+        .maybeSingle();
+
+      if (!isActive) return;
+
+      if (error) {
+        console.error("Organisation load error:", error);
+        setOrg(null);
+      } else {
+        setOrg(data ?? null);
+      }
+
+      setLoading(false);
+    };
+
+    loadOrganisation();
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(() => {
+      loadOrganisation();
+    });
+
+    return () => {
+      isActive = false;
+      subscription.unsubscribe();
+    };
+  }, [refreshKey]);
 
   return { org, loading, refetch };
 }
