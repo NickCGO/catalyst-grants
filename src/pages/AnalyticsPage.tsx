@@ -98,14 +98,14 @@ const AnalyticsPage = () => {
     load();
   }, [user]);
 
-  const formatCurrency = (v: number) => v >= 1000000 ? `R${(v / 1000000).toFixed(1)}M` : v >= 1000 ? `R${(v / 1000).toFixed(0)}k` : `R${v}`;
+  const formatCurrency = (v: number) => v >= 1000000 ? `$${(v / 1000000).toFixed(1)}M` : v >= 1000 ? `$${(v / 1000).toFixed(0)}k` : `$${v}`;
 
   const generateBoardReport = async () => {
     setGenerating(true);
     try {
       const report = await callAI([
         { role: "system", content: "You are a professional NGO board report writer." },
-        { role: "user", content: `Generate a concise board report. Data: ${stats.totalApps} applications, ${stats.submitted} submitted, ${stats.successfulCount} successful, win rate ${stats.winRate}%, R${stats.pipeline} pipeline, R${stats.awarded} awarded, avg score ${stats.avgScore}. Max 600 words.` },
+        { role: "user", content: `Generate a concise board report. Data: ${stats.totalApps} applications, ${stats.submitted} submitted, ${stats.successfulCount} successful, win rate ${stats.winRate}%, $${stats.pipeline} pipeline, $${stats.awarded} awarded, avg score ${stats.avgScore}. Max 600 words.` },
       ]);
       const blob = new Blob([report], { type: "text/plain" });
       const url = URL.createObjectURL(blob);
@@ -140,12 +140,12 @@ const AnalyticsPage = () => {
         </div>
 
         {/* KPI Cards */}
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
           {[
             { label: "Pipeline Value", value: formatCurrency(stats.pipeline), sub: `${stats.inProgress} in progress`, icon: DollarSign, color: "text-primary" },
-            { label: "Total Awarded", value: formatCurrency(stats.awarded), sub: `from ${stats.successfulCount} grants`, icon: Award, color: "text-emerald-400" },
             { label: "Win Rate", value: `${stats.winRate}%`, sub: `${stats.successfulCount}W / ${stats.deniedCount}L`, icon: Target, color: "text-amber-400" },
             { label: "Applications", value: String(stats.totalApps), sub: `${stats.submitted} submitted`, icon: FileText, color: "text-primary" },
+            { label: "Successful Grants", value: String(stats.successfulCount), sub: `from ${stats.totalApps} total`, icon: Award, color: "text-emerald-400" },
             { label: "Avg Proposal Score", value: String(stats.avgScore || "—"), sub: proposalScores.length > 0 ? `from ${proposalScores.length} scored` : "No scores yet", icon: TrendingUp, color: "text-emerald-400" },
           ].map(kpi => (
             <GlassCard key={kpi.label} className="p-4">

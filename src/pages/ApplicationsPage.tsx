@@ -102,6 +102,15 @@ const ApplicationsPage = () => {
     return apps.filter(a => a.kanban_column === colId && !["successful", "denied"].includes(a.status));
   };
 
+  // Auto-create CRM prospect when moving to submitted or creating
+  const ensureCRMProspect = async (funderId: string | null) => {
+    if (!funderId || !orgId) return;
+    const { data: existing } = await supabase.from("funder_relationships").select("id").eq("org_id", orgId).eq("funder_id", funderId).maybeSingle();
+    if (!existing) {
+      await supabase.from("funder_relationships").insert({ org_id: orgId, funder_id: funderId, relationship_status: "prospect", health_score: 50 });
+    }
+  };
+
   const moveApp = async (appId: string, newColumn: string, newStatus?: string) => {
     const updateData: any = { kanban_column: newColumn };
     if (newStatus) updateData.status = newStatus;
@@ -109,6 +118,8 @@ const ApplicationsPage = () => {
     if (newColumn === "in_progress" && !newStatus) updateData.status = "in_progress";
 
     await supabase.from("applications").update(updateData).eq("id", appId);
+    const app = apps.find(a => a.id === appId);
+    if (app?.funder_id) await ensureCRMProspect(app.funder_id);
     setApps(prev => prev.map(a => a.id === appId ? { ...a, kanban_column: newColumn, status: updateData.status || a.status } : a));
     toast({ title: "Application updated" });
   };
@@ -182,9 +193,12 @@ const ApplicationsPage = () => {
                       const isUrgent = item.deadline && new Date(item.deadline) < new Date(Date.now() + 14 * 86400000);
                       return (
                         <motion.div key={item.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: j * 0.05 }}>
-                          <GlassCard className="p-4">
+                          <GlassCard className={`p-4 ${item.status === "successful" ? "border-emerald-500/30 bg-emerald-500/5" : ""}`}>
                             <div className="flex items-start justify-between mb-2">
-                              <h4 className="text-sm font-medium text-foreground leading-tight flex-1 mr-2">{item.funder}</h4>
+                              <div className="flex items-center gap-2 flex-1 mr-2">
+                                <h4 className="text-sm font-medium text-foreground leading-tight">{item.funder}</h4>
+                                {item.status === "successful" && <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 font-medium">✅ Won</span>}
+                              </div>
                               <MatchScoreRing score={item.score} size="sm" />
                             </div>
                             {item.project_name && item.project_name !== item.funder && (
