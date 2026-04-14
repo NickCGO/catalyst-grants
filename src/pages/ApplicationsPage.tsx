@@ -102,6 +102,15 @@ const ApplicationsPage = () => {
     return apps.filter(a => a.kanban_column === colId && !["successful", "denied"].includes(a.status));
   };
 
+  // Auto-create CRM prospect when moving to submitted or creating
+  const ensureCRMProspect = async (funderId: string | null) => {
+    if (!funderId || !orgId) return;
+    const { data: existing } = await supabase.from("funder_relationships").select("id").eq("org_id", orgId).eq("funder_id", funderId).maybeSingle();
+    if (!existing) {
+      await supabase.from("funder_relationships").insert({ org_id: orgId, funder_id: funderId, relationship_status: "prospect", health_score: 50 });
+    }
+  };
+
   const moveApp = async (appId: string, newColumn: string, newStatus?: string) => {
     const updateData: any = { kanban_column: newColumn };
     if (newStatus) updateData.status = newStatus;
@@ -109,6 +118,8 @@ const ApplicationsPage = () => {
     if (newColumn === "in_progress" && !newStatus) updateData.status = "in_progress";
 
     await supabase.from("applications").update(updateData).eq("id", appId);
+    const app = apps.find(a => a.id === appId);
+    if (app?.funder_id) await ensureCRMProspect(app.funder_id);
     setApps(prev => prev.map(a => a.id === appId ? { ...a, kanban_column: newColumn, status: updateData.status || a.status } : a));
     toast({ title: "Application updated" });
   };
