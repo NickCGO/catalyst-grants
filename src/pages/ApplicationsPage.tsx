@@ -113,7 +113,7 @@ const ApplicationsPage = () => {
   };
 
   const moveApp = async (appId: string, newColumn: string, newStatus?: string) => {
-    const updateData: any = { kanban_column: newColumn };
+    const updateData: any = { kanban_column: newColumn, updated_at: new Date().toISOString() };
     if (newStatus) updateData.status = newStatus;
     if (newColumn === "submitted" && !newStatus) updateData.status = "submitted";
     if (newColumn === "in_progress" && !newStatus) updateData.status = "in_progress";
@@ -121,6 +121,22 @@ const ApplicationsPage = () => {
     await supabase.from("applications").update(updateData).eq("id", appId);
     const app = apps.find(a => a.id === appId);
     if (app?.funder_id) await ensureCRMProspect(app.funder_id);
+
+    // Send notification on key status changes
+    if (user && updateData.status) {
+      const statusLabel = updateData.status === "submitted" ? "submitted" : updateData.status === "successful" ? "awarded 🎉" : updateData.status === "denied" ? "marked as unsuccessful" : null;
+      if (statusLabel) {
+        await createNotification({
+          userId: user.id,
+          orgId: orgId || undefined,
+          type: "application_status",
+          title: `Application ${statusLabel}`,
+          body: `"${app?.project_name || app?.funder || "Application"}" has been ${statusLabel}.`,
+          link: "/applications",
+        });
+      }
+    }
+
     setApps(prev => prev.map(a => a.id === appId ? { ...a, kanban_column: newColumn, status: updateData.status || a.status } : a));
     toast({ title: "Application updated" });
   };
