@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Newspaper, Bookmark, Loader2 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import DashboardLayout from "@/components/DashboardLayout";
 import GlassCard from "@/components/GlassCard";
 import MatchScoreRing from "@/components/MatchScoreRing";
@@ -17,6 +18,7 @@ const categoryBadge: Record<string, string> = {
 };
 
 const NewsPage = () => {
+  const navigate = useNavigate();
   const { org } = useOrganisation();
   const [bookmarked, setBookmarked] = useState<Set<number>>(new Set());
   const [newsItems, setNewsItems] = useState<any[]>([]);
@@ -154,10 +156,10 @@ const NewsPage = () => {
             ) : fundingAlerts.length === 0 ? (
               <p className="text-xs text-muted-foreground">No funders open this month.</p>
             ) : fundingAlerts.map((alert, i) => (
-              <GlassCard key={i} className="p-3">
+              <GlassCard key={i} className="p-3 cursor-pointer hover:border-primary/30 transition-all" onClick={() => alert.funderId && navigate(`/grants/${alert.funderId}`)}>
                 <div className="flex items-start justify-between">
                   <div className="flex-1 pr-2">
-                    <div className="text-xs font-medium text-foreground line-clamp-2">{alert.funder}</div>
+                    <div className="text-xs font-medium text-foreground line-clamp-2 hover:text-primary transition-colors">{alert.funder}</div>
                     <div className="flex flex-wrap gap-1 mt-1.5">
                       {alert.areas.slice(0, 2).map((a: string) => (
                         <span key={a} className="text-[9px] px-1.5 py-0.5 rounded-full bg-primary/10 text-primary">{a}</span>
