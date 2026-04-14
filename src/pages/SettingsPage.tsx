@@ -44,6 +44,7 @@ const notificationTypes = [
 
 const SettingsPage = () => {
   const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
   const defaultTab = searchParams.get("tab") || "profile";
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
@@ -172,6 +173,7 @@ const SettingsPage = () => {
         <Tabs defaultValue={defaultTab}>
           <TabsList className="bg-secondary/30 border border-border/30 mb-6">
             <TabsTrigger value="profile"><User className="h-3.5 w-3.5 mr-1" /> Organisation</TabsTrigger>
+            <TabsTrigger value="team" onClick={() => navigate("/settings/team")}><Users className="h-3.5 w-3.5 mr-1" /> Team</TabsTrigger>
             <TabsTrigger value="ai"><Sparkles className="h-3.5 w-3.5 mr-1" /> AI Preferences</TabsTrigger>
             <TabsTrigger value="notifications"><Bell className="h-3.5 w-3.5 mr-1" /> Notifications</TabsTrigger>
             <TabsTrigger value="modules"><Puzzle className="h-3.5 w-3.5 mr-1" /> Modules</TabsTrigger>
