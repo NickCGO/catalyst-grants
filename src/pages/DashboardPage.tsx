@@ -8,6 +8,7 @@ import StatusBadge from "@/components/StatusBadge";
 import DashboardLayout from "@/components/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import SubmissionTracker from "@/components/SubmissionTracker";
 import { supabase } from "@/integrations/supabase/client";
 import { useOrganisation } from "@/hooks/useAuth";
 
@@ -256,7 +257,10 @@ const DashboardPage = () => {
               </GlassCard>
             )}
 
-            {/* Recent Activity */}
+            {/* Submission Tracker */}
+            <SubmissionTracker />
+
+
             {recentActivity.length > 0 && (
               <GlassCard className="p-4">
                 <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Recent Activity</h3>
