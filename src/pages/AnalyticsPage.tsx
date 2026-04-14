@@ -105,7 +105,7 @@ const AnalyticsPage = () => {
     try {
       const report = await callAI([
         { role: "system", content: "You are a professional NGO board report writer." },
-        { role: "user", content: `Generate a concise board report. Data: ${stats.totalApps} applications, ${stats.submitted} submitted, ${stats.successfulCount} successful, win rate ${stats.winRate}%, R${stats.pipeline} pipeline, R${stats.awarded} awarded, avg score ${stats.avgScore}. Max 600 words.` },
+        { role: "user", content: `Generate a concise board report. Data: ${stats.totalApps} applications, ${stats.submitted} submitted, ${stats.successfulCount} successful, win rate ${stats.winRate}%, $${stats.pipeline} pipeline, $${stats.awarded} awarded, avg score ${stats.avgScore}. Max 600 words.` },
       ]);
       const blob = new Blob([report], { type: "text/plain" });
       const url = URL.createObjectURL(blob);
