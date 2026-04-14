@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-import { Settings, User, Sparkles, Bell, Puzzle, Upload, Check, Loader2 } from "lucide-react";
+import { Settings, User, Sparkles, Bell, Puzzle, Upload, Check, Loader2, Users } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import DashboardLayout from "@/components/DashboardLayout";
 import GlassCard from "@/components/GlassCard";
 import { Button } from "@/components/ui/button";

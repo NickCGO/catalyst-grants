@@ -193,9 +193,12 @@ const ApplicationsPage = () => {
                       const isUrgent = item.deadline && new Date(item.deadline) < new Date(Date.now() + 14 * 86400000);
                       return (
                         <motion.div key={item.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: j * 0.05 }}>
-                          <GlassCard className="p-4">
+                          <GlassCard className={`p-4 ${item.status === "successful" ? "border-emerald-500/30 bg-emerald-500/5" : ""}`}>
                             <div className="flex items-start justify-between mb-2">
-                              <h4 className="text-sm font-medium text-foreground leading-tight flex-1 mr-2">{item.funder}</h4>
+                              <div className="flex items-center gap-2 flex-1 mr-2">
+                                <h4 className="text-sm font-medium text-foreground leading-tight">{item.funder}</h4>
+                                {item.status === "successful" && <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 font-medium">✅ Won</span>}
+                              </div>
                               <MatchScoreRing score={item.score} size="sm" />
                             </div>
                             {item.project_name && item.project_name !== item.funder && (
