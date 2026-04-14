@@ -121,6 +121,124 @@ export type Database = {
           },
         ]
       }
+      crm_activity_notes: {
+        Row: {
+          author_id: string | null
+          author_name: string | null
+          content: string
+          created_at: string | null
+          funder_id: string
+          id: string
+          is_pinned: boolean | null
+          note_type: string
+          org_id: string
+        }
+        Insert: {
+          author_id?: string | null
+          author_name?: string | null
+          content: string
+          created_at?: string | null
+          funder_id: string
+          id?: string
+          is_pinned?: boolean | null
+          note_type?: string
+          org_id: string
+        }
+        Update: {
+          author_id?: string | null
+          author_name?: string | null
+          content?: string
+          created_at?: string | null
+          funder_id?: string
+          id?: string
+          is_pinned?: boolean | null
+          note_type?: string
+          org_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crm_activity_notes_funder_id_fkey"
+            columns: ["funder_id"]
+            isOneToOne: false
+            referencedRelation: "funders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crm_activity_notes_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organisations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      crm_emails: {
+        Row: {
+          body: string
+          created_at: string | null
+          created_by: string | null
+          funder_id: string
+          id: string
+          org_id: string
+          recipient_email: string | null
+          relationship_id: string | null
+          sent_at: string | null
+          status: string
+          subject: string
+          updated_at: string | null
+        }
+        Insert: {
+          body?: string
+          created_at?: string | null
+          created_by?: string | null
+          funder_id: string
+          id?: string
+          org_id: string
+          recipient_email?: string | null
+          relationship_id?: string | null
+          sent_at?: string | null
+          status?: string
+          subject?: string
+          updated_at?: string | null
+        }
+        Update: {
+          body?: string
+          created_at?: string | null
+          created_by?: string | null
+          funder_id?: string
+          id?: string
+          org_id?: string
+          recipient_email?: string | null
+          relationship_id?: string | null
+          sent_at?: string | null
+          status?: string
+          subject?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crm_emails_funder_id_fkey"
+            columns: ["funder_id"]
+            isOneToOne: false
+            referencedRelation: "funders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crm_emails_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organisations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crm_emails_relationship_id_fkey"
+            columns: ["relationship_id"]
+            isOneToOne: false
+            referencedRelation: "funder_relationships"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       deadline_intelligence: {
         Row: {
           ai_recommendation: string | null

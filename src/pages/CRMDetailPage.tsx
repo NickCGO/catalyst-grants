@@ -1,9 +1,7 @@
 import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
-import { motion } from "framer-motion";
 import {
-  ArrowLeft, Mail, Phone, Users, FileText, TrendingUp, Eye,
-  Calendar, MessageSquare, Star, Sparkles, Plus, Globe, Tag,
+  ArrowLeft, Globe, Mail,
 } from "lucide-react";
 import DashboardLayout from "@/components/DashboardLayout";
 import GlassCard from "@/components/GlassCard";
@@ -18,25 +16,9 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-
-const sentimentColors: Record<string, string> = {
-  positive: "bg-success/20 text-success",
-  neutral: "bg-muted text-muted-foreground",
-  negative: "bg-destructive/20 text-destructive",
-  unknown: "bg-muted text-muted-foreground",
-};
-
-const interactionIcons: Record<string, typeof Mail> = {
-  email_sent: Mail, email_received: Mail, call: Phone, meeting: Users,
-  proposal_submitted: FileText, proposal_outcome: TrendingUp,
-  report_submitted: FileText, site_visit: Eye, event: Calendar, note: MessageSquare,
-};
-
-const interactionLabels: Record<string, string> = {
-  email_sent: "Email Sent", email_received: "Email Received", call: "Phone Call",
-  meeting: "Meeting", proposal_submitted: "Proposal Submitted", proposal_outcome: "Proposal Outcome",
-  report_submitted: "Report Submitted", site_visit: "Site Visit", event: "Conference", note: "Note",
-};
+import CRMEmailComposer from "@/components/crm/CRMEmailComposer";
+import CRMEmailLog from "@/components/crm/CRMEmailLog";
+import CRMActivityFeed from "@/components/crm/CRMActivityFeed";
 
 const CRMDetailPage = () => {
   const { funderId } = useParams();
@@ -45,39 +27,41 @@ const CRMDetailPage = () => {
   const [relationship, setRelationship] = useState<any>(null);
   const [interactions, setInteractions] = useState<any[]>([]);
   const [applications, setApplications] = useState<any[]>([]);
+  const [orgId, setOrgId] = useState<string>("");
   const [loading, setLoading] = useState(true);
   const [notes, setNotes] = useState("");
   const [nextActionDate, setNextActionDate] = useState("");
   const [nextActionType, setNextActionType] = useState("");
   const [nextActionNote, setNextActionNote] = useState("");
+  const [emailRefreshKey, setEmailRefreshKey] = useState(0);
 
-  useEffect(() => {
+  const loadData = async () => {
     if (!user || !funderId) return;
-    const load = async () => {
-      const { data: org } = await supabase.from("organisations").select("id").eq("user_id", user.id).maybeSingle();
-      if (!org) { setLoading(false); return; }
+    const { data: org } = await supabase.from("organisations").select("id").eq("user_id", user.id).maybeSingle();
+    if (!org) { setLoading(false); return; }
+    setOrgId(org.id);
 
-      const [{ data: funderData }, { data: relData }, { data: interData }, { data: appData }] = await Promise.all([
-        supabase.from("funders").select("*").eq("id", funderId).maybeSingle(),
-        supabase.from("funder_relationships").select("*").eq("org_id", org.id).eq("funder_id", funderId).maybeSingle(),
-        supabase.from("funder_interactions").select("*").eq("org_id", org.id).eq("funder_id", funderId).order("date", { ascending: false }),
-        supabase.from("applications").select("*").eq("org_id", org.id).eq("funder_id", funderId).order("created_at", { ascending: false }),
-      ]);
+    const [{ data: funderData }, { data: relData }, { data: interData }, { data: appData }] = await Promise.all([
+      supabase.from("funders").select("*").eq("id", funderId).maybeSingle(),
+      supabase.from("funder_relationships").select("*").eq("org_id", org.id).eq("funder_id", funderId).maybeSingle(),
+      supabase.from("funder_interactions").select("*").eq("org_id", org.id).eq("funder_id", funderId).order("date", { ascending: false }),
+      supabase.from("applications").select("*").eq("org_id", org.id).eq("funder_id", funderId).order("created_at", { ascending: false }),
+    ]);
 
-      setFunder(funderData);
-      setRelationship(relData);
-      setInteractions(interData || []);
-      setApplications(appData || []);
-      if (relData) {
-        setNotes(relData.notes || "");
-        setNextActionDate(relData.next_action_date || "");
-        setNextActionType(relData.next_action_type || "");
-        setNextActionNote(relData.next_action_note || "");
-      }
-      setLoading(false);
-    };
-    load();
-  }, [user, funderId]);
+    setFunder(funderData);
+    setRelationship(relData);
+    setInteractions(interData || []);
+    setApplications(appData || []);
+    if (relData) {
+      setNotes(relData.notes || "");
+      setNextActionDate(relData.next_action_date || "");
+      setNextActionType(relData.next_action_type || "");
+      setNextActionNote(relData.next_action_note || "");
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => { loadData(); }, [user, funderId]);
 
   const saveAction = async () => {
     if (!relationship) return;
@@ -95,7 +79,7 @@ const CRMDetailPage = () => {
     toast({ title: "Notes saved" });
   };
 
-  const formatCurrency = (v: number) => `R${(v || 0).toLocaleString()}`;
+  const formatCurrency = (v: number) => `$${(v || 0).toLocaleString()}`;
 
   if (loading) return (
     <DashboardLayout>
@@ -120,6 +104,7 @@ const CRMDetailPage = () => {
   return (
     <DashboardLayout>
       <div className="space-y-6">
+        {/* Header */}
         <div className="flex items-start justify-between">
           <div>
             <Link to="/crm" className="text-xs text-muted-foreground hover:text-primary transition-colors inline-flex items-center gap-1 mb-2">
@@ -133,11 +118,18 @@ const CRMDetailPage = () => {
               <span>{funder.category}</span>
               <span>•</span>
               <span>{funder.geographical_area || "National"}</span>
+              {funder.email && (
+                <>
+                  <span>•</span>
+                  <span className="flex items-center gap-1"><Mail className="h-3 w-3" />{funder.email}</span>
+                </>
+              )}
             </div>
           </div>
           <MatchScoreRing score={relationship?.health_score || 50} size="lg" />
         </div>
 
+        {/* Stats */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           {[
             { label: "Total Applied", value: formatCurrency(Number(relationship?.total_applied) || 0) },
@@ -152,14 +144,17 @@ const CRMDetailPage = () => {
           ))}
         </div>
 
+        {/* Tabs */}
         <Tabs defaultValue="overview" className="space-y-4">
           <TabsList className="bg-secondary/30 border border-border/30">
             <TabsTrigger value="overview" className="text-xs">Overview</TabsTrigger>
-            <TabsTrigger value="interactions" className="text-xs">Interactions ({interactions.length})</TabsTrigger>
+            <TabsTrigger value="communications" className="text-xs">Communications</TabsTrigger>
+            <TabsTrigger value="activity" className="text-xs">Activity</TabsTrigger>
             <TabsTrigger value="applications" className="text-xs">Applications ({applications.length})</TabsTrigger>
             <TabsTrigger value="notes" className="text-xs">Notes</TabsTrigger>
           </TabsList>
 
+          {/* Overview Tab */}
           <TabsContent value="overview" className="space-y-4">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
               <GlassCard className="p-4">
@@ -198,39 +193,36 @@ const CRMDetailPage = () => {
             </div>
           </TabsContent>
 
-          <TabsContent value="interactions" className="space-y-4">
-            <h3 className="text-sm font-semibold text-foreground">Interaction Timeline</h3>
-            {interactions.length === 0 ? (
-              <p className="text-xs text-muted-foreground">No interactions logged yet.</p>
-            ) : (
-              <div className="space-y-1">
-                {interactions.map((interaction, i) => {
-                  const Icon = interactionIcons[interaction.interaction_type] || MessageSquare;
-                  return (
-                    <motion.div key={interaction.id} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.05 }}>
-                      <div className="flex gap-3 p-3 rounded-lg hover:bg-secondary/10 transition-colors">
-                        <div className="h-8 w-8 rounded-full bg-secondary/50 flex items-center justify-center shrink-0">
-                          <Icon className="h-4 w-4 text-muted-foreground" />
-                        </div>
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2">
-                            <span className="text-xs font-medium text-foreground">{interactionLabels[interaction.interaction_type] || interaction.interaction_type}</span>
-                            <Badge className={`${sentimentColors[interaction.sentiment || "unknown"]} text-[9px] h-4`}>{interaction.sentiment}</Badge>
-                            <span className="text-[10px] text-muted-foreground ml-auto">
-                              {new Date(interaction.date).toLocaleDateString("en-ZA", { day: "numeric", month: "short", year: "numeric" })}
-                            </span>
-                          </div>
-                          {interaction.summary && <p className="text-xs text-muted-foreground mt-1">{interaction.summary}</p>}
-                          {interaction.outcome && <p className="text-xs text-muted-foreground/70 mt-0.5 italic">Outcome: {interaction.outcome}</p>}
-                        </div>
-                      </div>
-                    </motion.div>
-                  );
-                })}
-              </div>
+          {/* Communications Tab */}
+          <TabsContent value="communications" className="space-y-4">
+            {orgId && funderId && (
+              <>
+                <CRMEmailComposer
+                  orgId={orgId}
+                  funderId={funderId}
+                  funderName={funder.donor_name}
+                  funderEmail={funder.email}
+                  relationshipId={relationship?.id}
+                  onEmailSaved={() => { setEmailRefreshKey(k => k + 1); loadData(); }}
+                />
+                <CRMEmailLog orgId={orgId} funderId={funderId} refreshKey={emailRefreshKey} />
+              </>
             )}
           </TabsContent>
 
+          {/* Activity Tab */}
+          <TabsContent value="activity" className="space-y-4">
+            {orgId && funderId && (
+              <CRMActivityFeed
+                orgId={orgId}
+                funderId={funderId}
+                interactions={interactions}
+                onRefresh={loadData}
+              />
+            )}
+          </TabsContent>
+
+          {/* Applications Tab */}
           <TabsContent value="applications" className="space-y-4">
             <h3 className="text-sm font-semibold text-foreground">Applications History</h3>
             {applications.length === 0 ? (
@@ -243,7 +235,7 @@ const CRMDetailPage = () => {
                       <div>
                         <p className="text-xs font-medium text-foreground">{app.project_name || "Application"}</p>
                         <p className="text-[10px] text-muted-foreground mt-0.5">
-                          {app.amount_requested ? `R${Number(app.amount_requested).toLocaleString()}` : ""} · {new Date(app.created_at).toLocaleDateString("en-ZA", { month: "short", year: "numeric" })}
+                          {app.amount_requested ? `$${Number(app.amount_requested).toLocaleString()}` : ""} · {new Date(app.created_at).toLocaleDateString("en-ZA", { month: "short", year: "numeric" })}
                         </p>
                       </div>
                       <Badge className={app.status === "successful" ? "bg-success/20 text-success" : app.status === "submitted" ? "bg-primary/20 text-primary" : "bg-muted text-muted-foreground"}>
@@ -256,6 +248,7 @@ const CRMDetailPage = () => {
             )}
           </TabsContent>
 
+          {/* Notes Tab */}
           <TabsContent value="notes" className="space-y-4">
             <h3 className="text-sm font-semibold text-foreground">Strategic Notes</h3>
             <Textarea value={notes} onChange={e => setNotes(e.target.value)} className="bg-secondary/30 border-border/30 min-h-[300px] text-sm" placeholder="Add notes about this funder relationship..." />
