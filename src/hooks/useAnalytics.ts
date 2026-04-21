@@ -42,10 +42,14 @@ async function startSession(path: string): Promise<string | null> {
   const ua = navigator.userAgent;
   const { device, browser, os } = detectDevice(ua);
   const params = new URLSearchParams(window.location.search);
+  // Generate the session id client-side so we don't need to read it back
+  // (RLS blocks SELECT on analytics tables — write-only for visitors).
+  const sessionId = crypto.randomUUID();
 
-  const { data, error } = await db
+  const { error } = await db
     .from("analytics_sessions")
     .insert({
+      id: sessionId,
       visitor_id: visitorId,
       referrer: document.referrer || null,
       utm_source: params.get("utm_source"),
@@ -57,14 +61,15 @@ async function startSession(path: string): Promise<string | null> {
       browser,
       os,
       language: navigator.language,
-    })
-    .select("id")
-    .single();
+    });
 
-  if (error || !data) return null;
-  sessionStorage.setItem(SESSION_KEY, data.id);
+  if (error) {
+    console.error("[analytics] startSession failed:", error);
+    return null;
+  }
+  sessionStorage.setItem(SESSION_KEY, sessionId);
   sessionStorage.setItem(SESSION_START_KEY, Date.now().toString());
-  return data.id;
+  return sessionId;
 }
 
 async function trackPageView(path: string, sessionId: string) {
