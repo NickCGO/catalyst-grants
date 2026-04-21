@@ -115,6 +115,21 @@ export function useAnalytics() {
   }, [location.pathname]);
 
   useEffect(() => {
+    // Heartbeat: every 30s update last_seen_at + duration so engagement metrics aren't stuck at 0
+    const tick = async () => {
+      const sessionId = sessionStorage.getItem(SESSION_KEY);
+      if (!sessionId || document.hidden) return;
+      const start = parseInt(sessionStorage.getItem(SESSION_START_KEY) || "0", 10);
+      const duration = start ? Math.round((Date.now() - start) / 1000) : 0;
+      try {
+        await db
+          .from("analytics_sessions")
+          .update({ last_seen_at: new Date().toISOString(), duration_seconds: duration })
+          .eq("id", sessionId);
+      } catch {}
+    };
+    const interval = setInterval(tick, 30000);
+
     const handleUnload = () => {
       const sessionId = sessionStorage.getItem(SESSION_KEY);
       if (!sessionId) return;
@@ -131,6 +146,11 @@ export function useAnalytics() {
       } catch {}
     };
     window.addEventListener("beforeunload", handleUnload);
-    return () => window.removeEventListener("beforeunload", handleUnload);
+    document.addEventListener("visibilitychange", tick);
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener("beforeunload", handleUnload);
+      document.removeEventListener("visibilitychange", tick);
+    };
   }, []);
 }
