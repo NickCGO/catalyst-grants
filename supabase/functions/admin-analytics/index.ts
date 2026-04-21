@@ -103,7 +103,7 @@ Deno.serve(async (req) => {
     }));
 
     // Avg engagement per (unique) visitor
-    const totalDuration = sessions.reduce((a: number, s: any) => a + (s.duration_seconds || 0), 0);
+    const totalDuration = sessions.reduce((a: number, s: any) => a + sessionDuration(s), 0);
     const avgEngagementPerVisitor = uniqueVisitors ? Math.round(totalDuration / uniqueVisitors) : 0;
 
     // Activity heatmap: day-of-week (0=Sun..6=Sat) x hour (0..23), based on page views (UTC)
