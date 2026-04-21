@@ -19,7 +19,7 @@ import { formatDistanceToNow } from "date-fns";
 import { useAuth, useOrganisation } from "@/hooks/useAuth";
 import { Skeleton } from "@/components/ui/skeleton";
 
-const ADMIN_EMAILS = ["founders@grantmatch.co.za", "admin@grantmatch.co.za", "info@nickfernandes.co.za"];
+const ADMIN_EMAILS = ["founders@grantmatch.co.za", "admin@grantmatch.co.za", "info@nickfernandes.co.za", "hello@chantalehlen.com"];
 
 const navItems = [
   { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
