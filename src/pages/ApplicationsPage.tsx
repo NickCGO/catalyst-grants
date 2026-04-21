@@ -257,16 +257,14 @@ const ApplicationsPage = () => {
                     {items.map((item, j) => {
                       const isUrgent = item.deadline && new Date(item.deadline) < new Date(Date.now() + 14 * 86400000);
                       return (
-                        <motion.div
+                        <div
                           key={item.id}
-                          initial={{ opacity: 0, y: 10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ delay: j * 0.05 }}
                           draggable
                           onDragStart={onDragStart(item.id)}
                           onDragEnd={() => { setDraggingId(null); setDragOverCol(null); }}
                           className={`cursor-grab active:cursor-grabbing ${draggingId === item.id ? "opacity-40" : ""}`}
                         >
+                          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: j * 0.05 }}>
                           <GlassCard className={`p-4 ${item.status === "successful" ? "border-emerald-500/30 bg-emerald-500/5" : ""}`}>
                             <div className="flex items-start justify-between mb-2">
                               <div className="flex items-center gap-2 flex-1 mr-2">
