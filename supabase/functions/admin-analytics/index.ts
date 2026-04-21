@@ -89,10 +89,28 @@ Deno.serve(async (req) => {
       visitors: e.visitors.size,
     }));
 
+    // Avg engagement per (unique) visitor
+    const totalDuration = sessions.reduce((a: number, s: any) => a + (s.duration_seconds || 0), 0);
+    const avgEngagementPerVisitor = uniqueVisitors ? Math.round(totalDuration / uniqueVisitors) : 0;
+
+    // Activity heatmap: day-of-week (0=Sun..6=Sat) x hour (0..23), based on page views (UTC)
+    const heatmap: { day: number; hour: number; count: number }[] = [];
+    const hmMap = new Map<string, number>();
+    pageViews.forEach((p: any) => {
+      const d = new Date(p.created_at);
+      const key = `${d.getUTCDay()}-${d.getUTCHours()}`;
+      hmMap.set(key, (hmMap.get(key) || 0) + 1);
+    });
+    for (let day = 0; day < 7; day++) {
+      for (let hour = 0; hour < 24; hour++) {
+        heatmap.push({ day, hour, count: hmMap.get(`${day}-${hour}`) || 0 });
+      }
+    }
+
     return new Response(
       JSON.stringify({
-        summary: { uniqueVisitors, totalSessions, totalPageViews, avgDuration, bounceRate },
-        dailySeries, referrers, devices, browsers, countries, topPages,
+        summary: { uniqueVisitors, totalSessions, totalPageViews, avgDuration, bounceRate, avgEngagementPerVisitor },
+        dailySeries, referrers, devices, browsers, countries, topPages, heatmap,
         recentSessions: sessions.slice(0, 50),
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
