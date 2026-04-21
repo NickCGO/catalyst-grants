@@ -498,6 +498,209 @@ function FunderManagement() {
   );
 }
 
+// ─── Website Analytics ───────────────────────────────────────────────────────
+function WebsiteAnalytics() {
+  const [data, setData] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [days, setDays] = useState(30);
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error("Not authenticated");
+      const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
+      const res = await fetch(
+        `https://${projectId}.supabase.co/functions/v1/admin-analytics?days=${days}`,
+        {
+          headers: {
+            Authorization: `Bearer ${session.access_token}`,
+            apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+          },
+        }
+      );
+      if (!res.ok) throw new Error((await res.json()).error || "Failed");
+      setData(await res.json());
+    } catch (e: any) {
+      toast({ title: "Error", description: e.message, variant: "destructive" });
+    } finally {
+      setLoading(false);
+    }
+  }, [days]);
+
+  useEffect(() => { load(); }, [load]);
+
+  const fmtDuration = (s: number) => {
+    if (s < 60) return `${s}s`;
+    const m = Math.floor(s / 60);
+    const r = s % 60;
+    return `${m}m ${r}s`;
+  };
+
+  const summary = data?.summary;
+  const cards = [
+    { label: "Unique Visitors", value: summary?.uniqueVisitors ?? 0, icon: Users },
+    { label: "Sessions", value: summary?.totalSessions ?? 0, icon: Activity },
+    { label: "Page Views", value: summary?.totalPageViews ?? 0, icon: TrendingUp },
+    { label: "Avg. Duration", value: fmtDuration(summary?.avgDuration ?? 0), icon: Clock },
+    { label: "Bounce Rate", value: `${summary?.bounceRate ?? 0}%`, icon: Globe },
+  ];
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between gap-3 flex-wrap">
+        <h2 className="text-lg font-semibold text-foreground">Website Analytics</h2>
+        <div className="flex items-center gap-2">
+          {[7, 30, 90].map((d) => (
+            <Button key={d} size="sm" variant={days === d ? "default" : "outline"} onClick={() => setDays(d)}>
+              Last {d}d
+            </Button>
+          ))}
+          <Button variant="outline" size="sm" onClick={load} disabled={loading}>
+            <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} />
+          </Button>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+        {cards.map((c) => (
+          <Card key={c.label} className="bg-card/50 border-border/30">
+            <CardContent className="pt-5">
+              <div className="flex items-center gap-2">
+                <c.icon className="h-4 w-4 text-primary" />
+                <p className="text-xs text-muted-foreground">{c.label}</p>
+              </div>
+              <p className="text-2xl font-bold text-foreground mt-1">
+                {loading ? <Skeleton className="h-7 w-16" /> : c.value}
+              </p>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      <Card className="bg-card/50 border-border/30">
+        <CardHeader><CardTitle className="text-sm">Traffic over time</CardTitle></CardHeader>
+        <CardContent className="h-72">
+          {data?.dailySeries && (
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={data.dailySeries}>
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                <XAxis dataKey="date" stroke="hsl(var(--muted-foreground))" fontSize={11} />
+                <YAxis stroke="hsl(var(--muted-foreground))" fontSize={11} />
+                <RTooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }} />
+                <Line type="monotone" dataKey="visitors" stroke="hsl(var(--primary))" strokeWidth={2} name="Visitors" />
+                <Line type="monotone" dataKey="sessions" stroke="#10b981" strokeWidth={2} name="Sessions" />
+                <Line type="monotone" dataKey="pageViews" stroke="#f59e0b" strokeWidth={2} name="Page Views" />
+              </LineChart>
+            </ResponsiveContainer>
+          )}
+        </CardContent>
+      </Card>
+
+      <div className="grid md:grid-cols-2 gap-4">
+        <Card className="bg-card/50 border-border/30">
+          <CardHeader><CardTitle className="text-sm">Top Pages</CardTitle></CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              {data?.topPages?.slice(0, 10).map((p: any) => (
+                <div key={p.name} className="flex justify-between text-sm">
+                  <span className="text-foreground truncate max-w-[70%]">{p.name}</span>
+                  <span className="text-muted-foreground">{p.value}</span>
+                </div>
+              ))}
+              {!data?.topPages?.length && <p className="text-xs text-muted-foreground">No data yet</p>}
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-card/50 border-border/30">
+          <CardHeader><CardTitle className="text-sm">Traffic Sources</CardTitle></CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              {data?.referrers?.slice(0, 10).map((r: any) => (
+                <div key={r.name} className="flex justify-between text-sm">
+                  <span className="text-foreground truncate max-w-[70%]">{r.name}</span>
+                  <span className="text-muted-foreground">{r.value}</span>
+                </div>
+              ))}
+              {!data?.referrers?.length && <p className="text-xs text-muted-foreground">No data yet</p>}
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-card/50 border-border/30">
+          <CardHeader><CardTitle className="text-sm">Devices</CardTitle></CardHeader>
+          <CardContent className="h-56">
+            {data?.devices?.length ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={data.devices}>
+                  <XAxis dataKey="name" stroke="hsl(var(--muted-foreground))" fontSize={11} />
+                  <YAxis stroke="hsl(var(--muted-foreground))" fontSize={11} />
+                  <RTooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }} />
+                  <Bar dataKey="value" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            ) : <p className="text-xs text-muted-foreground">No data yet</p>}
+          </CardContent>
+        </Card>
+
+        <Card className="bg-card/50 border-border/30">
+          <CardHeader><CardTitle className="text-sm">Browsers</CardTitle></CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              {data?.browsers?.slice(0, 8).map((b: any) => (
+                <div key={b.name} className="flex justify-between text-sm">
+                  <span className="text-foreground">{b.name}</span>
+                  <span className="text-muted-foreground">{b.value}</span>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      <Card className="bg-card/50 border-border/30">
+        <CardHeader><CardTitle className="text-sm">Recent Sessions</CardTitle></CardHeader>
+        <CardContent>
+          <div className="rounded-lg border border-border/30 overflow-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Time</TableHead>
+                  <TableHead>Landing</TableHead>
+                  <TableHead>Source</TableHead>
+                  <TableHead>Device</TableHead>
+                  <TableHead>Browser</TableHead>
+                  <TableHead className="text-right">Duration</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {data?.recentSessions?.slice(0, 30).map((s: any) => (
+                  <TableRow key={s.id}>
+                    <TableCell className="text-xs text-muted-foreground">
+                      {new Date(s.started_at).toLocaleString()}
+                    </TableCell>
+                    <TableCell className="text-xs truncate max-w-[160px]">{s.landing_path}</TableCell>
+                    <TableCell className="text-xs truncate max-w-[140px]">
+                      {s.utm_source || (s.referrer ? new URL(s.referrer).hostname : "Direct")}
+                    </TableCell>
+                    <TableCell className="text-xs">{s.device_type}</TableCell>
+                    <TableCell className="text-xs">{s.browser}</TableCell>
+                    <TableCell className="text-right text-xs">{fmtDuration(s.duration_seconds || 0)}</TableCell>
+                  </TableRow>
+                ))}
+                {!data?.recentSessions?.length && (
+                  <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground py-6 text-xs">No sessions yet</TableCell></TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
 // ─── Admin Page ──────────────────────────────────────────────────────────────
 export default function AdminPage() {
   const { user, loading: authLoading } = useAuth();
@@ -537,12 +740,14 @@ export default function AdminPage() {
         <Tabs defaultValue="overview" className="space-y-6">
           <TabsList className="bg-card/50">
             <TabsTrigger value="overview"><BarChart3 className="h-3.5 w-3.5 mr-1.5" />Overview</TabsTrigger>
+            <TabsTrigger value="analytics"><Activity className="h-3.5 w-3.5 mr-1.5" />Website Analytics</TabsTrigger>
             <TabsTrigger value="users"><Users className="h-3.5 w-3.5 mr-1.5" />Users</TabsTrigger>
             <TabsTrigger value="waitlist"><ListChecks className="h-3.5 w-3.5 mr-1.5" />Waitlist</TabsTrigger>
             <TabsTrigger value="funders"><Database className="h-3.5 w-3.5 mr-1.5" />Funders</TabsTrigger>
           </TabsList>
 
           <TabsContent value="overview"><StatsOverview /></TabsContent>
+          <TabsContent value="analytics"><WebsiteAnalytics /></TabsContent>
           <TabsContent value="users"><UserManagement /></TabsContent>
           <TabsContent value="waitlist"><WaitlistManagement /></TabsContent>
           <TabsContent value="funders"><FunderManagement /></TabsContent>
