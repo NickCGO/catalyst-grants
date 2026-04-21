@@ -341,9 +341,17 @@ const ProposalEditorPage = () => {
 
   if (!proposal) return (
     <DashboardLayout>
-      <div className="text-center py-12">
-        <p className="text-muted-foreground">Proposal not found</p>
-        <Link to="/writer" className="text-primary text-sm mt-2 inline-block">← Back to Proposals</Link>
+      <div className="max-w-md mx-auto text-center py-16">
+        <FileText className="h-10 w-10 text-muted-foreground/30 mx-auto mb-3" />
+        <h2 className="text-lg font-semibold text-foreground mb-2">Start a new proposal</h2>
+        <p className="text-sm text-muted-foreground mb-5">
+          Proposals are created from a grant or application so we can tailor them to the funder.
+          Pick a grant or open an application to get started.
+        </p>
+        <div className="flex gap-2 justify-center">
+          <Link to="/grants"><Button size="sm" className="bg-primary text-primary-foreground">Browse Grants</Button></Link>
+          <Link to="/applications"><Button size="sm" variant="outline">My Applications</Button></Link>
+        </div>
       </div>
     </DashboardLayout>
   );

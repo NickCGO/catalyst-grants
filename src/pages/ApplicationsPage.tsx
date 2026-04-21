@@ -42,6 +42,9 @@ const ApplicationsPage = () => {
   const [newProjectName, setNewProjectName] = useState("");
   const [newAmount, setNewAmount] = useState("");
   const [newDeadline, setNewDeadline] = useState("");
+  const [newReadyToSubmit, setNewReadyToSubmit] = useState(false);
+  const [draggingId, setDraggingId] = useState<string | null>(null);
+  const [dragOverCol, setDragOverCol] = useState<string | null>(null);
 
   const loadApps = async (oid: string) => {
     const { data: applications } = await supabase
