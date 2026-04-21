@@ -503,6 +503,9 @@ function WebsiteAnalytics() {
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [days, setDays] = useState(30);
+  const [live, setLive] = useState(true);
+  const [liveEvents, setLiveEvents] = useState(0);
+  const [lastEventAt, setLastEventAt] = useState<Date | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -530,6 +533,30 @@ function WebsiteAnalytics() {
 
   useEffect(() => { load(); }, [load]);
 
+  // Realtime subscription — refresh when new sessions/page views arrive.
+  useEffect(() => {
+    if (!live) return;
+    let reloadTimer: any = null;
+    const scheduleReload = () => {
+      if (reloadTimer) clearTimeout(reloadTimer);
+      reloadTimer = setTimeout(() => load(), 2500);
+    };
+    const bump = () => {
+      setLiveEvents((n) => n + 1);
+      setLastEventAt(new Date());
+      scheduleReload();
+    };
+    const channel = supabase
+      .channel("admin-analytics-live")
+      .on("postgres_changes" as any, { event: "INSERT", schema: "public", table: "analytics_sessions" }, bump)
+      .on("postgres_changes" as any, { event: "INSERT", schema: "public", table: "analytics_page_views" }, bump)
+      .subscribe();
+    return () => {
+      if (reloadTimer) clearTimeout(reloadTimer);
+      supabase.removeChannel(channel);
+    };
+  }, [live, load]);
+
   const fmtDuration = (s: number) => {
     if (s < 60) return `${s}s`;
     const m = Math.floor(s / 60);
@@ -549,7 +576,33 @@ function WebsiteAnalytics() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between gap-3 flex-wrap">
-        <h2 className="text-lg font-semibold text-foreground">Website Analytics</h2>
+        <div className="flex items-center gap-3">
+          <h2 className="text-lg font-semibold text-foreground">Website Analytics</h2>
+          <button
+            type="button"
+            onClick={() => setLive((v) => !v)}
+            className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs transition ${
+              live
+                ? "border-green-500/40 bg-green-500/10 text-green-400"
+                : "border-border/40 bg-muted/30 text-muted-foreground"
+            }`}
+            title={live ? "Realtime on — click to pause" : "Realtime paused — click to resume"}
+          >
+            <span className="relative flex h-2 w-2">
+              {live && <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-green-400 opacity-75" />}
+              <span className={`relative inline-flex h-2 w-2 rounded-full ${live ? "bg-green-500" : "bg-muted-foreground"}`} />
+            </span>
+            {live ? "Live" : "Paused"}
+            {live && liveEvents > 0 && (
+              <span className="ml-1 rounded-full bg-green-500/20 px-1.5 text-[10px] font-medium">{liveEvents}</span>
+            )}
+          </button>
+          {lastEventAt && (
+            <span className="text-xs text-muted-foreground">
+              Last event {lastEventAt.toLocaleTimeString()}
+            </span>
+          )}
+        </div>
         <div className="flex items-center gap-2">
           {[7, 30, 90].map((d) => (
             <Button key={d} size="sm" variant={days === d ? "default" : "outline"} onClick={() => setDays(d)}>
