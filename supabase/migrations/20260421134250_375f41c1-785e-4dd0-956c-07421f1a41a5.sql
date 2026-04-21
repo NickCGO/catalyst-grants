@@ -1,0 +1,1 @@
+DELETE FROM public.analytics_sessions WHERE visitor_id LIKE 'test-%';
