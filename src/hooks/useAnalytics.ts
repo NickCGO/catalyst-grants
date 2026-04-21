@@ -5,7 +5,10 @@ import { supabase } from "@/integrations/supabase/client";
 const VISITOR_KEY = "gm_visitor_id";
 const SESSION_KEY = "gm_session_id";
 const SESSION_START_KEY = "gm_session_start";
-const SESSION_TIMEOUT_MS = 30 * 60 * 1000; // 30 min
+const SESSION_TIMEOUT_MS = 30 * 60 * 1000;
+
+// Use untyped client to avoid waiting on regenerated types
+const db = supabase as any;
 
 function getOrCreateVisitorId(): string {
   let id = localStorage.getItem(VISITOR_KEY);
@@ -16,7 +19,7 @@ function getOrCreateVisitorId(): string {
   return id;
 }
 
-function detectDevice(ua: string): { device: string; browser: string; os: string } {
+function detectDevice(ua: string) {
   const isMobile = /Mobi|Android|iPhone|iPad/i.test(ua);
   const isTablet = /iPad|Tablet/i.test(ua);
   const device = isTablet ? "tablet" : isMobile ? "mobile" : "desktop";
@@ -40,7 +43,7 @@ async function startSession(path: string): Promise<string | null> {
   const { device, browser, os } = detectDevice(ua);
   const params = new URLSearchParams(window.location.search);
 
-  const { data, error } = await supabase
+  const { data, error } = await db
     .from("analytics_sessions")
     .insert({
       visitor_id: visitorId,
@@ -64,41 +67,22 @@ async function startSession(path: string): Promise<string | null> {
   return data.id;
 }
 
-async function endSession(sessionId: string) {
-  const start = parseInt(sessionStorage.getItem(SESSION_START_KEY) || "0", 10);
-  const duration = start ? Math.round((Date.now() - start) / 1000) : 0;
-  await supabase
-    .from("analytics_sessions")
-    .update({
-      ended_at: new Date().toISOString(),
-      last_seen_at: new Date().toISOString(),
-      duration_seconds: duration,
-    })
-    .eq("id", sessionId);
-}
-
 async function trackPageView(path: string, sessionId: string) {
   const visitorId = getOrCreateVisitorId();
-  await supabase.from("analytics_page_views").insert({
+  await db.from("analytics_page_views").insert({
     session_id: sessionId,
     visitor_id: visitorId,
     path,
     title: document.title,
     referrer: document.referrer || null,
   });
-  // bump page_count + last_seen
   const start = parseInt(sessionStorage.getItem(SESSION_START_KEY) || "0", 10);
   const duration = start ? Math.round((Date.now() - start) / 1000) : 0;
-  await supabase.rpc as any; // noop type guard
-  await supabase
+  await db
     .from("analytics_sessions")
-    .update({
-      last_seen_at: new Date().toISOString(),
-      duration_seconds: duration,
-    })
+    .update({ last_seen_at: new Date().toISOString(), duration_seconds: duration })
     .eq("id", sessionId);
 
-  // GA4 page_view
   const w = window as any;
   if (typeof w.gtag === "function") {
     w.gtag("event", "page_view", { page_path: path, page_title: document.title });
@@ -115,30 +99,23 @@ export function useAnalytics() {
       let sessionId = sessionStorage.getItem(SESSION_KEY);
       const start = parseInt(sessionStorage.getItem(SESSION_START_KEY) || "0", 10);
       const expired = !start || Date.now() - start > SESSION_TIMEOUT_MS;
-
       if (!sessionId || expired) {
         sessionId = await startSession(location.pathname);
       }
       if (!sessionId || !active) return;
-
-      if (!initialized.current) {
-        initialized.current = true;
-      }
+      if (!initialized.current) initialized.current = true;
       await trackPageView(location.pathname, sessionId);
     })();
-
-    return () => {
-      active = false;
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    return () => { active = false; };
   }, [location.pathname]);
 
   useEffect(() => {
     const handleUnload = () => {
       const sessionId = sessionStorage.getItem(SESSION_KEY);
-      if (sessionId) {
-        const start = parseInt(sessionStorage.getItem(SESSION_START_KEY) || "0", 10);
-        const duration = start ? Math.round((Date.now() - start) / 1000) : 0;
+      if (!sessionId) return;
+      const start = parseInt(sessionStorage.getItem(SESSION_START_KEY) || "0", 10);
+      const duration = start ? Math.round((Date.now() - start) / 1000) : 0;
+      try {
         navigator.sendBeacon?.(
           `${import.meta.env.VITE_SUPABASE_URL}/rest/v1/analytics_sessions?id=eq.${sessionId}`,
           new Blob(
@@ -146,7 +123,7 @@ export function useAnalytics() {
             { type: "application/json" }
           )
         );
-      }
+      } catch {}
     };
     window.addEventListener("beforeunload", handleUnload);
     return () => window.removeEventListener("beforeunload", handleUnload);
