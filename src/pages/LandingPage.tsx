@@ -7,6 +7,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import ParticleBackground from "@/components/ParticleBackground";
 import AnimatedCounter from "@/components/AnimatedCounter";
+import founderNick from "@/assets/founder-nick.png";
+import founderChantal from "@/assets/founder-chantal.jpeg";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 
@@ -541,6 +543,58 @@ const LandingPage = () => {
             ))}
           </div>
           <p className="text-center text-sm text-[#64748B] mt-12">Average time from signup to first proposal draft: 23 minutes. (We timed it.)</p>
+        </div>
+      </section>
+
+      {/* ── FOUNDERS ── */}
+      <section id="founders" className="relative z-10 py-24 px-6">
+        <div className="max-w-6xl mx-auto">
+          <motion.div variants={fadeUpVariants()} initial="hidden" whileInView="visible" viewport={{ once: true }} className="text-center mb-16">
+            <p className="text-xs font-semibold tracking-widest text-[#0EA5E9] mb-3">MEET THE FOUNDERS</p>
+            <h2 className="text-[28px] lg:text-[40px] font-bold text-[#F1F5F9] mb-4">Built by people who have lived it.</h2>
+            <p className="text-lg text-[#94A3B8] max-w-2xl mx-auto">Decades of experience across psychology, NGO leadership, and operational strategy — channelled into one tool for African changemakers.</p>
+          </motion.div>
+
+          <div className="grid md:grid-cols-2 gap-8">
+            {[
+              {
+                name: "Nick Fernandes, PhD",
+                title: "Co-Founder · Clinical Psychologist & Strategist",
+                img: founderNick,
+                bio: "Clinical psychologist, strategist, and founder of six NGOs focused on education, youth development, and mental health across Africa. With a PhD in psychology and extensive field experience, Nick brings a deep understanding of human systems and scalable social impact. He designs community-rooted strategies that are both trauma-informed and results-oriented — helping organisations stay grounded in their mission while expanding their reach.",
+              },
+              {
+                name: "Chantal Ehlen",
+                title: "Co-Founder · Project Strategist & Operations Coach",
+                img: founderChantal,
+                bio: "Project strategist and operations coach with over 20 years of experience across corporate, startup, nonprofit, and research environments. Chantal blends the strategic clarity of corporate with the agility of startups and the purpose of NGOs. She specialises in building operational systems and frameworks that give teams structure without losing their soul — supporting organisations to grow sustainably from the inside out.",
+              },
+            ].map((f, i) => (
+              <motion.div
+                key={f.name}
+                variants={fadeUpVariants(i * 0.15)}
+                initial="hidden"
+                whileInView="visible"
+                viewport={{ once: true }}
+                className="group relative rounded-2xl bg-gradient-to-b from-[#1E293B]/80 to-[#0F172A]/80 backdrop-blur-xl border border-white/10 p-8 hover:border-[#0EA5E9]/40 transition-all"
+              >
+                <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-[#0EA5E9]/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
+                <div className="relative flex flex-col items-center text-center">
+                  <div className="relative mb-6">
+                    <div className="absolute inset-0 rounded-full bg-gradient-to-br from-[#0EA5E9] to-[#0284C7] blur-xl opacity-40" />
+                    <img
+                      src={f.img}
+                      alt={`${f.name}, ${f.title}`}
+                      className="relative w-32 h-32 rounded-full object-cover border-2 border-[#0EA5E9]/50 shadow-[0_0_32px_rgba(14,165,233,0.25)]"
+                    />
+                  </div>
+                  <h3 className="text-xl font-bold text-[#F1F5F9] mb-1">{f.name}</h3>
+                  <p className="text-sm font-semibold text-[#0EA5E9] mb-4">{f.title}</p>
+                  <p className="text-sm text-[#94A3B8] leading-relaxed">{f.bio}</p>
+                </div>
+              </motion.div>
+            ))}
+          </div>
         </div>
       </section>
 
