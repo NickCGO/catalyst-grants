@@ -129,7 +129,12 @@ const ProposalEditorPage = () => {
 
   // Load proposal + funder + org from Supabase
   useEffect(() => {
-    if (!proposalId || !user) return;
+    if (!user) return;
+    if (!proposalId || proposalId === "new") {
+      // No proposal id — show empty-state instead of infinite spinner.
+      setLoading(false);
+      return;
+    }
     const load = async () => {
       const { data: p } = await supabase.from("proposals").select("*").eq("id", proposalId).maybeSingle();
       if (!p) { setLoading(false); return; }
