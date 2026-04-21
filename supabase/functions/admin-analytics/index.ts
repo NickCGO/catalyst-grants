@@ -36,11 +36,24 @@ Deno.serve(async (req) => {
     const sessions = sessionsRes.data || [];
     const pageViews = pagesRes.data || [];
 
+    // Derive a usable duration: prefer stored duration_seconds, fall back to (last_seen_at - started_at)
+    const sessionDuration = (s: any): number => {
+      const stored = Number(s.duration_seconds || 0);
+      if (stored > 0) return stored;
+      if (s.last_seen_at && s.started_at) {
+        const diff = Math.round(
+          (new Date(s.last_seen_at).getTime() - new Date(s.started_at).getTime()) / 1000
+        );
+        return diff > 0 ? diff : 0;
+      }
+      return 0;
+    };
+
     const uniqueVisitors = new Set(sessions.map((s: any) => s.visitor_id)).size;
     const totalSessions = sessions.length;
     const totalPageViews = pageViews.length;
     const avgDuration = sessions.length
-      ? Math.round(sessions.reduce((a: number, s: any) => a + (s.duration_seconds || 0), 0) / sessions.length)
+      ? Math.round(sessions.reduce((a: number, s: any) => a + sessionDuration(s), 0) / sessions.length)
       : 0;
     const bounces = sessions.filter((s: any) => {
       const pv = pageViews.filter((p: any) => p.session_id === s.id).length;
@@ -90,7 +103,7 @@ Deno.serve(async (req) => {
     }));
 
     // Avg engagement per (unique) visitor
-    const totalDuration = sessions.reduce((a: number, s: any) => a + (s.duration_seconds || 0), 0);
+    const totalDuration = sessions.reduce((a: number, s: any) => a + sessionDuration(s), 0);
     const avgEngagementPerVisitor = uniqueVisitors ? Math.round(totalDuration / uniqueVisitors) : 0;
 
     // Activity heatmap: day-of-week (0=Sun..6=Sat) x hour (0..23), based on page views (UTC)
