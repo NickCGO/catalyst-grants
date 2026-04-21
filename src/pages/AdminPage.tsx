@@ -684,7 +684,7 @@ function WebsiteAnalytics() {
                       const cell = heatmap.find((c) => c.day === day && c.hour === hour);
                       const count = cell?.count ?? 0;
                       const intensity = maxHeat > 0 ? count / maxHeat : 0;
-                      const opacity = count === 0 ? 0 : 0.15 + intensity * 0.85;
+                      const opacity = count === 0 ? 0 : 0.3 + intensity * 0.7;
                       return (
                         <div
                           key={hour}
