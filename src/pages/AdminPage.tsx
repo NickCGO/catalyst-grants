@@ -13,8 +13,10 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "@/hooks/use-toast";
 import {
   Users, ListChecks, Database, BarChart3, Shield, Search,
-  Trash2, UserCheck, UserX, Download, RefreshCw, Plus,
+  Trash2, UserCheck, UserX, Download, RefreshCw, Plus, Activity,
+  Globe, Monitor, Clock, TrendingUp,
 } from "lucide-react";
+import { LineChart, Line, XAxis, YAxis, Tooltip as RTooltip, ResponsiveContainer, BarChart, Bar, CartesianGrid } from "recharts";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
