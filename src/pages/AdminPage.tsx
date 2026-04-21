@@ -655,6 +655,69 @@ function WebsiteAnalytics() {
         </CardContent>
       </Card>
 
+      <Card className="bg-card/50 border-border/30">
+        <CardHeader>
+          <CardTitle className="text-sm">Activity Heatmap</CardTitle>
+          <p className="text-xs text-muted-foreground">Page views by day &amp; hour (UTC). Darker = busier.</p>
+        </CardHeader>
+        <CardContent>
+          {heatmap.length ? (
+            <div className="overflow-x-auto">
+              <div className="inline-block min-w-full">
+                {/* Hour axis */}
+                <div className="grid gap-[2px] mb-1" style={{ gridTemplateColumns: `36px repeat(24, minmax(14px, 1fr))` }}>
+                  <div />
+                  {Array.from({ length: 24 }).map((_, h) => (
+                    <div key={h} className="text-[9px] text-muted-foreground text-center">
+                      {h % 3 === 0 ? h : ""}
+                    </div>
+                  ))}
+                </div>
+                {dayLabels.map((label, day) => (
+                  <div
+                    key={day}
+                    className="grid gap-[2px] mb-[2px]"
+                    style={{ gridTemplateColumns: `36px repeat(24, minmax(14px, 1fr))` }}
+                  >
+                    <div className="text-[10px] text-muted-foreground flex items-center">{label}</div>
+                    {Array.from({ length: 24 }).map((_, hour) => {
+                      const cell = heatmap.find((c) => c.day === day && c.hour === hour);
+                      const count = cell?.count ?? 0;
+                      const intensity = maxHeat > 0 ? count / maxHeat : 0;
+                      const opacity = count === 0 ? 0 : 0.15 + intensity * 0.85;
+                      return (
+                        <div
+                          key={hour}
+                          title={`${label} ${String(hour).padStart(2, "0")}:00 — ${count} view${count === 1 ? "" : "s"}`}
+                          className="aspect-square rounded-[3px] border border-border/30"
+                          style={{
+                            backgroundColor: count > 0 ? `hsl(var(--primary) / ${opacity})` : "transparent",
+                          }}
+                        />
+                      );
+                    })}
+                  </div>
+                ))}
+                <div className="flex items-center gap-2 mt-3 text-[10px] text-muted-foreground">
+                  <span>Less</span>
+                  {[0.15, 0.35, 0.55, 0.75, 1].map((o) => (
+                    <div
+                      key={o}
+                      className="h-3 w-3 rounded-[3px] border border-border/30"
+                      style={{ backgroundColor: `hsl(var(--primary) / ${o})` }}
+                    />
+                  ))}
+                  <span>More</span>
+                  <span className="ml-auto">Peak: {maxHeat} views/hr</span>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <p className="text-xs text-muted-foreground">No data yet</p>
+          )}
+        </CardContent>
+      </Card>
+
       <div className="grid md:grid-cols-2 gap-4">
         <Card className="bg-card/50 border-border/30">
           <CardHeader><CardTitle className="text-sm">Top Pages</CardTitle></CardHeader>
