@@ -241,7 +241,7 @@ function WaitlistForm({ onSuccess }: { onSuccess: (data: { name: string; email: 
     try {
       // Get current count for position
       const { count } = await supabase.from("waitlist").select("*", { count: "exact", head: true });
-      const position = 6 + (count || 0) + 1;
+      const position = 7 + (count || 0) + 1;
 
       const { error } = await supabase.from("waitlist").insert({
         email, name, organisation: org, country, role,
@@ -372,7 +372,7 @@ const LandingPage = () => {
   const [successData, setSuccessData] = useState<{ name: string; email: string; position: number } | null>(null);
   const [activeTab, setActiveTab] = useState(0);
 
-  const BASE_COUNT = 6;
+  const BASE_COUNT = 7;
   useEffect(() => {
     supabase.from("waitlist").select("*", { count: "exact", head: true }).then(({ count }) => {
       setWaitlistCount(BASE_COUNT + (count || 0));
