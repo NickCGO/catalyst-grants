@@ -94,6 +94,18 @@ const ApplicationsPage = () => {
     load();
   }, [user]);
 
+  // Realtime sync — keep board in sync across tabs/teammates
+  useEffect(() => {
+    if (!orgId) return;
+    const channel = supabase
+      .channel('applications-realtime')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'applications', filter: `org_id=eq.${orgId}` }, () => {
+        loadApps(orgId);
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [orgId]);
+
   const columns = [
     { id: "backlog", title: "Backlog" },
     { id: "in_progress", title: "In Progress" },
@@ -152,19 +164,44 @@ const ApplicationsPage = () => {
 
   const createManualApp = async () => {
     if (!orgId || !newProjectName) return;
+    const status = newReadyToSubmit ? "in_progress" : "pending";
+    const kanban = newReadyToSubmit ? "in_progress" : "backlog";
     const { error } = await supabase.from("applications").insert({
       org_id: orgId,
       project_name: newProjectName,
       amount_requested: newAmount ? parseFloat(newAmount) : null,
       deadline: newDeadline || null,
-      status: "pending",
-      kanban_column: "backlog",
+      status,
+      kanban_column: kanban,
     });
     if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
-    toast({ title: "Application created!" });
+    toast({ title: newReadyToSubmit ? "Application created — marked Ready to Submit" : "Application created!" });
     setCreateOpen(false);
-    setNewProjectName(""); setNewAmount(""); setNewDeadline("");
+    setNewProjectName(""); setNewAmount(""); setNewDeadline(""); setNewReadyToSubmit(false);
     await loadApps(orgId);
+  };
+
+  // Drag-and-drop handlers
+  const onDragStart = (id: string) => (e: React.DragEvent) => {
+    setDraggingId(id);
+    e.dataTransfer.effectAllowed = "move";
+  };
+  const onDragOver = (colId: string) => (e: React.DragEvent) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+    setDragOverCol(colId);
+  };
+  const onDrop = (colId: string) => (e: React.DragEvent) => {
+    e.preventDefault();
+    setDragOverCol(null);
+    if (!draggingId) return;
+    const targetCol = colId === "closed" ? "closed" : colId;
+    const newStatus = colId === "closed" ? "successful" : undefined;
+    const app = apps.find(a => a.id === draggingId);
+    if (app && app.kanban_column !== targetCol) {
+      moveApp(draggingId, targetCol, newStatus);
+    }
+    setDraggingId(null);
   };
 
   if (loading) return (
