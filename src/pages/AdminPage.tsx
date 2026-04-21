@@ -533,6 +533,30 @@ function WebsiteAnalytics() {
 
   useEffect(() => { load(); }, [load]);
 
+  // Realtime subscription — refresh when new sessions/page views arrive.
+  useEffect(() => {
+    if (!live) return;
+    let reloadTimer: any = null;
+    const scheduleReload = () => {
+      if (reloadTimer) clearTimeout(reloadTimer);
+      reloadTimer = setTimeout(() => load(), 2500);
+    };
+    const bump = () => {
+      setLiveEvents((n) => n + 1);
+      setLastEventAt(new Date());
+      scheduleReload();
+    };
+    const channel = supabase
+      .channel("admin-analytics-live")
+      .on("postgres_changes" as any, { event: "INSERT", schema: "public", table: "analytics_sessions" }, bump)
+      .on("postgres_changes" as any, { event: "INSERT", schema: "public", table: "analytics_page_views" }, bump)
+      .subscribe();
+    return () => {
+      if (reloadTimer) clearTimeout(reloadTimer);
+      supabase.removeChannel(channel);
+    };
+  }, [live, load]);
+
   const fmtDuration = (s: number) => {
     if (s < 60) return `${s}s`;
     const m = Math.floor(s / 60);
