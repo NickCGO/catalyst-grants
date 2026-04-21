@@ -570,8 +570,13 @@ function WebsiteAnalytics() {
     { label: "Sessions", value: summary?.totalSessions ?? 0, icon: Activity },
     { label: "Page Views", value: summary?.totalPageViews ?? 0, icon: TrendingUp },
     { label: "Avg. Duration", value: fmtDuration(summary?.avgDuration ?? 0), icon: Clock },
+    { label: "Engagement / Visitor", value: fmtDuration(summary?.avgEngagementPerVisitor ?? 0), icon: Clock },
     { label: "Bounce Rate", value: `${summary?.bounceRate ?? 0}%`, icon: Globe },
   ];
+
+  const dayLabels = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+  const heatmap: { day: number; hour: number; count: number }[] = data?.heatmap ?? [];
+  const maxHeat = heatmap.reduce((m, c) => (c.count > m ? c.count : m), 0);
 
   return (
     <div className="space-y-6">
