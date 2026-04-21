@@ -13,6 +13,7 @@ import { useNavigate } from "react-router-dom";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import { toast } from "@/hooks/use-toast";
 import { createNotification } from "@/hooks/useNotifications";
 
@@ -239,17 +240,33 @@ const ApplicationsPage = () => {
           <div className="flex gap-4 overflow-x-auto pb-6">
             {columns.map((col) => {
               const items = getColumnItems(col.id);
+              const isOver = dragOverCol === col.id;
               return (
-                <div key={col.id} className="min-w-[280px] flex-1">
-                  <div className="flex items-center gap-2 mb-4">
+                <div
+                  key={col.id}
+                  className={`min-w-[280px] flex-1 rounded-lg p-2 transition-colors ${isOver ? "bg-primary/5 ring-2 ring-primary/40" : ""}`}
+                  onDragOver={onDragOver(col.id)}
+                  onDragLeave={() => setDragOverCol(null)}
+                  onDrop={onDrop(col.id)}
+                >
+                  <div className="flex items-center gap-2 mb-4 px-1">
                     <h3 className="text-sm font-semibold text-foreground">{col.title}</h3>
                     <span className="text-xs text-muted-foreground bg-secondary/50 rounded-full px-2 py-0.5">{items.length}</span>
                   </div>
-                  <div className="space-y-3">
+                  <div className="space-y-3 min-h-[60px]">
                     {items.map((item, j) => {
                       const isUrgent = item.deadline && new Date(item.deadline) < new Date(Date.now() + 14 * 86400000);
                       return (
-                        <motion.div key={item.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: j * 0.05 }}>
+                        <motion.div
+                          key={item.id}
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: j * 0.05 }}
+                          draggable
+                          onDragStart={onDragStart(item.id)}
+                          onDragEnd={() => { setDraggingId(null); setDragOverCol(null); }}
+                          className={`cursor-grab active:cursor-grabbing ${draggingId === item.id ? "opacity-40" : ""}`}
+                        >
                           <GlassCard className={`p-4 ${item.status === "successful" ? "border-emerald-500/30 bg-emerald-500/5" : ""}`}>
                             <div className="flex items-start justify-between mb-2">
                               <div className="flex items-center gap-2 flex-1 mr-2">
@@ -274,7 +291,7 @@ const ApplicationsPage = () => {
                                 {isUrgent && " ⚠️"}
                               </div>
                             )}
-                            <div className="flex items-center gap-1 mt-3 pt-2 border-t border-border/20">
+                            <div className="flex items-center gap-1 mt-3 pt-2 border-t border-border/20 flex-wrap">
                               {col.id !== "in_progress" && col.id !== "closed" && (
                                 <Button size="sm" variant="ghost" className="h-6 text-[10px] px-2" onClick={() => moveApp(item.id, "in_progress")}>
                                   Start <ArrowRight className="h-2.5 w-2.5 ml-0.5" />
@@ -285,15 +302,18 @@ const ApplicationsPage = () => {
                                   Submit <ArrowRight className="h-2.5 w-2.5 ml-0.5" />
                                 </Button>
                               )}
-                              {item.proposal_id && (
-                                <Button size="sm" variant="ghost" className="h-6 text-[10px] px-2" onClick={() => navigate(`/writer/${item.proposal_id}`)}>
-                                  Edit Proposal
-                                </Button>
-                              )}
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                className="h-6 text-[10px] px-2 text-primary"
+                                onClick={() => navigate(item.proposal_id ? `/writer/${item.proposal_id}` : `/grants`)}
+                              >
+                                {item.proposal_id ? "Edit Proposal" : "Write Proposal"}
+                              </Button>
                               {col.id === "submitted" && (
-                                <div className="flex gap-1 ml-auto">
-                                  <Button size="sm" variant="ghost" className="h-6 text-[10px] px-2 text-green-500" onClick={() => moveApp(item.id, "closed", "successful")}>Won</Button>
-                                  <Button size="sm" variant="ghost" className="h-6 text-[10px] px-2 text-red-500" onClick={() => moveApp(item.id, "closed", "denied")}>Lost</Button>
+                                <div className="flex gap-1">
+                                  <Button size="sm" variant="ghost" className="h-6 text-[10px] px-2 text-emerald-500" onClick={() => moveApp(item.id, "closed", "successful")}>Won</Button>
+                                  <Button size="sm" variant="ghost" className="h-6 text-[10px] px-2 text-destructive" onClick={() => moveApp(item.id, "closed", "denied")}>Lost</Button>
                                 </div>
                               )}
                               <Button size="sm" variant="ghost" className="h-6 text-[10px] px-2 text-destructive ml-auto" onClick={() => deleteApp(item.id)}>
@@ -304,12 +324,18 @@ const ApplicationsPage = () => {
                         </motion.div>
                       );
                     })}
+                    {items.length === 0 && (
+                      <div className="text-[10px] text-muted-foreground/50 text-center py-6 border border-dashed border-border/30 rounded-lg">
+                        Drop here
+                      </div>
+                    )}
                   </div>
                 </div>
               );
             })}
           </div>
         )}
+        <p className="text-[10px] text-muted-foreground/70 mt-2">💡 Tip: drag cards between columns to update status.</p>
       </div>
 
       {/* Create Application Dialog */}
@@ -332,6 +358,13 @@ const ApplicationsPage = () => {
                 <Label className="text-xs text-muted-foreground">Deadline</Label>
                 <Input type="date" value={newDeadline} onChange={e => setNewDeadline(e.target.value)} className="mt-1 bg-secondary/30 border-border/50 text-foreground" />
               </div>
+            </div>
+            <div className="flex items-center justify-between rounded-lg border border-border/40 bg-secondary/20 px-3 py-2">
+              <div>
+                <Label className="text-xs text-foreground">Mark as ready to submit</Label>
+                <p className="text-[10px] text-muted-foreground">Skips Backlog and lands in "In Progress".</p>
+              </div>
+              <Switch checked={newReadyToSubmit} onCheckedChange={setNewReadyToSubmit} />
             </div>
             <Button className="w-full bg-primary text-primary-foreground" onClick={createManualApp} disabled={!newProjectName}>
               Create Application
