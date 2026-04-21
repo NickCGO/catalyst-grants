@@ -503,6 +503,9 @@ function WebsiteAnalytics() {
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [days, setDays] = useState(30);
+  const [live, setLive] = useState(true);
+  const [liveEvents, setLiveEvents] = useState(0);
+  const [lastEventAt, setLastEventAt] = useState<Date | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
