@@ -580,22 +580,48 @@ const PartnershipWorkspacePage = () => {
                 )}
               </div>
 
-              {/* Right - Messages placeholder */}
+              {/* Right - Messages */}
               <div className="col-span-2">
                 <GlassCard hoverable={false} className="flex flex-col h-[500px]">
                   <h3 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
                     <MessageSquare className="h-4 w-4" /> Messages
+                    <span className="text-[10px] text-muted-foreground ml-auto">{messages.length} message{messages.length !== 1 ? "s" : ""}</span>
                   </h3>
-                  <div className="flex-1 flex items-center justify-center text-muted-foreground">
-                    <div className="text-center">
-                      <MessageSquare className="h-8 w-8 mx-auto mb-2 opacity-40" />
-                      <p className="text-xs">Partnership messaging coming soon.</p>
-                      <p className="text-[10px] mt-1">Use the proposal tab to collaborate on your joint application.</p>
-                    </div>
+                  <div className="flex-1 overflow-y-auto space-y-2 pr-1">
+                    {messages.length === 0 ? (
+                      <div className="h-full flex items-center justify-center text-muted-foreground">
+                        <div className="text-center">
+                          <MessageSquare className="h-8 w-8 mx-auto mb-2 opacity-40" />
+                          <p className="text-xs">No messages yet. Start the conversation.</p>
+                        </div>
+                      </div>
+                    ) : (
+                      messages.map((m) => {
+                        const mine = m.author_user_id === currentUserId;
+                        return (
+                          <div key={m.id} className={`flex ${mine ? "justify-end" : "justify-start"}`}>
+                            <div className={`max-w-[80%] rounded-lg px-3 py-2 text-xs ${mine ? "bg-primary text-primary-foreground" : "bg-secondary text-foreground"}`}>
+                              {!mine && <div className="text-[10px] font-semibold opacity-70 mb-0.5">{m.author_name || "Member"}</div>}
+                              <div className="whitespace-pre-wrap break-words">{m.body}</div>
+                              <div className="text-[9px] opacity-60 mt-1">{new Date(m.created_at).toLocaleString()}</div>
+                            </div>
+                          </div>
+                        );
+                      })
+                    )}
                   </div>
                   <div className="flex gap-2 pt-3 border-t border-border/30">
-                    <Input placeholder="Type a message..." value={newMessage} onChange={e => setNewMessage(e.target.value)} className="text-xs bg-secondary/30 border-border/50" disabled />
-                    <Button size="sm" className="shrink-0" disabled><Send className="h-3 w-3" /></Button>
+                    <Input
+                      placeholder="Type a message..."
+                      value={newMessage}
+                      onChange={e => setNewMessage(e.target.value)}
+                      onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMessage(); } }}
+                      className="text-xs bg-secondary/30 border-border/50"
+                      disabled={sendingMsg}
+                    />
+                    <Button size="sm" className="shrink-0" onClick={sendMessage} disabled={sendingMsg || !newMessage.trim()}>
+                      <Send className="h-3 w-3" />
+                    </Button>
                   </div>
                 </GlassCard>
               </div>
