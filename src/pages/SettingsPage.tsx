@@ -394,7 +394,8 @@ const SettingsPage = () => {
                     ))}
                   </div>
                 </div>
-                <Button className="bg-primary text-primary-foreground hover:bg-primary/90" onClick={() => toast({ title: "AI preferences saved" })}>
+                <Button className="bg-primary text-primary-foreground hover:bg-primary/90" onClick={saveAIPrefs} disabled={saving}>
+                  {saving ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : null}
                   Save Preferences
                 </Button>
               </div>
@@ -436,6 +437,12 @@ const SettingsPage = () => {
                   ))}
                 </div>
               </GlassCard>
+              <div>
+                <Button className="bg-primary text-primary-foreground hover:bg-primary/90" onClick={saveNotifications} disabled={saving}>
+                  {saving ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : null}
+                  Save Notification Preferences
+                </Button>
+              </div>
             </div>
           </TabsContent>
 
@@ -460,6 +467,12 @@ const SettingsPage = () => {
                 ))}
               </div>
             </GlassCard>
+            <div className="mt-4">
+              <Button className="bg-primary text-primary-foreground hover:bg-primary/90" onClick={saveModules} disabled={saving}>
+                {saving ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : null}
+                Save Module Preferences
+              </Button>
+            </div>
           </TabsContent>
         </Tabs>
       </div>
