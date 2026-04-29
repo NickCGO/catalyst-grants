@@ -101,12 +101,15 @@ const PartnershipWorkspacePage = () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
+      setCurrentUserId(user.id);
+      setCurrentUserName(user.email?.split("@")[0] || "Member");
 
       // Get user's org
       const { data: org } = await supabase.from("organisations").select("id, name").eq("user_id", user.id).maybeSingle();
       if (org) {
         setUserOrgId(org.id);
         setLeadOrgName(org.name);
+        setCurrentUserName(org.name); // prefer org name as author display
       }
 
       // Load partnership
@@ -115,6 +118,30 @@ const PartnershipWorkspacePage = () => {
         .select("*")
         .eq("id", id!)
         .maybeSingle();
+
+      if (pErr || !p) {
+        toast.error("Partnership not found");
+        setLoading(false);
+        return;
+      }
+      setPartnership(p as PartnershipData);
+      setMouContent(p.mou_content || "");
+
+      // Load messages
+      const { data: msgs } = await supabase
+        .from("partnership_messages")
+        .select("*")
+        .eq("partnership_id", id!)
+        .order("created_at", { ascending: true });
+      if (msgs) setMessages(msgs as Message[]);
+
+      // Load documents
+      const { data: docsData } = await supabase
+        .from("partnership_documents")
+        .select("*")
+        .eq("partnership_id", id!)
+        .order("created_at", { ascending: false });
+      if (docsData) setDocs(docsData as PDoc[]);
 
       if (pErr || !p) {
         toast.error("Partnership not found");
