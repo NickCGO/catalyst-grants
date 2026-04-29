@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -6,23 +6,24 @@
 
 @layer base {
   :root {
-    --background: 222 47% 6%;
-    --foreground: 210 20% 92%;
+    /* Light theme — matches grantmatch reference (white bg, near-black text, sky-500 primary) */
+    --background: 0 0% 100%;
+    --foreground: 222 47% 11%;
 
-    --card: 222 47% 9%;
-    --card-foreground: 210 20% 92%;
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 11%;
 
-    --popover: 222 47% 9%;
-    --popover-foreground: 210 20% 92%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
 
     --primary: 199 89% 48%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 222 30% 14%;
-    --secondary-foreground: 210 20% 92%;
+    --secondary: 210 40% 96%;
+    --secondary-foreground: 222 47% 11%;
 
-    --muted: 222 30% 14%;
-    --muted-foreground: 215 16% 56%;
+    --muted: 210 40% 96%;
+    --muted-foreground: 215 16% 47%;
 
     --accent: 199 89% 48%;
     --accent-foreground: 0 0% 100%;
@@ -30,37 +31,38 @@
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 222 30% 18%;
-    --input: 222 30% 18%;
+    --border: 214 32% 91%;
+    --input: 214 32% 91%;
     --ring: 199 89% 48%;
 
     --radius: 0.75rem;
 
-    /* Custom tokens */
-    --glass-bg: 222 47% 9% / 0.7;
-    --glass-bg-hover: 222 47% 12% / 0.85;
-    --glass-border: 222 30% 20% / 0.6;
-    --glass-border-hover: 199 89% 48% / 0.3;
+    /* Custom tokens — light surfaces */
+    --glass-bg: 0 0% 100% / 0.85;
+    --glass-bg-hover: 0 0% 100% / 1;
+    --glass-border: 214 32% 91% / 1;
+    --glass-border-hover: 199 89% 48% / 0.4;
     --glass-blur: 12px;
-    --glass-shadow: 0 4px 24px rgba(0, 0, 0, 0.3);
-    --glass-shadow-hover: 0 0 20px rgba(14, 165, 233, 0.15);
+    --glass-shadow: 0 4px 24px hsla(222 47% 11% / 0.06);
+    --glass-shadow-hover: 0 12px 32px hsla(199 89% 48% / 0.15);
 
-    --bg-deep: 222 47% 6%;
-    --bg-slate: 222 30% 10%;
+    --bg-deep: 0 0% 100%;
+    --bg-slate: 210 40% 98%;
+    --bg-soft: 210 40% 96%;
     --accent-blue: 199 89% 48%;
-    --accent-bright: 199 92% 61%;
+    --accent-bright: 199 92% 56%;
     --accent-teal: 168 76% 42%;
     --accent-amber: 38 92% 50%;
     --success: 160 84% 39%;
     --success-foreground: 0 0% 100%;
 
-    --sidebar-background: 222 47% 8%;
-    --sidebar-foreground: 215 16% 56%;
+    --sidebar-background: 210 40% 98%;
+    --sidebar-foreground: 215 16% 47%;
     --sidebar-primary: 199 89% 48%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 222 30% 12%;
-    --sidebar-accent-foreground: 210 20% 92%;
-    --sidebar-border: 222 30% 15%;
+    --sidebar-accent: 210 40% 94%;
+    --sidebar-accent-foreground: 222 47% 11%;
+    --sidebar-border: 214 32% 91%;
     --sidebar-ring: 199 89% 48%;
   }
 }
@@ -77,7 +79,8 @@
 
   h1, h2, h3, h4, h5, h6 {
     font-family: 'Inter', system-ui, sans-serif;
-    font-weight: 600;
+    font-weight: 700;
+    letter-spacing: -0.02em;
   }
 
   code, pre, .font-mono {
@@ -112,11 +115,11 @@
   }
 
   .gradient-bg {
-    background: linear-gradient(135deg, hsl(var(--bg-deep)) 0%, hsl(210 20% 96%) 100%);
+    background: linear-gradient(135deg, hsl(var(--bg-deep)) 0%, hsl(var(--bg-soft)) 100%);
   }
 
   .gradient-hero {
-    background: linear-gradient(180deg, hsl(210 20% 98%) 0%, hsl(210 20% 95%) 100%);
+    background: linear-gradient(180deg, hsl(0 0% 100%) 0%, hsl(210 40% 98%) 100%);
   }
 
   .glow-blue {
