@@ -96,6 +96,101 @@ const PartnershipWorkspacePage = () => {
     if (id) loadWorkspace();
   }, [id]);
 
+  // Realtime: subscribe to new messages
+  useEffect(() => {
+    if (!id) return;
+    const channel = supabase
+      .channel(`partnership-msgs-${id}`)
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "partnership_messages", filter: `partnership_id=eq.${id}` },
+        (payload) => {
+          const m = payload.new as Message;
+          setMessages((prev) => (prev.some((x) => x.id === m.id) ? prev : [...prev, m]));
+        }
+      )
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [id]);
+
+  const sendMessage = async () => {
+    if (!newMessage.trim() || !partnership || !userOrgId || !currentUserId) return;
+    setSendingMsg(true);
+    try {
+      const { error } = await supabase.from("partnership_messages").insert({
+        partnership_id: partnership.id,
+        org_id: userOrgId,
+        author_user_id: currentUserId,
+        author_name: currentUserName,
+        body: newMessage.trim(),
+      });
+      if (error) throw error;
+      setNewMessage("");
+    } catch (err: any) {
+      toast.error(err.message || "Failed to send message");
+    }
+    setSendingMsg(false);
+  };
+
+  const uploadDocument = async (file: File | undefined) => {
+    if (!file || !partnership || !userOrgId || !currentUserId) return;
+    setUploadingDoc(true);
+    try {
+      const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+      const filePath = `partnership-files/${partnership.id}/${Date.now()}_${safeName}`;
+      const { error: upErr } = await supabase.storage
+        .from("org-documents")
+        .upload(filePath, file, { upsert: false });
+      if (upErr) throw upErr;
+
+      const { data: row, error: dbErr } = await supabase
+        .from("partnership_documents")
+        .insert({
+          partnership_id: partnership.id,
+          org_id: userOrgId,
+          uploaded_by: currentUserId,
+          uploader_name: currentUserName,
+          file_name: file.name,
+          file_path: filePath,
+          file_size: file.size,
+          mime_type: file.type,
+        })
+        .select()
+        .single();
+      if (dbErr) throw dbErr;
+      if (row) setDocs((prev) => [row as PDoc, ...prev]);
+      toast.success("Document uploaded");
+    } catch (err: any) {
+      toast.error(err.message || "Upload failed");
+    }
+    setUploadingDoc(false);
+  };
+
+  const downloadDocument = async (doc: PDoc) => {
+    try {
+      const { data, error } = await supabase.storage
+        .from("org-documents")
+        .createSignedUrl(doc.file_path, 60);
+      if (error || !data?.signedUrl) throw error;
+      window.open(data.signedUrl, "_blank");
+    } catch (err: any) {
+      toast.error(err.message || "Download failed");
+    }
+  };
+
+  const deleteDocument = async (doc: PDoc) => {
+    if (!confirm(`Delete ${doc.file_name}?`)) return;
+    try {
+      await supabase.storage.from("org-documents").remove([doc.file_path]);
+      const { error } = await supabase.from("partnership_documents").delete().eq("id", doc.id);
+      if (error) throw error;
+      setDocs((prev) => prev.filter((d) => d.id !== doc.id));
+      toast.success("Document removed");
+    } catch (err: any) {
+      toast.error(err.message || "Delete failed");
+    }
+  };
+
   const loadWorkspace = async () => {
     setLoading(true);
     try {
