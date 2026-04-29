@@ -1912,6 +1912,45 @@ export type Database = {
           },
         ]
       }
+      support_requests: {
+        Row: {
+          conversation: Json | null
+          created_at: string
+          email: string
+          id: string
+          message: string
+          name: string | null
+          page_url: string | null
+          status: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          conversation?: Json | null
+          created_at?: string
+          email: string
+          id?: string
+          message: string
+          name?: string | null
+          page_url?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          conversation?: Json | null
+          created_at?: string
+          email?: string
+          id?: string
+          message?: string
+          name?: string | null
+          page_url?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       tasks: {
         Row: {
           application_id: string | null
