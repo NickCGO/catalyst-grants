@@ -61,13 +61,13 @@ const AuthPage = () => {
 
   if (waitlistMessage) {
     return (
-      <div className="min-h-screen bg-[#0F172A] flex items-center justify-center px-6">
+      <div className="min-h-screen bg-background flex items-center justify-center px-6">
         <div className="glass-card p-8 max-w-md w-full text-center">
           <div className="text-4xl mb-4">🎉</div>
-          <h2 className="text-xl font-bold text-[#F1F5F9] mb-2">You're on the waitlist!</h2>
-          <p className="text-sm text-[#94A3B8] mb-6">We will email you when access opens. Thank you for your patience.</p>
+          <h2 className="text-xl font-bold text-foreground mb-2">You're on the waitlist!</h2>
+          <p className="text-sm text-muted-foreground mb-6">We will email you when access opens. Thank you for your patience.</p>
           <Link to="/">
-            <Button variant="outline" className="border-white/20 text-[#F1F5F9]">
+            <Button variant="outline" className="border-input text-foreground">
               <ArrowLeft className="h-3 w-3 mr-2" /> Back to homepage
             </Button>
           </Link>
@@ -79,35 +79,35 @@ const AuthPage = () => {
   // Beta login page (hidden, clean, minimal)
   if (isBetaLogin) {
     return (
-      <div className="min-h-screen bg-[#0F172A] flex items-center justify-center px-6">
+      <div className="min-h-screen bg-background flex items-center justify-center px-6">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="glass-card p-8 max-w-md w-full">
           <div className="flex items-center gap-1 mb-1">
-            <span className="text-xl font-bold text-[#F1F5F9]">Grant</span>
-            <span className="text-xl font-bold text-[#0EA5E9]">Match</span>
+            <span className="text-xl font-bold text-foreground">Grant</span>
+            <span className="text-xl font-bold text-primary">Match</span>
           </div>
-          <p className="text-sm font-semibold text-[#94A3B8] mb-4">Beta Access</p>
-          <p className="text-xs text-[#64748B] mb-6">This portal is for beta testers only. If you are on the waitlist, you will receive access when we launch.</p>
+          <p className="text-sm font-semibold text-muted-foreground mb-4">Beta Access</p>
+          <p className="text-xs text-muted-foreground/80 mb-6">This portal is for beta testers only. If you are on the waitlist, you will receive access when we launch.</p>
           <form className="space-y-4" onSubmit={handleSubmit}>
             <div>
-              <Label className="text-xs text-[#94A3B8]">Email</Label>
+              <Label className="text-xs text-muted-foreground">Email</Label>
               <div className="relative mt-1">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#64748B]" />
-                <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required className="pl-10 bg-[#0F172A]/60 border-white/10 text-[#F1F5F9]" placeholder="you@organisation.org" />
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/80" />
+                <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required className="pl-10 bg-secondary border-input text-foreground" placeholder="you@organisation.org" />
               </div>
             </div>
             <div>
-              <Label className="text-xs text-[#94A3B8]">Password</Label>
+              <Label className="text-xs text-muted-foreground">Password</Label>
               <div className="relative mt-1">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#64748B]" />
-                <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} className="pl-10 bg-[#0F172A]/60 border-white/10 text-[#F1F5F9]" placeholder="••••••••" />
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/80" />
+                <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} className="pl-10 bg-secondary border-input text-foreground" placeholder="••••••••" />
               </div>
             </div>
-            <Button type="submit" disabled={submitting} className="w-full bg-gradient-to-r from-[#0EA5E9] to-[#0284C7] text-white rounded-xl border-0">
+            <Button type="submit" disabled={submitting} className="w-full bg-primary text-primary-foreground hover:bg-primary/90 rounded-xl border-0">
               {submitting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
               Sign in to beta
             </Button>
           </form>
-          <Link to="/" className="block text-center text-xs text-[#64748B] hover:text-[#94A3B8] mt-4">← Back to homepage</Link>
+          <Link to="/" className="block text-center text-xs text-muted-foreground/80 hover:text-muted-foreground mt-4">← Back to homepage</Link>
         </motion.div>
       </div>
     );
@@ -115,36 +115,36 @@ const AuthPage = () => {
 
   // Signup page (for beta testers who need accounts)
   return (
-    <div className="min-h-screen bg-[#0F172A] flex items-center justify-center px-6">
+    <div className="min-h-screen bg-background flex items-center justify-center px-6">
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="glass-card p-8 max-w-md w-full">
-        <h1 className="text-xl font-bold text-[#F1F5F9] mb-2">Create beta account</h1>
-        <p className="text-xs text-[#64748B] mb-6">Only for invited beta testers.</p>
+        <h1 className="text-xl font-bold text-foreground mb-2">Create beta account</h1>
+        <p className="text-xs text-muted-foreground/80 mb-6">Only for invited beta testers.</p>
         <form className="space-y-4" onSubmit={handleSubmit}>
           <div>
-            <Label className="text-xs text-[#94A3B8]">Organisation Name</Label>
-            <Input value={orgName} onChange={(e) => setOrgName(e.target.value)} required className="mt-1 bg-[#0F172A]/60 border-white/10 text-[#F1F5F9]" placeholder="e.g. Ubuntu Youth Foundation" />
+            <Label className="text-xs text-muted-foreground">Organisation Name</Label>
+            <Input value={orgName} onChange={(e) => setOrgName(e.target.value)} required className="mt-1 bg-secondary border-input text-foreground" placeholder="e.g. Ubuntu Youth Foundation" />
           </div>
           <div>
-            <Label className="text-xs text-[#94A3B8]">Country</Label>
-            <select value={country} onChange={(e) => setCountry(e.target.value)} required className="mt-1 w-full rounded-md bg-[#0F172A]/60 border border-white/10 text-[#F1F5F9] text-sm px-3 py-2">
+            <Label className="text-xs text-muted-foreground">Country</Label>
+            <select value={country} onChange={(e) => setCountry(e.target.value)} required className="mt-1 w-full rounded-md bg-secondary border border-input text-foreground text-sm px-3 py-2">
               <option value="">Select country</option>
               {["South Africa", "Nigeria", "Kenya", "Ghana", "Tanzania", "Uganda", "Ethiopia", "Rwanda"].map((c) => <option key={c} value={c}>{c}</option>)}
             </select>
           </div>
           <div>
-            <Label className="text-xs text-[#94A3B8]">Email</Label>
-            <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required className="mt-1 bg-[#0F172A]/60 border-white/10 text-[#F1F5F9]" />
+            <Label className="text-xs text-muted-foreground">Email</Label>
+            <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required className="mt-1 bg-secondary border-input text-foreground" />
           </div>
           <div>
-            <Label className="text-xs text-[#94A3B8]">Password</Label>
-            <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} className="mt-1 bg-[#0F172A]/60 border-white/10 text-[#F1F5F9]" />
+            <Label className="text-xs text-muted-foreground">Password</Label>
+            <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} className="mt-1 bg-secondary border-input text-foreground" />
           </div>
-          <Button type="submit" disabled={submitting} className="w-full bg-gradient-to-r from-[#0EA5E9] to-[#0284C7] text-white rounded-xl border-0">
+          <Button type="submit" disabled={submitting} className="w-full bg-primary text-primary-foreground hover:bg-primary/90 rounded-xl border-0">
             {submitting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
             Create account
           </Button>
         </form>
-        <p className="text-center text-xs text-[#64748B] mt-4">Already have an account? <Link to="/login" className="text-[#0EA5E9] hover:underline">Log in</Link></p>
+        <p className="text-center text-xs text-muted-foreground/80 mt-4">Already have an account? <Link to="/login" className="text-primary hover:underline">Log in</Link></p>
       </motion.div>
     </div>
   );
