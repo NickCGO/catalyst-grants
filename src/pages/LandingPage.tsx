@@ -9,6 +9,9 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import AnimatedCounter from "@/components/AnimatedCounter";
 import founderNick from "@/assets/founder-nick.png";
 import founderChantal from "@/assets/founder-chantal.jpeg";
+import previewMatchEngine from "@/assets/preview-match-engine.jpg";
+import previewProposalWriter from "@/assets/preview-proposal-writer.jpg";
+import previewPipeline from "@/assets/preview-pipeline.jpg";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 
@@ -270,14 +273,17 @@ const LandingPage = () => {
     {
       label: "Match Engine",
       copy: "Discover your highest-probability matches in seconds. Our algorithm scores all funders against your mission, showing you exactly who is most likely to fund you.",
+      image: previewMatchEngine,
     },
     {
       label: "Proposal Writer",
       copy: "AI-powered proposal generation. Full proposals, letters of enquiry, concept notes. Generated from your profile in minutes. Reviewed by you. Ready to submit.",
+      image: previewProposalWriter,
     },
     {
       label: "Pipeline",
       copy: "Kanban board, deadline calendar, funder relationship history. Track every application from discovery to submission. Know exactly where you stand.",
+      image: previewPipeline,
     },
   ];
 
@@ -423,10 +429,17 @@ const LandingPage = () => {
               </button>
             ))}
           </div>
-          <div className="bg-card border border-border rounded-2xl p-10 shadow-sm">
-            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">{tabs[activeTab].copy}</p>
-            <div className="mt-8 aspect-video bg-secondary rounded-xl border border-border flex items-center justify-center text-sm text-muted-foreground">
-              {tabs[activeTab].label} — product preview
+          <div className="bg-card border border-border rounded-2xl p-6 lg:p-10 shadow-sm">
+            <p className="text-lg text-muted-foreground max-w-2xl mx-auto text-center">{tabs[activeTab].copy}</p>
+            <div className="mt-8 aspect-video rounded-xl border border-border overflow-hidden bg-secondary">
+              <img
+                src={tabs[activeTab].image}
+                alt={`${tabs[activeTab].label} preview`}
+                className="w-full h-full object-cover"
+                loading="lazy"
+                width={1280}
+                height={800}
+              />
             </div>
           </div>
         </div>
