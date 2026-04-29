@@ -80,21 +80,131 @@ const PartnershipWorkspacePage = () => {
   const [newMessage, setNewMessage] = useState("");
   const [saving, setSaving] = useState(false);
 
+  // Messaging
+  interface Message { id: string; body: string; author_user_id: string; author_name: string | null; org_id: string; created_at: string; }
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [sendingMsg, setSendingMsg] = useState(false);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [currentUserName, setCurrentUserName] = useState<string>("");
+
+  // Documents
+  interface PDoc { id: string; file_name: string; file_path: string; file_size: number | null; mime_type: string | null; uploader_name: string | null; uploaded_by: string; created_at: string; }
+  const [docs, setDocs] = useState<PDoc[]>([]);
+  const [uploadingDoc, setUploadingDoc] = useState(false);
+
   useEffect(() => {
     if (id) loadWorkspace();
   }, [id]);
+
+  // Realtime: subscribe to new messages
+  useEffect(() => {
+    if (!id) return;
+    const channel = supabase
+      .channel(`partnership-msgs-${id}`)
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "partnership_messages", filter: `partnership_id=eq.${id}` },
+        (payload) => {
+          const m = payload.new as Message;
+          setMessages((prev) => (prev.some((x) => x.id === m.id) ? prev : [...prev, m]));
+        }
+      )
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [id]);
+
+  const sendMessage = async () => {
+    if (!newMessage.trim() || !partnership || !userOrgId || !currentUserId) return;
+    setSendingMsg(true);
+    try {
+      const { error } = await supabase.from("partnership_messages").insert({
+        partnership_id: partnership.id,
+        org_id: userOrgId,
+        author_user_id: currentUserId,
+        author_name: currentUserName,
+        body: newMessage.trim(),
+      });
+      if (error) throw error;
+      setNewMessage("");
+    } catch (err: any) {
+      toast.error(err.message || "Failed to send message");
+    }
+    setSendingMsg(false);
+  };
+
+  const uploadDocument = async (file: File | undefined) => {
+    if (!file || !partnership || !userOrgId || !currentUserId) return;
+    setUploadingDoc(true);
+    try {
+      const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+      const filePath = `partnership-files/${partnership.id}/${Date.now()}_${safeName}`;
+      const { error: upErr } = await supabase.storage
+        .from("org-documents")
+        .upload(filePath, file, { upsert: false });
+      if (upErr) throw upErr;
+
+      const { data: row, error: dbErr } = await supabase
+        .from("partnership_documents")
+        .insert({
+          partnership_id: partnership.id,
+          org_id: userOrgId,
+          uploaded_by: currentUserId,
+          uploader_name: currentUserName,
+          file_name: file.name,
+          file_path: filePath,
+          file_size: file.size,
+          mime_type: file.type,
+        })
+        .select()
+        .single();
+      if (dbErr) throw dbErr;
+      if (row) setDocs((prev) => [row as PDoc, ...prev]);
+      toast.success("Document uploaded");
+    } catch (err: any) {
+      toast.error(err.message || "Upload failed");
+    }
+    setUploadingDoc(false);
+  };
+
+  const downloadDocument = async (doc: PDoc) => {
+    try {
+      const { data, error } = await supabase.storage
+        .from("org-documents")
+        .createSignedUrl(doc.file_path, 60);
+      if (error || !data?.signedUrl) throw error;
+      window.open(data.signedUrl, "_blank");
+    } catch (err: any) {
+      toast.error(err.message || "Download failed");
+    }
+  };
+
+  const deleteDocument = async (doc: PDoc) => {
+    if (!confirm(`Delete ${doc.file_name}?`)) return;
+    try {
+      await supabase.storage.from("org-documents").remove([doc.file_path]);
+      const { error } = await supabase.from("partnership_documents").delete().eq("id", doc.id);
+      if (error) throw error;
+      setDocs((prev) => prev.filter((d) => d.id !== doc.id));
+      toast.success("Document removed");
+    } catch (err: any) {
+      toast.error(err.message || "Delete failed");
+    }
+  };
 
   const loadWorkspace = async () => {
     setLoading(true);
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
+      setCurrentUserId(user.id);
+      setCurrentUserName(user.email?.split("@")[0] || "Member");
 
       // Get user's org
       const { data: org } = await supabase.from("organisations").select("id, name").eq("user_id", user.id).maybeSingle();
       if (org) {
         setUserOrgId(org.id);
         setLeadOrgName(org.name);
+        setCurrentUserName(org.name); // prefer org name as author display
       }
 
       // Load partnership
@@ -103,6 +213,30 @@ const PartnershipWorkspacePage = () => {
         .select("*")
         .eq("id", id!)
         .maybeSingle();
+
+      if (pErr || !p) {
+        toast.error("Partnership not found");
+        setLoading(false);
+        return;
+      }
+      setPartnership(p as PartnershipData);
+      setMouContent(p.mou_content || "");
+
+      // Load messages
+      const { data: msgs } = await supabase
+        .from("partnership_messages")
+        .select("*")
+        .eq("partnership_id", id!)
+        .order("created_at", { ascending: true });
+      if (msgs) setMessages(msgs as Message[]);
+
+      // Load documents
+      const { data: docsData } = await supabase
+        .from("partnership_documents")
+        .select("*")
+        .eq("partnership_id", id!)
+        .order("created_at", { ascending: false });
+      if (docsData) setDocs(docsData as PDoc[]);
 
       if (pErr || !p) {
         toast.error("Partnership not found");
@@ -446,22 +580,48 @@ const PartnershipWorkspacePage = () => {
                 )}
               </div>
 
-              {/* Right - Messages placeholder */}
+              {/* Right - Messages */}
               <div className="col-span-2">
                 <GlassCard hoverable={false} className="flex flex-col h-[500px]">
                   <h3 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
                     <MessageSquare className="h-4 w-4" /> Messages
+                    <span className="text-[10px] text-muted-foreground ml-auto">{messages.length} message{messages.length !== 1 ? "s" : ""}</span>
                   </h3>
-                  <div className="flex-1 flex items-center justify-center text-muted-foreground">
-                    <div className="text-center">
-                      <MessageSquare className="h-8 w-8 mx-auto mb-2 opacity-40" />
-                      <p className="text-xs">Partnership messaging coming soon.</p>
-                      <p className="text-[10px] mt-1">Use the proposal tab to collaborate on your joint application.</p>
-                    </div>
+                  <div className="flex-1 overflow-y-auto space-y-2 pr-1">
+                    {messages.length === 0 ? (
+                      <div className="h-full flex items-center justify-center text-muted-foreground">
+                        <div className="text-center">
+                          <MessageSquare className="h-8 w-8 mx-auto mb-2 opacity-40" />
+                          <p className="text-xs">No messages yet. Start the conversation.</p>
+                        </div>
+                      </div>
+                    ) : (
+                      messages.map((m) => {
+                        const mine = m.author_user_id === currentUserId;
+                        return (
+                          <div key={m.id} className={`flex ${mine ? "justify-end" : "justify-start"}`}>
+                            <div className={`max-w-[80%] rounded-lg px-3 py-2 text-xs ${mine ? "bg-primary text-primary-foreground" : "bg-secondary text-foreground"}`}>
+                              {!mine && <div className="text-[10px] font-semibold opacity-70 mb-0.5">{m.author_name || "Member"}</div>}
+                              <div className="whitespace-pre-wrap break-words">{m.body}</div>
+                              <div className="text-[9px] opacity-60 mt-1">{new Date(m.created_at).toLocaleString()}</div>
+                            </div>
+                          </div>
+                        );
+                      })
+                    )}
                   </div>
                   <div className="flex gap-2 pt-3 border-t border-border/30">
-                    <Input placeholder="Type a message..." value={newMessage} onChange={e => setNewMessage(e.target.value)} className="text-xs bg-secondary/30 border-border/50" disabled />
-                    <Button size="sm" className="shrink-0" disabled><Send className="h-3 w-3" /></Button>
+                    <Input
+                      placeholder="Type a message..."
+                      value={newMessage}
+                      onChange={e => setNewMessage(e.target.value)}
+                      onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMessage(); } }}
+                      className="text-xs bg-secondary/30 border-border/50"
+                      disabled={sendingMsg}
+                    />
+                    <Button size="sm" className="shrink-0" onClick={sendMessage} disabled={sendingMsg || !newMessage.trim()}>
+                      <Send className="h-3 w-3" />
+                    </Button>
                   </div>
                 </GlassCard>
               </div>
@@ -637,15 +797,47 @@ const PartnershipWorkspacePage = () => {
             <GlassCard hoverable={false}>
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-sm font-semibold text-foreground">Shared Documents</h3>
-                <Button size="sm" variant="outline" className="text-xs gap-1" disabled>
-                  <Upload className="h-3 w-3" /> Upload Document
-                </Button>
+                <label className="cursor-pointer">
+                  <input
+                    type="file"
+                    className="hidden"
+                    onChange={(e) => uploadDocument(e.target.files?.[0])}
+                    disabled={uploadingDoc}
+                  />
+                  <span className={`inline-flex items-center text-xs gap-1 px-3 py-1.5 rounded-lg border transition-colors ${uploadingDoc ? "border-primary/30 text-muted-foreground" : "border-border/50 text-primary hover:bg-primary/5"}`}>
+                    <Upload className="h-3 w-3" /> {uploadingDoc ? "Uploading..." : "Upload Document"}
+                  </span>
+                </label>
               </div>
-              <div className="text-center py-12">
-                <FileText className="h-10 w-10 text-muted-foreground mx-auto mb-3 opacity-40" />
-                <h3 className="text-sm font-medium text-foreground">Document sharing coming soon</h3>
-                <p className="text-xs text-muted-foreground mt-1">File storage will be available in a future update.</p>
-              </div>
+              {docs.length === 0 ? (
+                <div className="text-center py-12">
+                  <FileText className="h-10 w-10 text-muted-foreground mx-auto mb-3 opacity-40" />
+                  <h3 className="text-sm font-medium text-foreground">No documents yet</h3>
+                  <p className="text-xs text-muted-foreground mt-1">Upload contracts, briefs, budgets, or any shared materials.</p>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {docs.map((d) => (
+                    <div key={d.id} className="flex items-center gap-3 p-3 rounded-lg border border-border/30 hover:bg-secondary/30 transition-colors">
+                      <FileText className="h-4 w-4 text-primary shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <div className="text-sm text-foreground truncate">{d.file_name}</div>
+                        <div className="text-[10px] text-muted-foreground">
+                          {d.uploader_name || "Member"} · {d.file_size ? `${Math.round(d.file_size / 1024)} KB` : ""} · {new Date(d.created_at).toLocaleDateString()}
+                        </div>
+                      </div>
+                      <Button size="sm" variant="ghost" className="text-xs h-7" onClick={() => downloadDocument(d)}>
+                        <Download className="h-3 w-3" />
+                      </Button>
+                      {d.uploaded_by === currentUserId && (
+                        <Button size="sm" variant="ghost" className="text-xs h-7 text-destructive hover:text-destructive" onClick={() => deleteDocument(d)}>
+                          ✕
+                        </Button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
             </GlassCard>
           </TabsContent>
         </Tabs>

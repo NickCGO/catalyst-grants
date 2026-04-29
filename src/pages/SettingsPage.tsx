@@ -103,6 +103,15 @@ const SettingsPage = () => {
         setPctGrants(org.pct_grants || 0);
         setPctGovernment(org.pct_government || 0);
         setPctCorporate(org.pct_corporate || 0);
+
+        // Hydrate org_settings JSON
+        const s = (org as any).org_settings || {};
+        if (s.ai?.tone) setTone(s.ai.tone);
+        if (s.ai?.reportFormat) setReportFormat(s.ai.reportFormat);
+        if (s.ai?.writingLength) setWritingLength(s.ai.writingLength);
+        if (s.notifications) setNotifications(prev => ({ ...prev, ...s.notifications }));
+        if (s.emailDigest) setEmailDigest(s.emailDigest);
+        if (s.modules) setModules(prev => ({ ...prev, ...s.modules }));
       }
       setLoading(false);
     };
@@ -135,6 +144,34 @@ const SettingsPage = () => {
     }
     setSaving(false);
   };
+
+  // Save a partial org_settings JSON merge
+  const saveOrgSettings = async (patch: Record<string, any>, successMsg: string) => {
+    if (!user || !orgId) return;
+    setSaving(true);
+    try {
+      // Read current settings to merge
+      const { data: current } = await supabase
+        .from("organisations")
+        .select("org_settings")
+        .eq("id", orgId)
+        .maybeSingle();
+      const merged = { ...((current as any)?.org_settings || {}), ...patch };
+      const { error } = await supabase
+        .from("organisations")
+        .update({ org_settings: merged } as any)
+        .eq("id", orgId);
+      if (error) throw error;
+      toast({ title: successMsg });
+    } catch (err: any) {
+      toast({ title: "Save failed", description: err.message, variant: "destructive" });
+    }
+    setSaving(false);
+  };
+
+  const saveAIPrefs = () => saveOrgSettings({ ai: { tone, reportFormat, writingLength } }, "AI preferences saved");
+  const saveNotifications = () => saveOrgSettings({ notifications, emailDigest }, "Notification preferences saved");
+  const saveModules = () => saveOrgSettings({ modules }, "Module preferences saved");
 
   const handleDocUpload = async (docKey: string, file: File | undefined) => {
     if (!file || !orgId) return;
@@ -357,7 +394,8 @@ const SettingsPage = () => {
                     ))}
                   </div>
                 </div>
-                <Button className="bg-primary text-primary-foreground hover:bg-primary/90" onClick={() => toast({ title: "AI preferences saved" })}>
+                <Button className="bg-primary text-primary-foreground hover:bg-primary/90" onClick={saveAIPrefs} disabled={saving}>
+                  {saving ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : null}
                   Save Preferences
                 </Button>
               </div>
@@ -399,6 +437,12 @@ const SettingsPage = () => {
                   ))}
                 </div>
               </GlassCard>
+              <div>
+                <Button className="bg-primary text-primary-foreground hover:bg-primary/90" onClick={saveNotifications} disabled={saving}>
+                  {saving ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : null}
+                  Save Notification Preferences
+                </Button>
+              </div>
             </div>
           </TabsContent>
 
@@ -423,6 +467,12 @@ const SettingsPage = () => {
                 ))}
               </div>
             </GlassCard>
+            <div className="mt-4">
+              <Button className="bg-primary text-primary-foreground hover:bg-primary/90" onClick={saveModules} disabled={saving}>
+                {saving ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : null}
+                Save Module Preferences
+              </Button>
+            </div>
           </TabsContent>
         </Tabs>
       </div>

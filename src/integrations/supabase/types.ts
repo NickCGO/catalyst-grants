@@ -1032,6 +1032,7 @@ export type Database = {
           onboarding_complete: boolean | null
           onboarding_step: number | null
           operational_expenses: number | null
+          org_settings: Json
           org_size: string | null
           org_type: string | null
           organisational_achievements: string | null
@@ -1149,6 +1150,7 @@ export type Database = {
           onboarding_complete?: boolean | null
           onboarding_step?: number | null
           operational_expenses?: number | null
+          org_settings?: Json
           org_size?: string | null
           org_type?: string | null
           organisational_achievements?: string | null
@@ -1266,6 +1268,7 @@ export type Database = {
           onboarding_complete?: boolean | null
           onboarding_step?: number | null
           operational_expenses?: number | null
+          org_settings?: Json
           org_size?: string | null
           org_type?: string | null
           organisational_achievements?: string | null
@@ -1320,6 +1323,60 @@ export type Database = {
         }
         Relationships: []
       }
+      partnership_documents: {
+        Row: {
+          created_at: string
+          file_name: string
+          file_path: string
+          file_size: number | null
+          id: string
+          mime_type: string | null
+          org_id: string
+          partnership_id: string
+          uploaded_by: string
+          uploader_name: string | null
+        }
+        Insert: {
+          created_at?: string
+          file_name: string
+          file_path: string
+          file_size?: number | null
+          id?: string
+          mime_type?: string | null
+          org_id: string
+          partnership_id: string
+          uploaded_by: string
+          uploader_name?: string | null
+        }
+        Update: {
+          created_at?: string
+          file_name?: string
+          file_path?: string
+          file_size?: number | null
+          id?: string
+          mime_type?: string | null
+          org_id?: string
+          partnership_id?: string
+          uploaded_by?: string
+          uploader_name?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "partnership_documents_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organisations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "partnership_documents_partnership_id_fkey"
+            columns: ["partnership_id"]
+            isOneToOne: false
+            referencedRelation: "partnerships"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       partnership_members: {
         Row: {
           budget_share_percent: number | null
@@ -1361,6 +1418,51 @@ export type Database = {
           },
           {
             foreignKeyName: "partnership_members_partnership_id_fkey"
+            columns: ["partnership_id"]
+            isOneToOne: false
+            referencedRelation: "partnerships"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      partnership_messages: {
+        Row: {
+          author_name: string | null
+          author_user_id: string
+          body: string
+          created_at: string
+          id: string
+          org_id: string
+          partnership_id: string
+        }
+        Insert: {
+          author_name?: string | null
+          author_user_id: string
+          body: string
+          created_at?: string
+          id?: string
+          org_id: string
+          partnership_id: string
+        }
+        Update: {
+          author_name?: string | null
+          author_user_id?: string
+          body?: string
+          created_at?: string
+          id?: string
+          org_id?: string
+          partnership_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "partnership_messages_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organisations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "partnership_messages_partnership_id_fkey"
             columns: ["partnership_id"]
             isOneToOne: false
             referencedRelation: "partnerships"
