@@ -370,14 +370,14 @@ function LiveTicker() {
 
 /* ─── Main Page ─── */
 const LandingPage = () => {
-  const [waitlistCount, setWaitlistCount] = useState(0);
+  const BASE_COUNT = 7;
+  const [waitlistCount, setWaitlistCount] = useState(BASE_COUNT);
   const [successData, setSuccessData] = useState<{ name: string; email: string; position: number } | null>(null);
   const [activeTab, setActiveTab] = useState(0);
 
-  const BASE_COUNT = 7;
   useEffect(() => {
     supabase.from("waitlist").select("*", { count: "exact", head: true }).then(({ count }) => {
-      setWaitlistCount(BASE_COUNT + (count || 0));
+      setWaitlistCount(Math.max(BASE_COUNT, BASE_COUNT + (count || 0)));
     });
   }, []);
 
