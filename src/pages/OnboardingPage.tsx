@@ -183,10 +183,19 @@ const DynamicListInput = ({
 );
 
 // ── Main component ──
+const ADMIN_EMAILS = ["info@nickfernandes.co.za"];
+
 const OnboardingPage = () => {
   const [step, setStep] = useState(0);
   const [orgId, setOrgId] = useState<string | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => {
+      setIsAdmin(!!data.user?.email && ADMIN_EMAILS.includes(data.user.email));
+    });
+  }, []);
   const inputClass = "mt-1 bg-secondary/30 border-border/50 text-foreground text-sm placeholder:text-muted-foreground/60";
   const labelClass = "text-sm font-semibold text-foreground";
   const selectClass = "w-full mt-1 px-3 py-2 rounded-lg bg-secondary/30 border border-border/50 text-sm text-foreground";
@@ -845,9 +854,11 @@ const OnboardingPage = () => {
           <span className="text-sm font-semibold text-foreground">GrantMatch</span>
         </div>
         <div className="flex items-center gap-3">
-          <Button variant="outline" size="sm" className="text-xs border-amber-500/50 text-amber-600 hover:bg-amber-50" onClick={fillDummyData}>
-            🧪 Insert Dummy Data
-          </Button>
+          {isAdmin && (
+            <Button variant="outline" size="sm" className="text-xs border-amber-500/50 text-amber-600 hover:bg-amber-50" onClick={fillDummyData}>
+              🧪 Insert Dummy Data
+            </Button>
+          )}
           <span className="text-xs text-muted-foreground hidden sm:inline">Profile: {completeness}%</span>
           <Progress value={completeness} className="w-20 sm:w-28 h-1.5" />
           <Button variant="ghost" size="sm" className="text-xs text-muted-foreground" onClick={() => { saveProgress(step); toast({ title: "Progress saved!" }); navigate("/dashboard"); }}>

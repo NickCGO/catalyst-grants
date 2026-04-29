@@ -564,7 +564,18 @@ const PartnershipWorkspacePage = () => {
                       <Sparkles className="h-3 w-3" /> {mouGenerating ? "Generating..." : "Generate MOU"}
                     </Button>
                     {mouContent && (
-                      <Button size="sm" variant="outline" className="text-xs gap-1">
+                      <Button size="sm" variant="outline" className="text-xs gap-1" onClick={() => {
+                        const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>MOU - ${partnership?.partnership_name || "Partnership"}</title><style>body{font-family:Georgia,serif;max-width:800px;margin:40px auto;padding:0 20px;line-height:1.6;color:#111}h1,h2,h3{color:#0c4a6e}</style></head><body>${mouContent}</body></html>`;
+                        const blob = new Blob([html], { type: "text/html" });
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement("a");
+                        a.href = url;
+                        a.download = `MOU-${(partnership?.partnership_name || "partnership").replace(/[^a-z0-9]+/gi, "-")}.html`;
+                        document.body.appendChild(a);
+                        a.click();
+                        document.body.removeChild(a);
+                        URL.revokeObjectURL(url);
+                      }}>
                         <Download className="h-3 w-3" /> Download MOU
                       </Button>
                     )}
