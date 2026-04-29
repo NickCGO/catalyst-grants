@@ -7,7 +7,7 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-const SUPPORT_INBOX = "info@nickfernandes.co.za";
+const SUPPORT_INBOXES = ["info@nickfernandes.co.za", "hello@chantalehlen.com"];
 
 function isEmail(s: unknown): s is string {
   return typeof s === "string" && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s);
@@ -81,51 +81,36 @@ Deno.serve(async (req: Request) => {
       });
     }
 
-    // Best-effort email to support inbox via Lovable Email (if domain configured).
-    let emailed = false;
-    try {
-      const transcriptHtml = Array.isArray(conversation)
-        ? conversation
-            .map(
-              (m: any) =>
-                `<p><strong>${escapeHtml(m.role || "")}:</strong> ${escapeHtml(
-                  String(m.content || ""),
-                )}</p>`,
-            )
-            .join("")
-        : "";
+    // Best-effort email to each support inbox via Lovable transactional email.
+    const emailedTo: string[] = [];
+    const templateData = {
+      fromName: typeof name === "string" ? name : null,
+      fromEmail: email,
+      message: message.trim(),
+      pageUrl: typeof page_url === "string" ? page_url : null,
+      conversation: Array.isArray(conversation) ? conversation.slice(-30) : [],
+    };
 
-      const html = `
-        <h2>New GrantMatch support request</h2>
-        <p><strong>From:</strong> ${escapeHtml(name || "Anonymous")} &lt;${escapeHtml(email)}&gt;</p>
-        <p><strong>Page:</strong> ${escapeHtml(page_url || "—")}</p>
-        <p><strong>Message:</strong></p>
-        <blockquote>${escapeHtml(message)}</blockquote>
-        ${transcriptHtml ? `<hr><h3>Chat transcript</h3>${transcriptHtml}` : ""}
-      `;
-
-      const emailRes = await fetch(`${SUPABASE_URL}/functions/v1/send-transactional-email`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${SERVICE_ROLE}`,
-        },
-        body: JSON.stringify({
-          to: SUPPORT_INBOX,
-          subject: `Support request from ${name || email}`,
-          html,
-          purpose: "transactional",
-          idempotency_key: `support-${inserted.id}`,
-        }),
-      });
-      emailed = emailRes.ok;
-      if (!emailRes.ok) {
-        const t = await emailRes.text();
-        console.warn("Support email send failed (non-fatal):", emailRes.status, t);
+    for (const recipient of SUPPORT_INBOXES) {
+      try {
+        const res = await supabase.functions.invoke("send-transactional-email", {
+          body: {
+            templateName: "support-escalation",
+            recipientEmail: recipient,
+            idempotencyKey: `support-${inserted.id}-${recipient}`,
+            templateData,
+          },
+        });
+        if (res.error) {
+          console.warn("Support email send failed (non-fatal):", recipient, res.error);
+        } else {
+          emailedTo.push(recipient);
+        }
+      } catch (e) {
+        console.warn("Support email skipped (non-fatal):", recipient, e);
       }
-    } catch (e) {
-      console.warn("Support email skipped (non-fatal):", e);
     }
+    const emailed = emailedTo.length > 0;
 
     return new Response(JSON.stringify({ id: inserted.id, emailed }), {
       status: 200,
