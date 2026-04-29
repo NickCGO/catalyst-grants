@@ -27,12 +27,21 @@ import PartnershipWorkspacePage from "./pages/PartnershipWorkspacePage";
 import NGOPublicProfilePage from "./pages/NGOPublicProfilePage";
 import AdminPage from "./pages/AdminPage";
 import NotFound from "./pages/NotFound";
+import SupportChatWidget from "./components/SupportChatWidget";
 
 const queryClient = new QueryClient();
+
+const PUBLIC_ROUTES = ["/", "/login", "/signup"];
 
 const AnalyticsTracker = () => {
   useAnalytics();
   return null;
+};
+
+const PublicChatMount = () => {
+  const location = useLocation();
+  if (!PUBLIC_ROUTES.includes(location.pathname)) return null;
+  return <SupportChatWidget />;
 };
 
 const App = () => (
@@ -94,6 +103,7 @@ const App = () => (
 
           <Route path="*" element={<NotFound />} />
         </Routes>
+        <PublicChatMount />
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
