@@ -797,15 +797,47 @@ const PartnershipWorkspacePage = () => {
             <GlassCard hoverable={false}>
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-sm font-semibold text-foreground">Shared Documents</h3>
-                <Button size="sm" variant="outline" className="text-xs gap-1" disabled>
-                  <Upload className="h-3 w-3" /> Upload Document
-                </Button>
+                <label className="cursor-pointer">
+                  <input
+                    type="file"
+                    className="hidden"
+                    onChange={(e) => uploadDocument(e.target.files?.[0])}
+                    disabled={uploadingDoc}
+                  />
+                  <span className={`inline-flex items-center text-xs gap-1 px-3 py-1.5 rounded-lg border transition-colors ${uploadingDoc ? "border-primary/30 text-muted-foreground" : "border-border/50 text-primary hover:bg-primary/5"}`}>
+                    <Upload className="h-3 w-3" /> {uploadingDoc ? "Uploading..." : "Upload Document"}
+                  </span>
+                </label>
               </div>
-              <div className="text-center py-12">
-                <FileText className="h-10 w-10 text-muted-foreground mx-auto mb-3 opacity-40" />
-                <h3 className="text-sm font-medium text-foreground">Document sharing coming soon</h3>
-                <p className="text-xs text-muted-foreground mt-1">File storage will be available in a future update.</p>
-              </div>
+              {docs.length === 0 ? (
+                <div className="text-center py-12">
+                  <FileText className="h-10 w-10 text-muted-foreground mx-auto mb-3 opacity-40" />
+                  <h3 className="text-sm font-medium text-foreground">No documents yet</h3>
+                  <p className="text-xs text-muted-foreground mt-1">Upload contracts, briefs, budgets, or any shared materials.</p>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {docs.map((d) => (
+                    <div key={d.id} className="flex items-center gap-3 p-3 rounded-lg border border-border/30 hover:bg-secondary/30 transition-colors">
+                      <FileText className="h-4 w-4 text-primary shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <div className="text-sm text-foreground truncate">{d.file_name}</div>
+                        <div className="text-[10px] text-muted-foreground">
+                          {d.uploader_name || "Member"} · {d.file_size ? `${Math.round(d.file_size / 1024)} KB` : ""} · {new Date(d.created_at).toLocaleDateString()}
+                        </div>
+                      </div>
+                      <Button size="sm" variant="ghost" className="text-xs h-7" onClick={() => downloadDocument(d)}>
+                        <Download className="h-3 w-3" />
+                      </Button>
+                      {d.uploaded_by === currentUserId && (
+                        <Button size="sm" variant="ghost" className="text-xs h-7 text-destructive hover:text-destructive" onClick={() => deleteDocument(d)}>
+                          ✕
+                        </Button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
             </GlassCard>
           </TabsContent>
         </Tabs>
