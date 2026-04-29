@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ArrowRight, Check, Copy, Globe, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -590,6 +591,12 @@ const LandingPage = () => {
         <div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
           <Wordmark size="text-lg" />
           <p className="text-xs text-muted-foreground">© {new Date().getFullYear()} GrantMatch. Built for African NGOs.</p>
+          <Link
+            to="/login"
+            className="text-xs text-muted-foreground hover:text-primary transition-colors"
+          >
+            Team login
+          </Link>
         </div>
       </footer>
     </div>
