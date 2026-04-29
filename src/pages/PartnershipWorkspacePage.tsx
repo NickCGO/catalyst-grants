@@ -80,6 +80,18 @@ const PartnershipWorkspacePage = () => {
   const [newMessage, setNewMessage] = useState("");
   const [saving, setSaving] = useState(false);
 
+  // Messaging
+  interface Message { id: string; body: string; author_user_id: string; author_name: string | null; org_id: string; created_at: string; }
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [sendingMsg, setSendingMsg] = useState(false);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [currentUserName, setCurrentUserName] = useState<string>("");
+
+  // Documents
+  interface PDoc { id: string; file_name: string; file_path: string; file_size: number | null; mime_type: string | null; uploader_name: string | null; uploaded_by: string; created_at: string; }
+  const [docs, setDocs] = useState<PDoc[]>([]);
+  const [uploadingDoc, setUploadingDoc] = useState(false);
+
   useEffect(() => {
     if (id) loadWorkspace();
   }, [id]);
