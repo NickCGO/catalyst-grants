@@ -430,6 +430,43 @@ const ApplicationsPage = () => {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Attach Funder Dialog */}
+      <Dialog open={attachOpen} onOpenChange={(o) => { setAttachOpen(o); if (!o) { setAttachAppId(null); setFunderSearch(""); setFunderResults([]); } }}>
+        <DialogContent className="bg-card border-border">
+          <DialogHeader>
+            <DialogTitle className="text-foreground">Attach a Funder</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3 mt-2">
+            <p className="text-[11px] text-muted-foreground">Search the funder database and attach one to this application. We'll also create a CRM relationship automatically.</p>
+            <Input
+              autoFocus
+              value={funderSearch}
+              onChange={(e) => setFunderSearch(e.target.value)}
+              placeholder="Search funders by name..."
+              className="bg-secondary/30 border-border/50"
+            />
+            <div className="max-h-72 overflow-y-auto rounded-lg border border-border/40 divide-y divide-border/30">
+              {funderSearch.trim().length < 2 && (
+                <p className="p-4 text-[11px] text-muted-foreground text-center">Type at least 2 characters to search.</p>
+              )}
+              {funderSearch.trim().length >= 2 && funderResults.length === 0 && (
+                <p className="p-4 text-[11px] text-muted-foreground text-center">No funders match "{funderSearch}".</p>
+              )}
+              {funderResults.map(f => (
+                <button
+                  key={f.id}
+                  onClick={() => attachFunder(f.id)}
+                  disabled={attachLoading}
+                  className="w-full text-left px-3 py-2 text-xs text-foreground hover:bg-secondary/40 disabled:opacity-50 transition-colors"
+                >
+                  {f.donor_name}
+                </button>
+              ))}
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </DashboardLayout>
   );
 };
