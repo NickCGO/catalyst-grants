@@ -200,7 +200,7 @@ const TasksPage = () => {
               <DialogHeader>
                 <DialogTitle className="text-foreground">Create Task</DialogTitle>
               </DialogHeader>
-              <TaskForm onSubmit={createTask} submitLabel="Create Task" />
+              {renderTaskForm(createTask, "Create Task")}
             </DialogContent>
           </Dialog>
         </div>
@@ -274,7 +274,7 @@ const TasksPage = () => {
           <DialogHeader>
             <DialogTitle className="text-foreground">Edit Task</DialogTitle>
           </DialogHeader>
-          <TaskForm onSubmit={saveEdit} submitLabel="Save Changes" />
+          {renderTaskForm(saveEdit, "Save Changes")}
         </DialogContent>
       </Dialog>
     </DashboardLayout>
