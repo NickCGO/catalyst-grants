@@ -338,6 +338,11 @@ const ApplicationsPage = () => {
                               </div>
                             )}
                             <div className="flex items-center gap-1 mt-3 pt-2 border-t border-border/20 flex-wrap">
+                              {!item.funder_id && (
+                                <Button size="sm" variant="ghost" className="h-6 text-[10px] px-2 text-amber-500" onClick={() => openAttachFunder(item.id)}>
+                                  <Link2 className="h-2.5 w-2.5 mr-0.5" /> Attach Funder
+                                </Button>
+                              )}
                               {col.id !== "in_progress" && col.id !== "closed" && (
                                 <Button size="sm" variant="ghost" className="h-6 text-[10px] px-2" onClick={() => moveApp(item.id, "in_progress")}>
                                   Start <ArrowRight className="h-2.5 w-2.5 ml-0.5" />
