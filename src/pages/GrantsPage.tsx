@@ -219,9 +219,18 @@ const GrantsPage = () => {
         website: f.website,
       }));
 
-      // Client-side focus area filter
+      // Client-side focus area filter — match either structured tags OR fall back to funder_focus text
       if (selectedFocusAreas.length > 0) {
-        combined = combined.filter(f => selectedFocusAreas.some(a => f.focusAreas.includes(a)));
+        const needles = selectedFocusAreas.map(a => a.toLowerCase());
+        combined = combined.filter(f => {
+          if (selectedFocusAreas.some(a => f.focusAreas.includes(a))) return true;
+          const haystack = (f.funderFocus || "").toLowerCase();
+          return needles.some(n => {
+            // Try each token in the label, e.g. "Health/HIV" -> ["health", "hiv"]
+            const tokens = n.split(/[\/\s]+/).filter(t => t.length >= 3);
+            return tokens.some(t => haystack.includes(t));
+          });
+        });
       }
       // Client-side consortium filter
       if (consortiumOnly) {

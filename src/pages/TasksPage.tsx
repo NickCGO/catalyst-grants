@@ -133,20 +133,23 @@ const TasksPage = () => {
     setTasks(prev => prev.map(t => t.id === task.id ? { ...t, status: next, completed_at: next === "done" ? new Date().toISOString() : null } : t));
   };
 
-  const TaskForm = ({ onSubmit, submitLabel }: { onSubmit: () => void; submitLabel: string }) => (
+  const renderTaskForm = (onSubmit: () => void, submitLabel: string) => (
     <div className="space-y-3 mt-2">
       <div>
         <Label className="text-xs text-muted-foreground">Title</Label>
         <Input value={formTitle} onChange={e => setFormTitle(e.target.value)} placeholder="What needs to be done?" className="mt-1 bg-secondary/30 border-border/50" />
+        <p className="text-[10px] text-muted-foreground mt-1">A short, action-oriented summary (e.g. "Draft concept note for Ford Foundation").</p>
       </div>
       <div>
         <Label className="text-xs text-muted-foreground">Description</Label>
         <Textarea value={formDesc} onChange={e => setFormDesc(e.target.value)} placeholder="Details..." className="mt-1 bg-secondary/30 border-border/50 min-h-[60px]" />
+        <p className="text-[10px] text-muted-foreground mt-1">Optional context, links, or sub-steps for whoever picks this up.</p>
       </div>
       <div className="grid grid-cols-2 gap-3">
         <div>
           <Label className="text-xs text-muted-foreground">Due Date</Label>
           <Input type="date" value={formDueDate} onChange={e => setFormDueDate(e.target.value)} className="mt-1 bg-secondary/30 border-border/50" />
+          <p className="text-[10px] text-muted-foreground mt-1">When this needs to be done by.</p>
         </div>
         <div>
           <Label className="text-xs text-muted-foreground">Priority</Label>
@@ -197,7 +200,7 @@ const TasksPage = () => {
               <DialogHeader>
                 <DialogTitle className="text-foreground">Create Task</DialogTitle>
               </DialogHeader>
-              <TaskForm onSubmit={createTask} submitLabel="Create Task" />
+              {renderTaskForm(createTask, "Create Task")}
             </DialogContent>
           </Dialog>
         </div>
@@ -271,7 +274,7 @@ const TasksPage = () => {
           <DialogHeader>
             <DialogTitle className="text-foreground">Edit Task</DialogTitle>
           </DialogHeader>
-          <TaskForm onSubmit={saveEdit} submitLabel="Save Changes" />
+          {renderTaskForm(saveEdit, "Save Changes")}
         </DialogContent>
       </Dialog>
     </DashboardLayout>

@@ -4,7 +4,7 @@ import GlassCard from "@/components/GlassCard";
 import StatusBadge from "@/components/StatusBadge";
 import MatchScoreRing from "@/components/MatchScoreRing";
 import { Button } from "@/components/ui/button";
-import { Plus, Trash2, ArrowRight } from "lucide-react";
+import { Plus, Trash2, ArrowRight, Link2 } from "lucide-react";
 import { motion } from "framer-motion";
 import { Skeleton } from "@/components/ui/skeleton";
 import { supabase } from "@/integrations/supabase/client";
@@ -46,6 +46,12 @@ const ApplicationsPage = () => {
   const [newReadyToSubmit, setNewReadyToSubmit] = useState(false);
   const [draggingId, setDraggingId] = useState<string | null>(null);
   const [dragOverCol, setDragOverCol] = useState<string | null>(null);
+  // Attach-grant picker state
+  const [attachOpen, setAttachOpen] = useState(false);
+  const [attachAppId, setAttachAppId] = useState<string | null>(null);
+  const [funderSearch, setFunderSearch] = useState("");
+  const [funderResults, setFunderResults] = useState<{ id: string; donor_name: string }[]>([]);
+  const [attachLoading, setAttachLoading] = useState(false);
 
   const loadApps = async (oid: string) => {
     const { data: applications } = await supabase
@@ -128,6 +134,23 @@ const ApplicationsPage = () => {
     }
   };
 
+  // Debounced funder search for the attach dialog
+  useEffect(() => {
+    if (!attachOpen) return;
+    const timer = setTimeout(async () => {
+      const term = funderSearch.trim();
+      if (term.length < 2) { setFunderResults([]); return; }
+      const { data } = await supabase
+        .from("funders")
+        .select("id, donor_name")
+        .ilike("donor_name", `%${term}%`)
+        .order("donor_name")
+        .limit(20);
+      setFunderResults(data || []);
+    }, 250);
+    return () => clearTimeout(timer);
+  }, [funderSearch, attachOpen]);
+
   const moveApp = async (appId: string, newColumn: string, newStatus?: string) => {
     const updateData: any = { kanban_column: newColumn, updated_at: new Date().toISOString() };
     if (newStatus) updateData.status = newStatus;
@@ -182,6 +205,26 @@ const ApplicationsPage = () => {
     await loadApps(orgId);
   };
 
+  // Open the funder picker for an existing application
+  const openAttachFunder = (appId: string) => {
+    setAttachAppId(appId);
+    setFunderSearch("");
+    setFunderResults([]);
+    setAttachOpen(true);
+  };
+
+  const attachFunder = async (funderId: string) => {
+    if (!attachAppId || !orgId) return;
+    setAttachLoading(true);
+    await supabase.from("applications").update({ funder_id: funderId }).eq("id", attachAppId);
+    await ensureCRMProspect(funderId);
+    setAttachLoading(false);
+    setAttachOpen(false);
+    setAttachAppId(null);
+    await loadApps(orgId);
+    toast({ title: "Funder attached to application" });
+  };
+
   // Drag-and-drop handlers
   const onDragStart = (id: string) => (e: React.DragEvent) => {
     setDraggingId(id);
@@ -233,8 +276,13 @@ const ApplicationsPage = () => {
 
         {apps.length === 0 ? (
           <GlassCard className="p-8 text-center">
-            <p className="text-sm text-muted-foreground mb-4">No applications yet. Browse grants and click "Apply" to create your first application.</p>
-            <Button onClick={() => navigate("/grants")}>Browse Grants</Button>
+            <p className="text-sm text-muted-foreground mb-4">No applications yet. You can start from a matched grant or create a blank application and attach a funder later.</p>
+            <div className="flex gap-2 justify-center">
+              <Button onClick={() => navigate("/grants")} variant="outline">Browse Grants</Button>
+              <Button className="bg-primary text-primary-foreground" onClick={() => setCreateOpen(true)}>
+                <Plus className="h-4 w-4 mr-1" /> Blank Application
+              </Button>
+            </div>
           </GlassCard>
         ) : (
           <div className="flex gap-4 overflow-x-auto pb-6">
@@ -290,6 +338,11 @@ const ApplicationsPage = () => {
                               </div>
                             )}
                             <div className="flex items-center gap-1 mt-3 pt-2 border-t border-border/20 flex-wrap">
+                              {!item.funder_id && (
+                                <Button size="sm" variant="ghost" className="h-6 text-[10px] px-2 text-amber-500" onClick={() => openAttachFunder(item.id)}>
+                                  <Link2 className="h-2.5 w-2.5 mr-0.5" /> Attach Funder
+                                </Button>
+                              )}
                               {col.id !== "in_progress" && col.id !== "closed" && (
                                 <Button size="sm" variant="ghost" className="h-6 text-[10px] px-2" onClick={() => moveApp(item.id, "in_progress")}>
                                   Start <ArrowRight className="h-2.5 w-2.5 ml-0.5" />
@@ -347,15 +400,18 @@ const ApplicationsPage = () => {
             <div>
               <Label className="text-xs text-muted-foreground">Project Name *</Label>
               <Input value={newProjectName} onChange={e => setNewProjectName(e.target.value)} placeholder="e.g. Youth Mentorship Programme" className="mt-1 bg-secondary/30 border-border/50 text-foreground" />
+              <p className="text-[10px] text-muted-foreground mt-1">Internal name for this application — you can attach a specific funder later.</p>
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <Label className="text-xs text-muted-foreground">Amount Requested ($)</Label>
                 <Input type="number" value={newAmount} onChange={e => setNewAmount(e.target.value)} placeholder="50000" className="mt-1 bg-secondary/30 border-border/50 text-foreground" />
+                <p className="text-[10px] text-muted-foreground mt-1">USD. Leave blank if not yet decided.</p>
               </div>
               <div>
                 <Label className="text-xs text-muted-foreground">Deadline</Label>
                 <Input type="date" value={newDeadline} onChange={e => setNewDeadline(e.target.value)} className="mt-1 bg-secondary/30 border-border/50 text-foreground" />
+                <p className="text-[10px] text-muted-foreground mt-1">Submission deadline. Used for the Deadlines view.</p>
               </div>
             </div>
             <div className="flex items-center justify-between rounded-lg border border-border/40 bg-secondary/20 px-3 py-2">
@@ -371,6 +427,43 @@ const ApplicationsPage = () => {
             <p className="text-[10px] text-muted-foreground text-center">
               Tip: For better matching, create applications from the <button onClick={() => { setCreateOpen(false); navigate("/grants"); }} className="text-primary hover:underline">Grants page</button>.
             </p>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Attach Funder Dialog */}
+      <Dialog open={attachOpen} onOpenChange={(o) => { setAttachOpen(o); if (!o) { setAttachAppId(null); setFunderSearch(""); setFunderResults([]); } }}>
+        <DialogContent className="bg-card border-border">
+          <DialogHeader>
+            <DialogTitle className="text-foreground">Attach a Funder</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3 mt-2">
+            <p className="text-[11px] text-muted-foreground">Search the funder database and attach one to this application. We'll also create a CRM relationship automatically.</p>
+            <Input
+              autoFocus
+              value={funderSearch}
+              onChange={(e) => setFunderSearch(e.target.value)}
+              placeholder="Search funders by name..."
+              className="bg-secondary/30 border-border/50"
+            />
+            <div className="max-h-72 overflow-y-auto rounded-lg border border-border/40 divide-y divide-border/30">
+              {funderSearch.trim().length < 2 && (
+                <p className="p-4 text-[11px] text-muted-foreground text-center">Type at least 2 characters to search.</p>
+              )}
+              {funderSearch.trim().length >= 2 && funderResults.length === 0 && (
+                <p className="p-4 text-[11px] text-muted-foreground text-center">No funders match "{funderSearch}".</p>
+              )}
+              {funderResults.map(f => (
+                <button
+                  key={f.id}
+                  onClick={() => attachFunder(f.id)}
+                  disabled={attachLoading}
+                  className="w-full text-left px-3 py-2 text-xs text-foreground hover:bg-secondary/40 disabled:opacity-50 transition-colors"
+                >
+                  {f.donor_name}
+                </button>
+              ))}
+            </div>
           </div>
         </DialogContent>
       </Dialog>

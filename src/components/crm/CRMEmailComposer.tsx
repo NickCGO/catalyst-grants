@@ -85,7 +85,28 @@ export default function CRMEmailComposer({ orgId, funderId, funderName, funderEm
       sentiment: "neutral",
     });
 
-    toast({ title: status === "draft" ? "Draft saved" : "Email queued — will send when email domain is configured" });
+    // Advance the relationship to "contacted" once a real email goes out
+    if (status === "queued") {
+      const today = new Date().toISOString().slice(0, 10);
+      if (relationshipId) {
+        await supabase
+          .from("funder_relationships")
+          .update({ relationship_status: "contacted", last_interaction_date: today })
+          .eq("id", relationshipId)
+          .in("relationship_status", ["prospect", "contacted"]);
+      } else {
+        // No relationship row yet — create one in "contacted" state
+        await supabase.from("funder_relationships").insert({
+          org_id: orgId,
+          funder_id: funderId,
+          relationship_status: "contacted",
+          health_score: 55,
+          last_interaction_date: today,
+        });
+      }
+    }
+
+    toast({ title: status === "draft" ? "Draft saved" : "Email queued — moved to Contacted" });
     setSubject("");
     setBody("");
     setTo(funderEmail || "");
