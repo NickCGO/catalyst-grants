@@ -188,6 +188,26 @@ const ApplicationsPage = () => {
     await loadApps(orgId);
   };
 
+  // Open the funder picker for an existing application
+  const openAttachFunder = (appId: string) => {
+    setAttachAppId(appId);
+    setFunderSearch("");
+    setFunderResults([]);
+    setAttachOpen(true);
+  };
+
+  const attachFunder = async (funderId: string) => {
+    if (!attachAppId || !orgId) return;
+    setAttachLoading(true);
+    await supabase.from("applications").update({ funder_id: funderId }).eq("id", attachAppId);
+    await ensureCRMProspect(funderId);
+    setAttachLoading(false);
+    setAttachOpen(false);
+    setAttachAppId(null);
+    await loadApps(orgId);
+    toast({ title: "Funder attached to application" });
+  };
+
   // Drag-and-drop handlers
   const onDragStart = (id: string) => (e: React.DragEvent) => {
     setDraggingId(id);
