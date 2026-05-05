@@ -352,15 +352,18 @@ const ApplicationsPage = () => {
             <div>
               <Label className="text-xs text-muted-foreground">Project Name *</Label>
               <Input value={newProjectName} onChange={e => setNewProjectName(e.target.value)} placeholder="e.g. Youth Mentorship Programme" className="mt-1 bg-secondary/30 border-border/50 text-foreground" />
+              <p className="text-[10px] text-muted-foreground mt-1">Internal name for this application — you can attach a specific funder later.</p>
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <Label className="text-xs text-muted-foreground">Amount Requested ($)</Label>
                 <Input type="number" value={newAmount} onChange={e => setNewAmount(e.target.value)} placeholder="50000" className="mt-1 bg-secondary/30 border-border/50 text-foreground" />
+                <p className="text-[10px] text-muted-foreground mt-1">USD. Leave blank if not yet decided.</p>
               </div>
               <div>
                 <Label className="text-xs text-muted-foreground">Deadline</Label>
                 <Input type="date" value={newDeadline} onChange={e => setNewDeadline(e.target.value)} className="mt-1 bg-secondary/30 border-border/50 text-foreground" />
+                <p className="text-[10px] text-muted-foreground mt-1">Submission deadline. Used for the Deadlines view.</p>
               </div>
             </div>
             <div className="flex items-center justify-between rounded-lg border border-border/40 bg-secondary/20 px-3 py-2">
