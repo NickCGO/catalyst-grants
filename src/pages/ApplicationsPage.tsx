@@ -4,7 +4,7 @@ import GlassCard from "@/components/GlassCard";
 import StatusBadge from "@/components/StatusBadge";
 import MatchScoreRing from "@/components/MatchScoreRing";
 import { Button } from "@/components/ui/button";
-import { Plus, Trash2, ArrowRight } from "lucide-react";
+import { Plus, Trash2, ArrowRight, Link2 } from "lucide-react";
 import { motion } from "framer-motion";
 import { Skeleton } from "@/components/ui/skeleton";
 import { supabase } from "@/integrations/supabase/client";
@@ -46,6 +46,12 @@ const ApplicationsPage = () => {
   const [newReadyToSubmit, setNewReadyToSubmit] = useState(false);
   const [draggingId, setDraggingId] = useState<string | null>(null);
   const [dragOverCol, setDragOverCol] = useState<string | null>(null);
+  // Attach-grant picker state
+  const [attachOpen, setAttachOpen] = useState(false);
+  const [attachAppId, setAttachAppId] = useState<string | null>(null);
+  const [funderSearch, setFunderSearch] = useState("");
+  const [funderResults, setFunderResults] = useState<{ id: string; donor_name: string }[]>([]);
+  const [attachLoading, setAttachLoading] = useState(false);
 
   const loadApps = async (oid: string) => {
     const { data: applications } = await supabase
