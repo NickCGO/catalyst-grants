@@ -31,6 +31,41 @@ const routeLabels: Record<ApplicationRoute, { label: string; color: string }> = 
   guided: { label: "Guided", color: "bg-muted/60 text-muted-foreground" },
 };
 
+const MONTH_NAMES = ["january","february","march","april","may","june","july","august","september","october","november","december"];
+
+/**
+ * Suggest a deadline (YYYY-MM-DD) from a funder's application_period string.
+ * Returns the LAST day of the next occurring month mentioned, or null if not parseable.
+ * Examples:
+ *   "January"        -> last day of next January
+ *   "Oct-Feb"        -> last day of next February
+ *   "Monthly" / ""   -> null (no auto deadline)
+ */
+function suggestDeadline(period?: string | null): string | null {
+  if (!period) return null;
+  const lower = period.toLowerCase();
+  if (lower.includes("monthly") || lower.includes("ongoing") || lower.includes("rolling") || lower.includes("any time") || lower.includes("anytime")) return null;
+
+  // Find all months mentioned
+  const found: number[] = [];
+  MONTH_NAMES.forEach((m, i) => {
+    if (lower.includes(m.slice(0, 3))) found.push(i);
+  });
+  if (found.length === 0) return null;
+
+  // Use the LAST month in a range as the deadline cue
+  const targetMonth = found[found.length - 1];
+  const today = new Date();
+  let year = today.getFullYear();
+  if (targetMonth < today.getMonth()) year += 1;
+  // Last day of that month
+  const lastDay = new Date(year, targetMonth + 1, 0);
+  const yyyy = lastDay.getFullYear();
+  const mm = String(lastDay.getMonth() + 1).padStart(2, "0");
+  const dd = String(lastDay.getDate()).padStart(2, "0");
+  return `${yyyy}-${mm}-${dd}`;
+}
+
 interface Props {
   open: boolean;
   onClose: () => void;
@@ -57,9 +92,9 @@ export default function StartApplicationModal({ open, onClose, funder, matchScor
       setProjectName("");
       setSelectedProgramme(programmes[0] || "");
       setAmountRequested("");
-      setDeadline("");
+      setDeadline(suggestDeadline(funder.application_period) || "");
     }
-  }, [open, programmes]);
+  }, [open, programmes, funder.application_period]);
 
   const handleStart = async () => {
     setCreating(true);
@@ -148,6 +183,11 @@ export default function StartApplicationModal({ open, onClose, funder, matchScor
               <Label className="text-xs text-muted-foreground">Deadline (if known)</Label>
               <Input type="date" value={deadline} onChange={e => setDeadline(e.target.value)}
                 className="mt-1 bg-secondary/30 border-border/50" />
+              {funder.application_period && (
+                <p className="text-[10px] text-muted-foreground mt-1">
+                  Auto-filled from funder window: <span className="text-foreground">{funder.application_period}</span>. Adjust if you have a more accurate date.
+                </p>
+              )}
             </div>
           </div>
 
