@@ -134,6 +134,23 @@ const ApplicationsPage = () => {
     }
   };
 
+  // Debounced funder search for the attach dialog
+  useEffect(() => {
+    if (!attachOpen) return;
+    const timer = setTimeout(async () => {
+      const term = funderSearch.trim();
+      if (term.length < 2) { setFunderResults([]); return; }
+      const { data } = await supabase
+        .from("funders")
+        .select("id, donor_name")
+        .ilike("donor_name", `%${term}%`)
+        .order("donor_name")
+        .limit(20);
+      setFunderResults(data || []);
+    }, 250);
+    return () => clearTimeout(timer);
+  }, [funderSearch, attachOpen]);
+
   const moveApp = async (appId: string, newColumn: string, newStatus?: string) => {
     const updateData: any = { kanban_column: newColumn, updated_at: new Date().toISOString() };
     if (newStatus) updateData.status = newStatus;
