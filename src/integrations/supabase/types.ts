@@ -1009,6 +1009,71 @@ export type Database = {
           },
         ]
       }
+      inbound_emails: {
+        Row: {
+          body_html: string | null
+          body_text: string | null
+          created_at: string
+          from_email: string
+          from_name: string | null
+          funder_id: string | null
+          id: string
+          in_reply_to: string | null
+          is_read: boolean
+          message_id: string | null
+          org_id: string
+          raw_payload: Json | null
+          received_at: string
+          relationship_id: string | null
+          subject: string | null
+          to_email: string
+        }
+        Insert: {
+          body_html?: string | null
+          body_text?: string | null
+          created_at?: string
+          from_email: string
+          from_name?: string | null
+          funder_id?: string | null
+          id?: string
+          in_reply_to?: string | null
+          is_read?: boolean
+          message_id?: string | null
+          org_id: string
+          raw_payload?: Json | null
+          received_at?: string
+          relationship_id?: string | null
+          subject?: string | null
+          to_email: string
+        }
+        Update: {
+          body_html?: string | null
+          body_text?: string | null
+          created_at?: string
+          from_email?: string
+          from_name?: string | null
+          funder_id?: string | null
+          id?: string
+          in_reply_to?: string | null
+          is_read?: boolean
+          message_id?: string | null
+          org_id?: string
+          raw_payload?: Json | null
+          received_at?: string
+          relationship_id?: string | null
+          subject?: string | null
+          to_email?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inbound_emails_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organisations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       notifications: {
         Row: {
           body: string | null
@@ -1101,6 +1166,7 @@ export type Database = {
           id: string
           impact_indicators: Json | null
           impact_statement: string | null
+          inbound_mailbox_token: string | null
           indirect_beneficiaries_annual: number | null
           innovation_factor: string | null
           intervention_approach: string | null
@@ -1219,6 +1285,7 @@ export type Database = {
           id?: string
           impact_indicators?: Json | null
           impact_statement?: string | null
+          inbound_mailbox_token?: string | null
           indirect_beneficiaries_annual?: number | null
           innovation_factor?: string | null
           intervention_approach?: string | null
@@ -1337,6 +1404,7 @@ export type Database = {
           id?: string
           impact_indicators?: Json | null
           impact_statement?: string | null
+          inbound_mailbox_token?: string | null
           indirect_beneficiaries_annual?: number | null
           innovation_factor?: string | null
           intervention_approach?: string | null
@@ -2173,6 +2241,53 @@ export type Database = {
           },
         ]
       }
+      team_invites: {
+        Row: {
+          accepted_at: string | null
+          created_at: string
+          email: string
+          expires_at: string
+          id: string
+          invited_by: string
+          org_id: string
+          role: string
+          status: string
+          token: string
+        }
+        Insert: {
+          accepted_at?: string | null
+          created_at?: string
+          email: string
+          expires_at?: string
+          id?: string
+          invited_by: string
+          org_id: string
+          role?: string
+          status?: string
+          token?: string
+        }
+        Update: {
+          accepted_at?: string | null
+          created_at?: string
+          email?: string
+          expires_at?: string
+          id?: string
+          invited_by?: string
+          org_id?: string
+          role?: string
+          status?: string
+          token?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "team_invites_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organisations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       team_members: {
         Row: {
           avatar_url: string | null
@@ -2277,6 +2392,14 @@ export type Database = {
       enqueue_email: {
         Args: { payload: Json; queue_name: string }
         Returns: number
+      }
+      has_org_role: {
+        Args: { _min_role: string; _org_id: string; _user_id: string }
+        Returns: boolean
+      }
+      is_org_member: {
+        Args: { _org_id: string; _user_id: string }
+        Returns: boolean
       }
       move_to_dlq: {
         Args: {
