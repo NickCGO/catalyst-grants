@@ -233,8 +233,13 @@ const ApplicationsPage = () => {
 
         {apps.length === 0 ? (
           <GlassCard className="p-8 text-center">
-            <p className="text-sm text-muted-foreground mb-4">No applications yet. Browse grants and click "Apply" to create your first application.</p>
-            <Button onClick={() => navigate("/grants")}>Browse Grants</Button>
+            <p className="text-sm text-muted-foreground mb-4">No applications yet. You can start from a matched grant or create a blank application and attach a funder later.</p>
+            <div className="flex gap-2 justify-center">
+              <Button onClick={() => navigate("/grants")} variant="outline">Browse Grants</Button>
+              <Button className="bg-primary text-primary-foreground" onClick={() => setCreateOpen(true)}>
+                <Plus className="h-4 w-4 mr-1" /> Blank Application
+              </Button>
+            </div>
           </GlassCard>
         ) : (
           <div className="flex gap-4 overflow-x-auto pb-6">
