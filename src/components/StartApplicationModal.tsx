@@ -8,6 +8,7 @@ import MatchScoreRing from "./MatchScoreRing";
 import { Calendar, Globe, FileText, DollarSign, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { hints } from "@/lib/formHints";
 
 type ApplicationRoute = "full_proposal" | "loe" | "concept_note" | "online_form" | "guided";
 
