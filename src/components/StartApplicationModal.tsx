@@ -8,6 +8,7 @@ import MatchScoreRing from "./MatchScoreRing";
 import { Calendar, Globe, FileText, DollarSign, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { hints } from "@/lib/formHints";
 
 type ApplicationRoute = "full_proposal" | "loe" | "concept_note" | "online_form" | "guided";
 
@@ -161,6 +162,7 @@ export default function StartApplicationModal({ open, onClose, funder, matchScor
                 <option value="">Select programme</option>
                 {programmes.map(p => <option key={p} value={p}>{p}</option>)}
               </select>
+              <p className="text-[10px] text-muted-foreground mt-1">{hints.application.activityCategory}</p>
             </div>
           )}
 
@@ -168,6 +170,7 @@ export default function StartApplicationModal({ open, onClose, funder, matchScor
             <Label className="text-xs text-muted-foreground">Project name (optional)</Label>
             <Input value={projectName} onChange={e => setProjectName(e.target.value)}
               placeholder={`Application to ${funder.donor_name}`} className="mt-1 bg-secondary/30 border-border/50" />
+            <p className="text-[10px] text-muted-foreground mt-1">{hints.application.projectName}</p>
           </div>
 
           <div className="grid grid-cols-2 gap-3">
@@ -178,6 +181,7 @@ export default function StartApplicationModal({ open, onClose, funder, matchScor
                 <Input type="number" value={amountRequested} onChange={e => setAmountRequested(e.target.value)}
                   placeholder="e.g. 50000" className="pl-8 bg-secondary/30 border-border/50" />
               </div>
+              <p className="text-[10px] text-muted-foreground mt-1">{hints.application.amountRequested}</p>
             </div>
             <div>
               <Label className="text-xs text-muted-foreground">Deadline (if known)</Label>

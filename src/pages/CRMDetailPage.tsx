@@ -19,6 +19,7 @@ import { useAuth } from "@/hooks/useAuth";
 import CRMEmailComposer from "@/components/crm/CRMEmailComposer";
 import CRMEmailLog from "@/components/crm/CRMEmailLog";
 import CRMActivityFeed from "@/components/crm/CRMActivityFeed";
+import { hints } from "@/lib/formHints";
 
 const CRMDetailPage = () => {
   const { funderId } = useParams();
@@ -182,14 +183,17 @@ const CRMDetailPage = () => {
                   <div>
                     <Label className="text-[10px]">Date</Label>
                     <Input type="date" value={nextActionDate} onChange={e => setNextActionDate(e.target.value)} className="bg-secondary/30 border-border/30 h-8 text-xs" />
+                    <p className="text-[10px] text-muted-foreground mt-1">{hints.crm.nextActionDate}</p>
                   </div>
                   <div>
                     <Label className="text-[10px]">Type</Label>
                     <Input value={nextActionType} onChange={e => setNextActionType(e.target.value)} className="bg-secondary/30 border-border/30 h-8 text-xs" placeholder="e.g. Follow up" />
+                    <p className="text-[10px] text-muted-foreground mt-1">{hints.crm.nextActionType}</p>
                   </div>
                   <div>
                     <Label className="text-[10px]">Note</Label>
                     <Textarea value={nextActionNote} onChange={e => setNextActionNote(e.target.value)} className="bg-secondary/30 border-border/30 min-h-[60px] text-xs" />
+                    <p className="text-[10px] text-muted-foreground mt-1">{hints.crm.nextActionNote}</p>
                   </div>
                   <Button size="sm" className="w-full h-7 text-xs" onClick={saveAction}>Save Action</Button>
                 </div>

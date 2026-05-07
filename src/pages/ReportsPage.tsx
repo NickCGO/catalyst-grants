@@ -11,6 +11,7 @@ import { callAI } from "@/lib/ai";
 import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth, useOrganisation } from "@/hooks/useAuth";
+import { hints } from "@/lib/formHints";
 
 type Step = "select" | "format" | "input" | "preview";
 
@@ -143,6 +144,7 @@ const ReportsPage = () => {
               <Textarea value={projectUpdates} onChange={e => setProjectUpdates(e.target.value)}
                 placeholder="We reached 250 young people through our AfterSchool programme. Key highlights include..."
                 className="min-h-[200px] bg-secondary/30 border-border/50" />
+              <p className="text-[10px] text-muted-foreground mt-1">{hints.report.projectUpdates}</p>
               <Button className="mt-4 bg-primary text-primary-foreground hover:bg-primary/90" onClick={generateReport} disabled={generating || !projectUpdates.trim()}>
                 {generating ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Sparkles className="h-4 w-4 mr-1" />}
                 Generate Report
