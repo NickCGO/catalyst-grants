@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { hints } from "@/lib/formHints";
 
 const emailTemplates: Record<string, { subject: string; body: string }> = {
   introduction: {
@@ -150,6 +151,7 @@ export default function CRMEmailComposer({ orgId, funderId, funderName, funderEm
           placeholder="Email subject"
           className="bg-secondary/30 border-border/30 h-8 text-xs"
         />
+        <p className="text-[10px] text-muted-foreground mt-1">{hints.crm.emailSubject}</p>
       </div>
       <div>
         <Label className="text-[10px]">Body</Label>
@@ -159,6 +161,7 @@ export default function CRMEmailComposer({ orgId, funderId, funderName, funderEm
           placeholder="Write your email..."
           className="bg-secondary/30 border-border/30 min-h-[180px] text-xs"
         />
+        <p className="text-[10px] text-muted-foreground mt-1">{hints.crm.emailBody}</p>
       </div>
       <div className="flex gap-2">
         <Button size="sm" variant="outline" className="h-7 text-xs flex-1" onClick={() => saveEmail("draft")} disabled={saving}>
