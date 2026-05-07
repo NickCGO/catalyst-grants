@@ -295,7 +295,8 @@ const SettingsPage = () => {
                     ))}
                   </div>
                   <div>
-                    <Label className="text-xs text-muted-foreground mb-2 block">Focus Areas</Label>
+                    <Label className="text-xs text-muted-foreground mb-1 block">Focus Areas</Label>
+                    <p className="text-[10px] text-muted-foreground mb-2">{hints.profile.focusAreas}</p>
                     <div className="flex flex-wrap gap-2">
                       {focusAreaKeys.map(area => (
                         <button
@@ -368,6 +369,7 @@ const SettingsPage = () => {
               <div className="space-y-6">
                 <div>
                   <Label className="text-xs text-muted-foreground">Default Proposal Tone</Label>
+                  <p className="text-[10px] text-muted-foreground mt-0.5">{hints.ai.tone}</p>
                   <div className="grid grid-cols-3 gap-2 mt-2">
                     {["formal", "semi-formal", "community"].map(t => (
                       <button key={t} onClick={() => setTone(t)}
@@ -381,6 +383,7 @@ const SettingsPage = () => {
                 </div>
                 <div>
                   <Label className="text-xs text-muted-foreground">Default Report Format</Label>
+                  <p className="text-[10px] text-muted-foreground mt-0.5">{hints.ai.reportFormat}</p>
                   <div className="grid grid-cols-3 gap-2 mt-2">
                     {[{ id: "narrative", label: "Narrative" }, { id: "logframe", label: "Logframe" }, { id: "results_framework", label: "Results Framework" }].map(f => (
                       <button key={f.id} onClick={() => setReportFormat(f.id)}
@@ -394,6 +397,7 @@ const SettingsPage = () => {
                 </div>
                 <div>
                   <Label className="text-xs text-muted-foreground">AI Writing Length</Label>
+                  <p className="text-[10px] text-muted-foreground mt-0.5">{hints.ai.writingLength}</p>
                   <div className="grid grid-cols-3 gap-2 mt-2">
                     {["concise", "standard", "detailed"].map(l => (
                       <button key={l} onClick={() => setWritingLength(l)}

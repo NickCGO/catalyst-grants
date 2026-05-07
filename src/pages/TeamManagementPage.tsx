@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "@/hooks/use-toast";
+import { hints } from "@/lib/formHints";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth, useOrganisation } from "@/hooks/useAuth";
 
@@ -187,6 +188,7 @@ const TeamManagementPage = () => {
                   </div>
                   <div>
                     <Label className="text-xs text-muted-foreground">Role</Label>
+                    <p className="text-[10px] text-muted-foreground mt-0.5 mb-1">{hints.team.role}</p>
                     <div className="grid grid-cols-1 gap-2 mt-1">
                       {assignableRoles.map((key) => {
                         const val = roleConfig[key];
