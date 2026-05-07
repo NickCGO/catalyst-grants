@@ -14,6 +14,7 @@ import { toast } from "@/hooks/use-toast";
 import { useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { hints } from "@/lib/formHints";
 
 const focusAreaKeys = [
   { key: "children", label: "Children" }, { key: "families_parents", label: "Families/Parents" },
@@ -225,16 +226,19 @@ const SettingsPage = () => {
                     <div>
                       <Label className="text-xs text-muted-foreground">Organisation Name</Label>
                       <Input value={orgName} onChange={e => setOrgName(e.target.value)} className="mt-1 bg-secondary/30 border-border/50" />
+                      <p className="text-[10px] text-muted-foreground mt-1">{hints.profile.orgName}</p>
                     </div>
                     <div>
                       <Label className="text-xs text-muted-foreground">Country</Label>
                       <Input value={country} onChange={e => setCountry(e.target.value)} className="mt-1 bg-secondary/30 border-border/50" />
+                      <p className="text-[10px] text-muted-foreground mt-1">{hints.profile.country}</p>
                     </div>
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <Label className="text-xs text-muted-foreground">Region</Label>
                       <Input value={region} onChange={e => setRegion(e.target.value)} className="mt-1 bg-secondary/30 border-border/50" />
+                      <p className="text-[10px] text-muted-foreground mt-1">{hints.profile.region}</p>
                     </div>
                     <div>
                       <Label className="text-xs text-muted-foreground">Organisation Size</Label>
@@ -245,32 +249,39 @@ const SettingsPage = () => {
                         <option value="medium (21-50)">Medium (21-50)</option>
                         <option value="large (50+)">Large (50+)</option>
                       </select>
+                      <p className="text-[10px] text-muted-foreground mt-1">{hints.profile.orgSize}</p>
                     </div>
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <Label className="text-xs text-muted-foreground">Registration Number</Label>
                       <Input value={regNumber} onChange={e => setRegNumber(e.target.value)} className="mt-1 bg-secondary/30 border-border/50" />
+                      <p className="text-[10px] text-muted-foreground mt-1">{hints.profile.registrationNumber}</p>
                     </div>
                     <div>
                       <Label className="text-xs text-muted-foreground">CEO/Director</Label>
                       <Input value={ceoName} onChange={e => setCeoName(e.target.value)} className="mt-1 bg-secondary/30 border-border/50" />
+                      <p className="text-[10px] text-muted-foreground mt-1">{hints.profile.ceoName}</p>
                     </div>
                   </div>
                   <div>
                     <Label className="text-xs text-muted-foreground">Website</Label>
                     <Input value={website} onChange={e => setWebsite(e.target.value)} className="mt-1 bg-secondary/30 border-border/50" />
+                    <p className="text-[10px] text-muted-foreground mt-1">{hints.profile.website}</p>
                   </div>
                   <div>
                     <Label className="text-xs text-muted-foreground">Mission Statement</Label>
                     <Textarea value={mission} onChange={e => setMission(e.target.value)} className="mt-1 bg-secondary/30 border-border/50" />
+                    <p className="text-[10px] text-muted-foreground mt-1">{hints.profile.mission}</p>
                   </div>
                   <div>
                     <Label className="text-xs text-muted-foreground">Annual Income (USD)</Label>
                     <Input type="number" value={annualIncome} onChange={e => setAnnualIncome(e.target.value)} className="mt-1 bg-secondary/30 border-border/50" />
+                    <p className="text-[10px] text-muted-foreground mt-1">{hints.profile.annualIncome}</p>
                   </div>
                   <div className="space-y-2">
                     <Label className="text-xs text-muted-foreground">Income Sources (%)</Label>
+                    <p className="text-[10px] text-muted-foreground">{hints.profile.incomeSources}</p>
                     {[
                       { label: "Grants", value: pctGrants, set: setPctGrants },
                       { label: "Government", value: pctGovernment, set: setPctGovernment },
