@@ -214,6 +214,36 @@ const CRMDetailPage = () => {
             )}
           </TabsContent>
 
+          {/* Inbox Tab */}
+          <TabsContent value="inbox" className="space-y-3">
+            <h3 className="text-sm font-semibold text-foreground">Replies from this funder</h3>
+            {inboundEmails.length === 0 ? (
+              <p className="text-xs text-muted-foreground">No inbound replies linked to this funder yet.</p>
+            ) : (
+              <div className="space-y-2">
+                {inboundEmails.map((e) => (
+                  <GlassCard key={e.id} className="p-3">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0 flex-1">
+                        <p className="text-xs font-medium text-foreground truncate">
+                          {e.subject || "(no subject)"}
+                        </p>
+                        <p className="text-[10px] text-muted-foreground mt-0.5">
+                          {e.from_name || e.from_email} · {new Date(e.received_at).toLocaleString()}
+                        </p>
+                        {e.body_text && (
+                          <p className="text-xs text-foreground/80 mt-2 line-clamp-3 whitespace-pre-wrap">
+                            {e.body_text}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  </GlassCard>
+                ))}
+              </div>
+            )}
+          </TabsContent>
+
           {/* Activity Tab */}
           <TabsContent value="activity" className="space-y-4">
             {orgId && funderId && (
