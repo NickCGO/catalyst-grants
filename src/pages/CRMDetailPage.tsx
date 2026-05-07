@@ -27,6 +27,7 @@ const CRMDetailPage = () => {
   const [relationship, setRelationship] = useState<any>(null);
   const [interactions, setInteractions] = useState<any[]>([]);
   const [applications, setApplications] = useState<any[]>([]);
+  const [inboundEmails, setInboundEmails] = useState<any[]>([]);
   const [orgId, setOrgId] = useState<string>("");
   const [loading, setLoading] = useState(true);
   const [notes, setNotes] = useState("");
