@@ -96,6 +96,9 @@ const App = () => (
           <Route path="/partnerships/profile/:orgId" element={<NGOPublicProfilePage />} />
           <Route path="/partnerships/:id" element={<PartnershipWorkspacePage />} />
 
+          {/* Inbox */}
+          <Route path="/inbox" element={<InboxPage />} />
+
           {/* Settings */}
           <Route path="/settings" element={<SettingsPage />} />
           <Route path="/settings/team" element={<TeamManagementPage />} />
@@ -108,12 +111,33 @@ const App = () => (
           <Route path="/team" element={<TeamManagementPage />} />
           <Route path="/tasks" element={<TasksPage />} />
 
+          {/* Invitations */}
+          <Route path="/accept-invite" element={<AcceptInvitePage />} />
+
+          {/* Help center */}
+          <Route path="/help" element={<HelpLayout />}>
+            <Route index element={<HelpOverview />} />
+            <Route path="dashboard" element={<HelpDashboard />} />
+            <Route path="grants" element={<HelpGrants />} />
+            <Route path="applications" element={<HelpApplications />} />
+            <Route path="proposals" element={<HelpProposals />} />
+            <Route path="tasks" element={<HelpTasks />} />
+            <Route path="crm" element={<HelpCRM />} />
+            <Route path="inbox" element={<HelpInbox />} />
+            <Route path="reports" element={<HelpReports />} />
+            <Route path="team" element={<HelpTeam />} />
+            <Route path="settings" element={<HelpSettings />} />
+            <Route path="faq" element={<HelpFAQ />} />
+          </Route>
+
           {/* Admin */}
           <Route path="/admin" element={<AdminPage />} />
 
           <Route path="*" element={<NotFound />} />
         </Routes>
         <PublicChatMount />
+        <HelpFloatingButton />
+        <ProductTour />
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
