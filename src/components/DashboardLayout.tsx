@@ -49,6 +49,7 @@ const typeIcons: Record<string, string> = {
   partnership_accepted: "🎉",
   interaction_due: "📞",
   match_new: "🎯",
+  inbound_email: "📨",
 };
 
 function AppSidebarContent() {
