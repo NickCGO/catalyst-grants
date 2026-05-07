@@ -42,17 +42,19 @@ const CRMDetailPage = () => {
     if (!org) { setLoading(false); return; }
     setOrgId(org.id);
 
-    const [{ data: funderData }, { data: relData }, { data: interData }, { data: appData }] = await Promise.all([
+    const [{ data: funderData }, { data: relData }, { data: interData }, { data: appData }, { data: inboundData }] = await Promise.all([
       supabase.from("funders").select("*").eq("id", funderId).maybeSingle(),
       supabase.from("funder_relationships").select("*").eq("org_id", org.id).eq("funder_id", funderId).maybeSingle(),
       supabase.from("funder_interactions").select("*").eq("org_id", org.id).eq("funder_id", funderId).order("date", { ascending: false }),
       supabase.from("applications").select("*").eq("org_id", org.id).eq("funder_id", funderId).order("created_at", { ascending: false }),
+      supabase.from("inbound_emails").select("*").eq("org_id", org.id).eq("funder_id", funderId).order("received_at", { ascending: false }),
     ]);
 
     setFunder(funderData);
     setRelationship(relData);
     setInteractions(interData || []);
     setApplications(appData || []);
+    setInboundEmails(inboundData || []);
     if (relData) {
       setNotes(relData.notes || "");
       setNextActionDate(relData.next_action_date || "");
