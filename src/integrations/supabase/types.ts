@@ -2385,6 +2385,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      accept_team_invite: { Args: { _token: string }; Returns: Json }
       delete_email: {
         Args: { message_id: number; queue_name: string }
         Returns: boolean

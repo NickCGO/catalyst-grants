@@ -27,6 +27,7 @@ const CRMDetailPage = () => {
   const [relationship, setRelationship] = useState<any>(null);
   const [interactions, setInteractions] = useState<any[]>([]);
   const [applications, setApplications] = useState<any[]>([]);
+  const [inboundEmails, setInboundEmails] = useState<any[]>([]);
   const [orgId, setOrgId] = useState<string>("");
   const [loading, setLoading] = useState(true);
   const [notes, setNotes] = useState("");
@@ -41,17 +42,19 @@ const CRMDetailPage = () => {
     if (!org) { setLoading(false); return; }
     setOrgId(org.id);
 
-    const [{ data: funderData }, { data: relData }, { data: interData }, { data: appData }] = await Promise.all([
+    const [{ data: funderData }, { data: relData }, { data: interData }, { data: appData }, { data: inboundData }] = await Promise.all([
       supabase.from("funders").select("*").eq("id", funderId).maybeSingle(),
       supabase.from("funder_relationships").select("*").eq("org_id", org.id).eq("funder_id", funderId).maybeSingle(),
       supabase.from("funder_interactions").select("*").eq("org_id", org.id).eq("funder_id", funderId).order("date", { ascending: false }),
       supabase.from("applications").select("*").eq("org_id", org.id).eq("funder_id", funderId).order("created_at", { ascending: false }),
+      supabase.from("inbound_emails").select("*").eq("org_id", org.id).eq("funder_id", funderId).order("received_at", { ascending: false }),
     ]);
 
     setFunder(funderData);
     setRelationship(relData);
     setInteractions(interData || []);
     setApplications(appData || []);
+    setInboundEmails(inboundData || []);
     if (relData) {
       setNotes(relData.notes || "");
       setNextActionDate(relData.next_action_date || "");
@@ -149,6 +152,7 @@ const CRMDetailPage = () => {
           <TabsList className="bg-secondary/30 border border-border/30">
             <TabsTrigger value="overview" className="text-xs">Overview</TabsTrigger>
             <TabsTrigger value="communications" className="text-xs">Communications</TabsTrigger>
+            <TabsTrigger value="inbox" className="text-xs">Inbox ({inboundEmails.length})</TabsTrigger>
             <TabsTrigger value="activity" className="text-xs">Activity</TabsTrigger>
             <TabsTrigger value="applications" className="text-xs">Applications ({applications.length})</TabsTrigger>
             <TabsTrigger value="notes" className="text-xs">Notes</TabsTrigger>
@@ -207,6 +211,36 @@ const CRMDetailPage = () => {
                 />
                 <CRMEmailLog orgId={orgId} funderId={funderId} refreshKey={emailRefreshKey} />
               </>
+            )}
+          </TabsContent>
+
+          {/* Inbox Tab */}
+          <TabsContent value="inbox" className="space-y-3">
+            <h3 className="text-sm font-semibold text-foreground">Replies from this funder</h3>
+            {inboundEmails.length === 0 ? (
+              <p className="text-xs text-muted-foreground">No inbound replies linked to this funder yet.</p>
+            ) : (
+              <div className="space-y-2">
+                {inboundEmails.map((e) => (
+                  <GlassCard key={e.id} className="p-3">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0 flex-1">
+                        <p className="text-xs font-medium text-foreground truncate">
+                          {e.subject || "(no subject)"}
+                        </p>
+                        <p className="text-[10px] text-muted-foreground mt-0.5">
+                          {e.from_name || e.from_email} · {new Date(e.received_at).toLocaleString()}
+                        </p>
+                        {e.body_text && (
+                          <p className="text-xs text-foreground/80 mt-2 line-clamp-3 whitespace-pre-wrap">
+                            {e.body_text}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  </GlassCard>
+                ))}
+              </div>
             )}
           </TabsContent>
 

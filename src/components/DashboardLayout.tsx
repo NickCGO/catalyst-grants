@@ -3,7 +3,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard, Search, ClipboardList, PenTool, Newspaper, Settings,
   Sparkles, LogOut, FileText, Mail, Bell, CheckSquare, Users, Handshake, BarChart3,
-  ShieldCheck,
+  ShieldCheck, Inbox, BookOpen,
 } from "lucide-react";
 import {
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent,
@@ -28,12 +28,14 @@ const navItems = [
   { title: "Proposal Writer", url: "/writer", icon: PenTool },
   { title: "Tasks", url: "/tasks", icon: CheckSquare },
   { title: "Funder CRM", url: "/crm", icon: Handshake },
+  { title: "Inbox", url: "/inbox", icon: Inbox },
   { title: "Analytics", url: "/analytics", icon: BarChart3 },
   { title: "Partnerships", url: "/partnerships", icon: Users },
   { title: "Reports", url: "/reports", icon: FileText },
   { title: "Email Hub", url: "/email", icon: Mail },
   { title: "News", url: "/news", icon: Newspaper },
   { title: "Team", url: "/team", icon: Users },
+  { title: "Help", url: "/help", icon: BookOpen },
   { title: "Settings", url: "/settings", icon: Settings },
 ];
 
@@ -47,6 +49,7 @@ const typeIcons: Record<string, string> = {
   partnership_accepted: "🎉",
   interaction_due: "📞",
   match_new: "🎯",
+  inbound_email: "📨",
 };
 
 function AppSidebarContent() {
