@@ -28,6 +28,16 @@ import NGOPublicProfilePage from "./pages/NGOPublicProfilePage";
 import AdminPage from "./pages/AdminPage";
 import NotFound from "./pages/NotFound";
 import SupportChatWidget from "./components/SupportChatWidget";
+import InboxPage from "./pages/InboxPage";
+import AcceptInvitePage from "./pages/AcceptInvitePage";
+import HelpFloatingButton from "./components/HelpFloatingButton";
+import ProductTour from "./components/ProductTour";
+import HelpLayout from "./pages/help/HelpLayout";
+import HelpOverview from "./pages/help/HelpOverview";
+import {
+  HelpDashboard, HelpGrants, HelpApplications, HelpProposals, HelpTasks,
+  HelpCRM, HelpInbox, HelpReports, HelpTeam, HelpSettings, HelpFAQ,
+} from "./pages/help/HelpPages";
 
 const queryClient = new QueryClient();
 
