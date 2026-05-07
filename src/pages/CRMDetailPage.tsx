@@ -19,6 +19,7 @@ import { useAuth } from "@/hooks/useAuth";
 import CRMEmailComposer from "@/components/crm/CRMEmailComposer";
 import CRMEmailLog from "@/components/crm/CRMEmailLog";
 import CRMActivityFeed from "@/components/crm/CRMActivityFeed";
+import { hints } from "@/lib/formHints";
 
 const CRMDetailPage = () => {
   const { funderId } = useParams();
