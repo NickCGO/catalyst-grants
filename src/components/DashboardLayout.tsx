@@ -3,7 +3,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard, Search, ClipboardList, PenTool, Newspaper, Settings,
   Sparkles, LogOut, FileText, Mail, Bell, CheckSquare, Users, Handshake, BarChart3,
-  ShieldCheck,
+  ShieldCheck, Inbox, BookOpen,
 } from "lucide-react";
 import {
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent,
