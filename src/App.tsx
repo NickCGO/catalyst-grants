@@ -116,6 +116,10 @@ const App = () => (
           {/* Invitations */}
           <Route path="/accept-invite" element={<AcceptInvitePage />} />
 
+          {/* Billing */}
+          <Route path="/pricing" element={<PricingPage />} />
+          <Route path="/checkout/return" element={<CheckoutReturnPage />} />
+
           {/* Help center */}
           <Route path="/help" element={<HelpLayout />}>
             <Route index element={<HelpOverview />} />
