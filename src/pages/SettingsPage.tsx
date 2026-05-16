@@ -1,5 +1,7 @@
 import { useState, useEffect } from "react";
-import { Settings, User, Sparkles, Bell, Puzzle, Upload, Check, Loader2, Users } from "lucide-react";
+import { Settings, User, Sparkles, Bell, Puzzle, Upload, Check, Loader2, Users, Zap, Mail } from "lucide-react";
+import AutomationsTab from "@/components/settings/AutomationsTab";
+import ConnectedInboxesTab from "@/components/settings/ConnectedInboxesTab";
 import { useNavigate } from "react-router-dom";
 import DashboardLayout from "@/components/DashboardLayout";
 import GlassCard from "@/components/GlassCard";
