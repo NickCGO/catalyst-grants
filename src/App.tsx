@@ -38,6 +38,8 @@ import {
   HelpDashboard, HelpGrants, HelpApplications, HelpProposals, HelpTasks,
   HelpCRM, HelpInbox, HelpReports, HelpTeam, HelpSettings, HelpFAQ,
 } from "./pages/help/HelpPages";
+import PricingPage from "./pages/PricingPage";
+import CheckoutReturnPage from "./pages/CheckoutReturnPage";
 
 const queryClient = new QueryClient();
 
