@@ -228,6 +228,42 @@ export type Database = {
           },
         ]
       }
+      automation_rules: {
+        Row: {
+          action_payload: Json
+          action_type: Database["public"]["Enums"]["automation_action"]
+          created_at: string
+          id: string
+          is_active: boolean
+          name: string
+          org_id: string
+          trigger_event: Database["public"]["Enums"]["automation_trigger"]
+          updated_at: string
+        }
+        Insert: {
+          action_payload?: Json
+          action_type: Database["public"]["Enums"]["automation_action"]
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name: string
+          org_id: string
+          trigger_event: Database["public"]["Enums"]["automation_trigger"]
+          updated_at?: string
+        }
+        Update: {
+          action_payload?: Json
+          action_type?: Database["public"]["Enums"]["automation_action"]
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          org_id?: string
+          trigger_event?: Database["public"]["Enums"]["automation_trigger"]
+          updated_at?: string
+        }
+        Relationships: []
+      }
       crm_activity_notes: {
         Row: {
           author_id: string | null
@@ -403,6 +439,45 @@ export type Database = {
           },
         ]
       }
+      email_credentials: {
+        Row: {
+          access_token_secret_id: string | null
+          created_at: string
+          email_address: string
+          id: string
+          last_synced_at: string | null
+          org_id: string
+          provider: Database["public"]["Enums"]["email_provider"]
+          refresh_token_secret_id: string | null
+          token_expires_at: string | null
+          updated_at: string
+        }
+        Insert: {
+          access_token_secret_id?: string | null
+          created_at?: string
+          email_address: string
+          id?: string
+          last_synced_at?: string | null
+          org_id: string
+          provider: Database["public"]["Enums"]["email_provider"]
+          refresh_token_secret_id?: string | null
+          token_expires_at?: string | null
+          updated_at?: string
+        }
+        Update: {
+          access_token_secret_id?: string | null
+          created_at?: string
+          email_address?: string
+          id?: string
+          last_synced_at?: string | null
+          org_id?: string
+          provider?: Database["public"]["Enums"]["email_provider"]
+          refresh_token_secret_id?: string | null
+          token_expires_at?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       email_send_log: {
         Row: {
           created_at: string
@@ -462,6 +537,66 @@ export type Database = {
           retry_after_until?: string | null
           send_delay_ms?: number
           transactional_email_ttl_minutes?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      email_threads: {
+        Row: {
+          application_id: string | null
+          body_html: string | null
+          created_at: string
+          direction: Database["public"]["Enums"]["email_thread_direction"]
+          from_address: string
+          funder_id: string | null
+          id: string
+          org_id: string
+          provider_message_id: string | null
+          provider_thread_id: string | null
+          relationship_id: string | null
+          sent_at: string
+          snippet: string | null
+          subject: string | null
+          synced_at: string
+          to_addresses: string[]
+          updated_at: string
+        }
+        Insert: {
+          application_id?: string | null
+          body_html?: string | null
+          created_at?: string
+          direction: Database["public"]["Enums"]["email_thread_direction"]
+          from_address: string
+          funder_id?: string | null
+          id?: string
+          org_id: string
+          provider_message_id?: string | null
+          provider_thread_id?: string | null
+          relationship_id?: string | null
+          sent_at?: string
+          snippet?: string | null
+          subject?: string | null
+          synced_at?: string
+          to_addresses?: string[]
+          updated_at?: string
+        }
+        Update: {
+          application_id?: string | null
+          body_html?: string | null
+          created_at?: string
+          direction?: Database["public"]["Enums"]["email_thread_direction"]
+          from_address?: string
+          funder_id?: string | null
+          id?: string
+          org_id?: string
+          provider_message_id?: string | null
+          provider_thread_id?: string | null
+          relationship_id?: string | null
+          sent_at?: string
+          snippet?: string | null
+          subject?: string | null
+          synced_at?: string
+          to_addresses?: string[]
           updated_at?: string
         }
         Relationships: []
@@ -2442,7 +2577,41 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      pipeline_summary: {
+        Row: {
+          kanban_column: string | null
+          nearest_deadline: string | null
+          opportunity_count: number | null
+          org_id: string | null
+          total_awarded: number | null
+          total_requested: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "applications_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organisations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      stage_velocity: {
+        Row: {
+          avg_days_in_stage: number | null
+          kanban_column: string | null
+          org_id: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "applications_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organisations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       accept_team_invite: { Args: { _token: string }; Returns: Json }
@@ -2486,7 +2655,21 @@ export type Database = {
       }
     }
     Enums: {
-      [_ in never]: never
+      automation_action:
+        | "create_task"
+        | "send_notification"
+        | "send_email_draft"
+        | "move_kanban_column"
+      automation_trigger:
+        | "application_submitted"
+        | "application_won"
+        | "application_lost"
+        | "deadline_approaching_7d"
+        | "deadline_approaching_1d"
+        | "no_reply_after_14d"
+        | "no_activity_after_30d"
+      email_provider: "gmail" | "outlook" | "smtp"
+      email_thread_direction: "inbound" | "outbound"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -2613,6 +2796,24 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      automation_action: [
+        "create_task",
+        "send_notification",
+        "send_email_draft",
+        "move_kanban_column",
+      ],
+      automation_trigger: [
+        "application_submitted",
+        "application_won",
+        "application_lost",
+        "deadline_approaching_7d",
+        "deadline_approaching_1d",
+        "no_reply_after_14d",
+        "no_activity_after_30d",
+      ],
+      email_provider: ["gmail", "outlook", "smtp"],
+      email_thread_direction: ["inbound", "outbound"],
+    },
   },
 } as const
