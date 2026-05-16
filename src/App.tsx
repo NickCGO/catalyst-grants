@@ -38,6 +38,8 @@ import {
   HelpDashboard, HelpGrants, HelpApplications, HelpProposals, HelpTasks,
   HelpCRM, HelpInbox, HelpReports, HelpTeam, HelpSettings, HelpFAQ,
 } from "./pages/help/HelpPages";
+import PricingPage from "./pages/PricingPage";
+import CheckoutReturnPage from "./pages/CheckoutReturnPage";
 
 const queryClient = new QueryClient();
 
@@ -113,6 +115,10 @@ const App = () => (
 
           {/* Invitations */}
           <Route path="/accept-invite" element={<AcceptInvitePage />} />
+
+          {/* Billing */}
+          <Route path="/pricing" element={<PricingPage />} />
+          <Route path="/checkout/return" element={<CheckoutReturnPage />} />
 
           {/* Help center */}
           <Route path="/help" element={<HelpLayout />}>

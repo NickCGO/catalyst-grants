@@ -11,6 +11,7 @@ import {
   SidebarTrigger, useSidebar,
 } from "@/components/ui/sidebar";
 import { NavLink } from "@/components/NavLink";
+import { AccessBanner } from "@/components/AccessBanner";
 import {
   Popover, PopoverContent, PopoverTrigger,
 } from "@/components/ui/popover";
@@ -247,6 +248,7 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
             <SidebarTrigger className="text-muted-foreground hover:text-foreground" />
             <NotificationBell />
           </header>
+          <AccessBanner />
           <main className="flex-1 overflow-auto p-6">
             {children}
           </main>
