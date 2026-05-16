@@ -1205,6 +1205,7 @@ export type Database = {
           pct_government: number | null
           pct_grants: number | null
           physical_address: string | null
+          plan_tier: string
           policies_list: string[] | null
           postal_address: string | null
           primary_sdgs: string[] | null
@@ -1216,6 +1217,7 @@ export type Database = {
           profile_completeness: number | null
           programme_details: Json | null
           programmes: string[] | null
+          proposals_used: number
           region: string | null
           regions_of_operation: string[] | null
           registration_number: string | null
@@ -1227,6 +1229,7 @@ export type Database = {
           toc_if_then: string | null
           total_funding_3yr: string | null
           trading_name: string | null
+          trial_started_at: string | null
           typical_grant_size_range: string | null
           user_id: string
           vision_statement: string | null
@@ -1324,6 +1327,7 @@ export type Database = {
           pct_government?: number | null
           pct_grants?: number | null
           physical_address?: string | null
+          plan_tier?: string
           policies_list?: string[] | null
           postal_address?: string | null
           primary_sdgs?: string[] | null
@@ -1335,6 +1339,7 @@ export type Database = {
           profile_completeness?: number | null
           programme_details?: Json | null
           programmes?: string[] | null
+          proposals_used?: number
           region?: string | null
           regions_of_operation?: string[] | null
           registration_number?: string | null
@@ -1346,6 +1351,7 @@ export type Database = {
           toc_if_then?: string | null
           total_funding_3yr?: string | null
           trading_name?: string | null
+          trial_started_at?: string | null
           typical_grant_size_range?: string | null
           user_id: string
           vision_statement?: string | null
@@ -1443,6 +1449,7 @@ export type Database = {
           pct_government?: number | null
           pct_grants?: number | null
           physical_address?: string | null
+          plan_tier?: string
           policies_list?: string[] | null
           postal_address?: string | null
           primary_sdgs?: string[] | null
@@ -1454,6 +1461,7 @@ export type Database = {
           profile_completeness?: number | null
           programme_details?: Json | null
           programmes?: string[] | null
+          proposals_used?: number
           region?: string | null
           regions_of_operation?: string[] | null
           registration_number?: string | null
@@ -1465,6 +1473,7 @@ export type Database = {
           toc_if_then?: string | null
           total_funding_3yr?: string | null
           trading_name?: string | null
+          trial_started_at?: string | null
           typical_grant_size_range?: string | null
           user_id?: string
           vision_statement?: string | null
@@ -2067,6 +2076,57 @@ export type Database = {
           },
         ]
       }
+      subscriptions: {
+        Row: {
+          cancel_at_period_end: boolean | null
+          created_at: string
+          current_period_end: string | null
+          environment: string
+          id: string
+          price_id: string | null
+          product_id: string | null
+          status: string
+          stripe_customer_id: string | null
+          stripe_subscription_id: string | null
+          tier: string | null
+          trial_end: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          cancel_at_period_end?: boolean | null
+          created_at?: string
+          current_period_end?: string | null
+          environment?: string
+          id?: string
+          price_id?: string | null
+          product_id?: string | null
+          status?: string
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          tier?: string | null
+          trial_end?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          cancel_at_period_end?: boolean | null
+          created_at?: string
+          current_period_end?: string | null
+          environment?: string
+          id?: string
+          price_id?: string | null
+          product_id?: string | null
+          status?: string
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          tier?: string | null
+          trial_end?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       support_requests: {
         Row: {
           conversation: Json | null
@@ -2393,6 +2453,11 @@ export type Database = {
       enqueue_email: {
         Args: { payload: Json; queue_name: string }
         Returns: number
+      }
+      get_access_state: { Args: { _env?: string }; Returns: Json }
+      has_active_subscription: {
+        Args: { _env?: string; _user_id: string }
+        Returns: boolean
       }
       has_org_role: {
         Args: { _min_role: string; _org_id: string; _user_id: string }
