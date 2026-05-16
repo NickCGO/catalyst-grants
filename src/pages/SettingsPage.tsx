@@ -1,5 +1,7 @@
 import { useState, useEffect } from "react";
-import { Settings, User, Sparkles, Bell, Puzzle, Upload, Check, Loader2, Users } from "lucide-react";
+import { Settings, User, Sparkles, Bell, Puzzle, Upload, Check, Loader2, Users, Zap, Mail } from "lucide-react";
+import AutomationsTab from "@/components/settings/AutomationsTab";
+import ConnectedInboxesTab from "@/components/settings/ConnectedInboxesTab";
 import { useNavigate } from "react-router-dom";
 import DashboardLayout from "@/components/DashboardLayout";
 import GlassCard from "@/components/GlassCard";
@@ -214,8 +216,13 @@ const SettingsPage = () => {
             <TabsTrigger value="team" onClick={() => navigate("/settings/team")}><Users className="h-3.5 w-3.5 mr-1" /> Team</TabsTrigger>
             <TabsTrigger value="ai"><Sparkles className="h-3.5 w-3.5 mr-1" /> AI Preferences</TabsTrigger>
             <TabsTrigger value="notifications"><Bell className="h-3.5 w-3.5 mr-1" /> Notifications</TabsTrigger>
+            <TabsTrigger value="automations"><Zap className="h-3.5 w-3.5 mr-1" /> Automations</TabsTrigger>
+            <TabsTrigger value="inbox"><Mail className="h-3.5 w-3.5 mr-1" /> Inbox Sync</TabsTrigger>
             <TabsTrigger value="modules"><Puzzle className="h-3.5 w-3.5 mr-1" /> Modules</TabsTrigger>
           </TabsList>
+
+          <TabsContent value="automations"><AutomationsTab /></TabsContent>
+          <TabsContent value="inbox"><ConnectedInboxesTab /></TabsContent>
 
           <TabsContent value="profile">
             <div className="space-y-6">
