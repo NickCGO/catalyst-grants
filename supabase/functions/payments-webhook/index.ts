@@ -1,4 +1,5 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
+import Stripe from "https://esm.sh/stripe@18.5.0?target=deno";
 import { type StripeEnv, createStripeClient, getWebhookSecret } from "../_shared/stripe.ts";
 
 const supabaseAdmin = createClient(
@@ -6,45 +7,33 @@ const supabaseAdmin = createClient(
   Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
 );
 
-// Map our human-readable price IDs to tier names
 const PRICE_TO_TIER: Record<string, string> = {
-  bronze_monthly: 'bronze',
-  bronze_annual: 'bronze',
-  silver_monthly: 'silver',
-  silver_annual: 'silver',
-  gold_monthly: 'gold',
-  gold_annual: 'gold',
+  starter_monthly: 'starter',
+  growth_monthly: 'growth',
 };
 
-async function upsertSubscription(env: StripeEnv, stripe: ReturnType<typeof createStripeClient>, subscription: any) {
-  const userId = subscription.metadata?.userId;
+async function upsertSubscription(env: StripeEnv, stripe: Stripe, subscription: any) {
+  let userId = subscription.metadata?.userId;
   if (!userId) {
-    // Try to get from customer
     const customerId = typeof subscription.customer === 'string' ? subscription.customer : subscription.customer?.id;
     if (customerId) {
       const customer = await stripe.customers.retrieve(customerId);
-      const cUserId = (customer as any)?.metadata?.userId;
-      if (!cUserId) {
-        console.warn('No userId on subscription/customer', subscription.id);
-        return;
-      }
-      subscription.metadata = { ...subscription.metadata, userId: cUserId };
-    } else {
-      console.warn('No customer on subscription', subscription.id);
+      userId = (customer as any)?.metadata?.userId;
+    }
+    if (!userId) {
+      console.warn('No userId on subscription/customer', subscription.id);
       return;
     }
   }
 
-  const finalUserId = subscription.metadata.userId;
   const item = subscription.items?.data?.[0];
-  const stripePriceId = item?.price?.id;
   const stripeProductId = item?.price?.product;
   const lookupKey = item?.price?.lookup_key || subscription.metadata?.lovable_price_id;
   const tier = lookupKey ? PRICE_TO_TIER[lookupKey] ?? null : null;
   const periodEnd = item?.current_period_end || subscription.current_period_end;
 
   await supabaseAdmin.from('subscriptions').upsert({
-    user_id: finalUserId,
+    user_id: userId,
     environment: env,
     stripe_customer_id: typeof subscription.customer === 'string' ? subscription.customer : subscription.customer?.id,
     stripe_subscription_id: subscription.id,
@@ -58,13 +47,29 @@ async function upsertSubscription(env: StripeEnv, stripe: ReturnType<typeof crea
     updated_at: new Date().toISOString(),
   }, { onConflict: 'stripe_subscription_id' });
 
-  // Reflect tier on org
   if (tier) {
     await supabaseAdmin
       .from('organisations')
       .update({ plan_tier: tier })
-      .eq('user_id', finalUserId);
+      .eq('user_id', userId);
   }
+}
+
+async function resetProposalsForCustomer(stripe: Stripe, customerId: string, billingReason?: string) {
+  // Only reset on subscription renewal cycles, not the initial create invoice
+  if (billingReason && billingReason !== 'subscription_cycle') return;
+  const customer = await stripe.customers.retrieve(customerId);
+  const userId = (customer as any)?.metadata?.userId;
+  if (!userId) {
+    console.warn('No userId on customer for proposal reset', customerId);
+    return;
+  }
+  const { error } = await supabaseAdmin
+    .from('organisations')
+    .update({ proposals_used: 0 })
+    .eq('user_id', userId);
+  if (error) console.error('Reset proposals_used failed:', error);
+  else console.log('proposals_used reset for user', userId);
 }
 
 Deno.serve(async (req) => {
@@ -81,7 +86,13 @@ Deno.serve(async (req) => {
 
   let event;
   try {
-    event = await stripe.webhooks.constructEventAsync(rawBody, signature, getWebhookSecret(env));
+    event = await stripe.webhooks.constructEventAsync(
+      rawBody,
+      signature,
+      getWebhookSecret(env),
+      undefined,
+      Stripe.createSubtleCryptoProvider()
+    );
   } catch (e) {
     console.error('Webhook signature verification failed:', e);
     return new Response('Invalid signature', { status: 400 });
@@ -101,6 +112,12 @@ Deno.serve(async (req) => {
           const sub = await stripe.subscriptions.retrieve(session.subscription);
           await upsertSubscription(env, stripe, sub);
         }
+        break;
+      }
+      case 'invoice.paid': {
+        const invoice = event.data.object as any;
+        const customerId = typeof invoice.customer === 'string' ? invoice.customer : invoice.customer?.id;
+        if (customerId) await resetProposalsForCustomer(stripe, customerId, invoice.billing_reason);
         break;
       }
       default:
