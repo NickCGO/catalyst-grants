@@ -8,7 +8,8 @@ export type AccessState =
   | { state: 'anonymous' }
   | { state: 'trial'; trial_days_left: number; proposals_used: number; proposals_limit: number }
   | { state: 'expired'; reason: 'time' | 'proposals'; trial_days_left: number; proposals_used: number; proposals_limit: number }
-  | { state: 'paid'; tier: Tier; price_id: string | null; status: string; current_period_end: string | null; cancel_at_period_end: boolean };
+  | { state: 'paid'; tier: Tier; price_id: string | null; status: string; current_period_end: string | null; cancel_at_period_end: boolean; proposals_used: number; proposals_limit: number }
+  | { state: 'limit_reached'; tier: Tier; price_id: string | null; status: string; current_period_end: string | null; cancel_at_period_end: boolean; proposals_used: number; proposals_limit: number };
 
 export function useAccess() {
   const [access, setAccess] = useState<AccessState>({ state: 'loading' });
@@ -47,4 +48,10 @@ export function useAccess() {
 
 export function canWrite(access: AccessState): boolean {
   return access.state === 'trial' || access.state === 'paid';
+}
+
+export function canCreateProposal(access: AccessState): boolean {
+  if (access.state === 'paid') return access.proposals_used < access.proposals_limit;
+  if (access.state === 'trial') return access.proposals_used < access.proposals_limit;
+  return false;
 }
