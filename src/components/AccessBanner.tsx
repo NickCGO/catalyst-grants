@@ -34,12 +34,25 @@ export function AccessBanner() {
     );
   }
 
-  // expired
+  // expired or monthly limit reached
+  if (access.state === 'limit_reached') {
+    return (
+      <div className="w-full bg-amber-50 border-b border-amber-200 px-4 py-2 flex items-center justify-center gap-3 text-sm text-amber-900">
+        <AlertTriangle className="h-4 w-4" />
+        <span>
+          You've used all {access.proposals_limit} proposals on your {String(access.tier).toUpperCase()} plan this cycle. Renews on{' '}
+          {access.current_period_end ? new Date(access.current_period_end).toLocaleDateString() : 'next billing date'}.
+        </span>
+        <Button asChild size="sm" variant="outline"><Link to="/pricing">Upgrade plan</Link></Button>
+      </div>
+    );
+  }
+
   return (
     <div className="w-full bg-destructive/10 border-b border-destructive/30 px-4 py-2 flex items-center justify-center gap-3 text-sm text-destructive">
       <AlertTriangle className="h-4 w-4" />
       <span>
-        {access.reason === 'time' ? 'Your 7-day trial has ended.' : 'You\'ve used your trial proposal.'} Read-only mode is active.
+        {access.reason === 'time' ? 'Your 7-day trial has ended.' : "You've used your trial proposal."} Read-only mode is active.
       </span>
       <Button asChild size="sm" variant="destructive"><Link to="/pricing">Choose a plan</Link></Button>
     </div>
