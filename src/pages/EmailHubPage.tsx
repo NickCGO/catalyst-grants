@@ -85,6 +85,8 @@ const EmailHubPage = () => {
   const [generating, setGenerating] = useState(false);
   const [subject, setSubject] = useState("");
   const [body, setBody] = useState("");
+  const [toAddress, setToAddress] = useState("");
+  const [sending, setSending] = useState(false);
   const [generated, setGenerated] = useState(false);
   const [funders, setFunders] = useState<any[]>([]);
   const [customTemplates, setCustomTemplates] = useState<EmailTemplate[]>([]);
@@ -321,6 +323,10 @@ const EmailHubPage = () => {
                 ) : (
                   <div className="space-y-4">
                     <div>
+                      <Label className="text-xs text-muted-foreground">To</Label>
+                      <Input value={toAddress} onChange={e => setToAddress(e.target.value)} placeholder="recipient@example.com" className="mt-1 bg-secondary/30 border-border/50 text-sm" />
+                    </div>
+                    <div>
                       <Label className="text-xs text-muted-foreground">Subject</Label>
                       <Input value={subject} onChange={e => setSubject(e.target.value)} className="mt-1 bg-secondary/30 border-border/50 text-sm" />
                     </div>
@@ -329,14 +335,33 @@ const EmailHubPage = () => {
                       <Textarea value={body} onChange={e => setBody(e.target.value)} className="min-h-[220px] bg-secondary/30 border-border/50" />
                     </div>
                     <div className="flex flex-wrap gap-2">
+                      {hasInbox ? (
+                        <Button size="sm" className="bg-primary text-primary-foreground" disabled={sending || !toAddress || !subject} onClick={async () => {
+                          setSending(true);
+                          const { data, error } = await supabase.functions.invoke("gmail-send", {
+                            body: { to: toAddress, subject, body },
+                          });
+                          setSending(false);
+                          if (error || data?.error) {
+                            toast({ title: "Could not send", description: data?.error || error?.message || "Unknown error", variant: "destructive" });
+                          } else {
+                            toast({ title: "Email sent ✓", description: `Delivered to ${toAddress}` });
+                            setShowDrafter(false); setGenerated(false); setToAddress(""); setSubject(""); setBody("");
+                          }
+                        }}>
+                          {sending ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : <Send className="h-3 w-3 mr-1" />}
+                          Send via Gmail
+                        </Button>
+                      ) : (
+                        <a href={`mailto:${toAddress}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`}>
+                          <Button variant="outline" size="sm" className="border-border/50">
+                            <Send className="h-3 w-3 mr-1" /> Open in Email
+                          </Button>
+                        </a>
+                      )}
                       <Button variant="outline" size="sm" onClick={copyToClipboard} className="border-border/50">
                         <Copy className="h-3 w-3 mr-1" /> Copy
                       </Button>
-                      <a href={`mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`}>
-                        <Button variant="outline" size="sm" className="border-border/50">
-                          <Send className="h-3 w-3 mr-1" /> Open in Email
-                        </Button>
-                      </a>
                       <Button variant="outline" size="sm" onClick={saveCurrentAsTemplate} className="border-border/50">
                         <BookmarkPlus className="h-3 w-3 mr-1" /> Save as Template
                       </Button>
