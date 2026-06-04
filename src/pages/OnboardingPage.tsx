@@ -848,10 +848,8 @@ const OnboardingPage = () => {
       {/* Header */}
       <div className="flex items-center justify-between p-4 sm:p-6 border-b border-border/20">
         <div className="flex items-center gap-2">
-          <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center">
-            <Sparkles className="h-4 w-4 text-primary-foreground" />
-          </div>
-          <span className="text-sm font-semibold text-foreground">GrantMatch</span>
+          <img src={brandLogo.url} alt="Find The Grant" className="h-8 w-8 rounded-lg object-cover" />
+          <span className="text-sm font-semibold text-foreground">Find The Grant</span>
         </div>
         <div className="flex items-center gap-3">
           {isAdmin && (

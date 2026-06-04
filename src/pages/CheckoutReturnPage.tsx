@@ -32,7 +32,7 @@ export default function CheckoutReturnPage() {
             <CheckCircle2 className="h-12 w-12 text-primary mx-auto mb-4" />
             <h1 className="text-xl font-semibold">Welcome to {access.tier?.toUpperCase()}</h1>
             <p className="text-sm text-muted-foreground mt-2">
-              Your subscription is active. You now have full access to GrantMatch.
+              Your subscription is active. You now have full access to Find The Grant.
             </p>
             <Button asChild className="mt-6 w-full"><Link to="/dashboard">Go to dashboard</Link></Button>
           </>

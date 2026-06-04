@@ -13,7 +13,7 @@ interface Step {
 
 const STEPS: Step[] = [
   {
-    title: "Welcome to GrantMatch 👋",
+    title: "Welcome to Find The Grant 👋",
     body: "Quick 60-second tour. You can replay this anytime from the Help button at the bottom-right.",
     route: "/dashboard",
   },

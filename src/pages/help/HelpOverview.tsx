@@ -4,7 +4,7 @@ export default function HelpOverview() {
   return (
     <>
       <PageHeader
-        title="Welcome to GrantMatch"
+        title="Welcome to Find The Grant"
         intro="Everything you need to find funding, manage applications and grow funder relationships — in one place."
       />
 

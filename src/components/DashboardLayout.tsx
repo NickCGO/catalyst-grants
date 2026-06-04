@@ -63,10 +63,8 @@ function AppSidebarContent() {
   return (
     <Sidebar collapsible="icon" className="border-r border-border/30">
       <div className="p-4 flex items-center gap-2">
-        <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center shrink-0">
-          <Sparkles className="h-4 w-4 text-primary-foreground" />
-        </div>
-        {!collapsed && <span className="text-sm font-semibold text-foreground">GrantMatch</span>}
+        <img src={brandLogo.url} alt="Find The Grant" className="h-8 w-8 rounded-lg object-cover shrink-0" />
+        {!collapsed && <span className="text-sm font-semibold text-foreground">Find The Grant</span>}
       </div>
 
       <SidebarContent className="px-2">
