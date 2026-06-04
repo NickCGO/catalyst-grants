@@ -9,6 +9,7 @@ const corsHeaders = {
 const TEST_USERS = [
   { email: "chantal@test.com", password: "234567", name: "Chantal", country: "South Africa" },
   { email: "nick@test.com", password: "123456", name: "Nick", country: "South Africa" },
+  { email: "info@eruditeprojects.co.za", password: "112626", name: "Erudite Projects", country: "South Africa" },
 ];
 
 Deno.serve(async (req) => {
