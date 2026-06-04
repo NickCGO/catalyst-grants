@@ -37,6 +37,18 @@ const DashboardPage = () => {
     loadDashboard(org.id);
   }, [org?.id, orgLoading]);
 
+  // Auto-refresh when the user returns to the tab/page
+  useEffect(() => {
+    if (!org?.id) return;
+    const refresh = () => { if (document.visibilityState === "visible") loadDashboard(org.id); };
+    document.addEventListener("visibilitychange", refresh);
+    window.addEventListener("focus", refresh);
+    return () => {
+      document.removeEventListener("visibilitychange", refresh);
+      window.removeEventListener("focus", refresh);
+    };
+  }, [org?.id]);
+
   async function loadDashboard(orgId: string) {
     setLoading(true);
     try {
@@ -160,13 +172,26 @@ const DashboardPage = () => {
       <div className="max-w-7xl mx-auto">
         <motion.div className="mb-8" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
           <h1 className="text-2xl font-bold text-foreground">
-            {getGreeting()}, {org?.name || "there"} 👋
+            {getGreeting()}, {org?.name || "there"}
           </h1>
           <p className="text-sm text-muted-foreground mt-1">
             {new Date().toLocaleDateString("en-ZA", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}
           </p>
           <div className="h-0.5 mt-4 rounded-full bg-gradient-to-r from-primary/60 via-accent-teal/40 to-transparent" />
         </motion.div>
+
+        {/* Quick action buttons */}
+        <div className="flex flex-wrap gap-2 mb-6">
+          <Button size="sm" className="bg-primary text-primary-foreground hover:bg-primary/90" onClick={() => navigate("/grants")}>
+            <Target className="h-3.5 w-3.5 mr-1.5" /> Find matching grants
+          </Button>
+          <Button size="sm" variant="outline" onClick={() => navigate("/writer/new")}>
+            <Plus className="h-3.5 w-3.5 mr-1.5" /> Start new proposal
+          </Button>
+          <Button size="sm" variant="outline" onClick={() => navigate("/reports")}>
+            <Calendar className="h-3.5 w-3.5 mr-1.5" /> Generate report
+          </Button>
+        </div>
 
         {/* KPI Cards — now clickable */}
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 mb-8">
@@ -225,21 +250,7 @@ const DashboardPage = () => {
 
           {/* Sidebar */}
           <div className="lg:col-span-2 space-y-6">
-            {/* Quick Actions */}
-            <GlassCard className="p-4">
-              <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Quick Actions</h3>
-              <div className="space-y-2">
-                <Button variant="outline" size="sm" className="w-full justify-start text-xs h-8" onClick={() => navigate("/grants")}>
-                  <Target className="h-3 w-3 mr-2" /> Find matching grants
-                </Button>
-                <Button variant="outline" size="sm" className="w-full justify-start text-xs h-8" onClick={() => navigate("/writer/new")}>
-                  <Plus className="h-3 w-3 mr-2" /> Start new proposal
-                </Button>
-                <Button variant="outline" size="sm" className="w-full justify-start text-xs h-8" onClick={() => navigate("/reports")}>
-                  <Calendar className="h-3 w-3 mr-2" /> Generate report
-                </Button>
-              </div>
-            </GlassCard>
+            {/* (Quick actions moved to top of page) */}
 
             {/* Deadline Intelligence */}
             {deadlineIntel.length > 0 && (
@@ -267,7 +278,7 @@ const DashboardPage = () => {
                 <div className="space-y-2">
                   {recentActivity.map((a, i) => (
                     <div key={i} className="flex items-center gap-2 py-1.5 border-b border-border/10 last:border-0">
-                      <span className="text-sm">{a.type === "status" ? "📊" : "🤖"}</span>
+                      <span className={`h-1.5 w-1.5 rounded-full ${a.type === "status" ? "bg-primary" : "bg-accent-teal"}`} />
                       <div className="flex-1 min-w-0">
                         <p className="text-xs text-foreground truncate">{a.funder}</p>
                         <p className="text-[10px] text-muted-foreground">{a.action} · {a.time}</p>
