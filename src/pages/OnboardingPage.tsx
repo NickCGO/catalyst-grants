@@ -1893,7 +1893,7 @@ const OnboardingPage = () => {
                         <div className="flex items-center justify-between p-3 rounded-lg border border-border/30 mt-3">
                           <div>
                             <div className="text-xs text-foreground">Discoverable to other NGOs?</div>
-                            <div className="text-[10px] text-muted-foreground">Other GrantMatch users can find and message you</div>
+                            <div className="text-[10px] text-muted-foreground">Other Find The Grant users can find and message you</div>
                           </div>
                           <Switch checked={isDiscoverable} onCheckedChange={setIsDiscoverable} />
                         </div>
