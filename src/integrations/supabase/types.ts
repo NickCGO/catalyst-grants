@@ -441,6 +441,7 @@ export type Database = {
       }
       email_credentials: {
         Row: {
+          access_token: string | null
           access_token_secret_id: string | null
           created_at: string
           email_address: string
@@ -448,11 +449,15 @@ export type Database = {
           last_synced_at: string | null
           org_id: string
           provider: Database["public"]["Enums"]["email_provider"]
+          provider_user_id: string | null
+          refresh_token: string | null
           refresh_token_secret_id: string | null
+          scope: string | null
           token_expires_at: string | null
           updated_at: string
         }
         Insert: {
+          access_token?: string | null
           access_token_secret_id?: string | null
           created_at?: string
           email_address: string
@@ -460,11 +465,15 @@ export type Database = {
           last_synced_at?: string | null
           org_id: string
           provider: Database["public"]["Enums"]["email_provider"]
+          provider_user_id?: string | null
+          refresh_token?: string | null
           refresh_token_secret_id?: string | null
+          scope?: string | null
           token_expires_at?: string | null
           updated_at?: string
         }
         Update: {
+          access_token?: string | null
           access_token_secret_id?: string | null
           created_at?: string
           email_address?: string
@@ -472,7 +481,10 @@ export type Database = {
           last_synced_at?: string | null
           org_id?: string
           provider?: Database["public"]["Enums"]["email_provider"]
+          provider_user_id?: string | null
+          refresh_token?: string | null
           refresh_token_secret_id?: string | null
+          scope?: string | null
           token_expires_at?: string | null
           updated_at?: string
         }
