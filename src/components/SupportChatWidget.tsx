@@ -14,7 +14,7 @@ const ANON = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 const INITIAL_GREETING: Msg = {
   role: "assistant",
   content:
-    "Hi 👋 I'm GrantMatch's assistant. Ask me anything about funder matching, proposals, pricing, or partnerships — or tap **Talk to a human** anytime.",
+    "Hi 👋 I'm Find The Grant's assistant. Ask me anything about funder matching, proposals, pricing, or partnerships — or tap **Talk to a human** anytime.",
 };
 
 export default function SupportChatWidget() {
@@ -199,7 +199,7 @@ export default function SupportChatWidget() {
                 <MessageCircle className="h-4 w-4" />
               </div>
               <div>
-                <div className="text-sm font-semibold leading-tight">GrantMatch Assistant</div>
+                <div className="text-sm font-semibold leading-tight">Find The Grant Assistant</div>
                 <div className="text-[10px] opacity-80">Usually replies instantly</div>
               </div>
             </div>

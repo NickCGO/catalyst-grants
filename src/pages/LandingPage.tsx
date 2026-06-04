@@ -12,6 +12,7 @@ import founderChantal from "@/assets/founder-chantal.jpeg";
 import previewMatchEngine from "@/assets/preview-match-engine.jpg";
 import previewProposalWriter from "@/assets/preview-proposal-writer.jpg";
 import previewPipeline from "@/assets/preview-pipeline.jpg";
+import brandLogo from "@/assets/find-the-grant-logo.png.asset.json";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 
@@ -23,10 +24,11 @@ const fadeUp = (delay = 0) => ({
 
 /* ─── Brand wordmark ─── */
 function Wordmark({ size = "text-2xl" }: { size?: string }) {
+  const iconSize = size === "text-lg" ? "h-7 w-7" : "h-9 w-9";
   return (
-    <div className="flex items-center gap-1">
-      <span className={`${size} font-bold text-foreground`}>Grant</span>
-      <span className={`${size} font-bold text-primary`}>Match</span>
+    <div className="flex items-center gap-2">
+      <img src={brandLogo.url} alt="Find The Grant" className={`${iconSize} rounded-md object-cover`} />
+      <span className={`${size} font-bold text-foreground tracking-tight`}>Find The Grant</span>
     </div>
   );
 }
@@ -73,7 +75,7 @@ function DashboardMock() {
     <div className="w-full max-w-md mx-auto">
       <div className="bg-card rounded-2xl border border-border p-6 shadow-[0_24px_48px_-12px_hsl(var(--foreground)/0.12)]">
         <div className="flex items-center justify-between mb-5">
-          <span className="text-[11px] font-semibold text-muted-foreground tracking-[0.12em]">GRANTMATCH DASHBOARD</span>
+          <span className="text-[11px] font-semibold text-muted-foreground tracking-[0.12em]">FIND THE GRANT · DASHBOARD</span>
           <div className="flex gap-1.5">
             <div className="h-2.5 w-2.5 rounded-full bg-destructive" />
             <div className="h-2.5 w-2.5 rounded-full bg-accent-amber" />
@@ -224,7 +226,7 @@ function WaitlistForm({ onSuccess }: { onSuccess: (d: { name: string; email: str
       </div>
       <label className="flex items-start gap-3 cursor-pointer">
         <input type="checkbox" checked={committed} onChange={(e) => setCommitted(e.target.checked)} className="mt-1 h-4 w-4 rounded border-input accent-primary" />
-        <span className="text-xs text-muted-foreground">I commit to paying $47/month when GrantMatch launches. (No charge until launch day.)</span>
+        <span className="text-xs text-muted-foreground">I commit to paying $47/month when Find The Grant launches. (No charge until launch day.)</span>
       </label>
       <Button type="submit" disabled={submitting} className="w-full bg-primary text-primary-foreground hover:bg-primary/90 text-base py-4 rounded-xl h-auto">
         {submitting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
@@ -235,13 +237,13 @@ function WaitlistForm({ onSuccess }: { onSuccess: (d: { name: string; email: str
 }
 
 function WaitlistSuccess({ data }: { data: { name: string; email: string; position: number } }) {
-  const shareText = `I just joined the GrantMatch waitlist. It is an AI tool that finds funders for African NGOs and writes the grant proposals. Launching soon at $47/month. Join here: ${window.location.origin}`;
+  const shareText = `I just joined the Find The Grant waitlist. It is an AI tool that finds funders for African NGOs and writes the grant proposals. Launching soon at $47/month. Join here: ${window.location.origin}`;
   return (
     <div className="text-center py-8">
       <div className="text-5xl mb-4">🎉</div>
       <h3 className="text-xl font-bold text-foreground mb-2">You're on the list, {data.name}!</h3>
       <p className="text-muted-foreground mb-1">You are founding member <span className="text-primary font-bold">#{data.position}</span></p>
-      <p className="text-sm text-muted-foreground/80 mb-6">We will email you at {data.email} when GrantMatch is ready to launch.</p>
+      <p className="text-sm text-muted-foreground/80 mb-6">We will email you at {data.email} when Find The Grant is ready to launch.</p>
       <p className="text-xs text-muted-foreground mb-4">In the meantime, tell another NGO:</p>
       <div className="flex flex-col gap-2">
         <a href={`https://wa.me/?text=${encodeURIComponent(shareText)}`} target="_blank" rel="noopener noreferrer">
@@ -258,7 +260,7 @@ function WaitlistSuccess({ data }: { data: { name: string; email: string; positi
 
 /* ─── Main Page ─── */
 const LandingPage = () => {
-  const BASE_COUNT = 7;
+  const BASE_COUNT = 17;
   const [waitlistCount, setWaitlistCount] = useState(BASE_COUNT);
   const [successData, setSuccessData] = useState<{ name: string; email: string; position: number } | null>(null);
   const [activeTab, setActiveTab] = useState(0);
@@ -303,10 +305,10 @@ const LandingPage = () => {
   ];
 
   const faqs = [
-    { q: "Is this another tool that doesn't understand African funders?", a: "No. GrantMatch is built specifically for African NGOs by people who have run them. Our funder database is weighted heavily toward Africa-active funders — local trusts, corporate foundations, and international funders with active African portfolios." },
-    { q: "What if I only need help with one proposal?", a: "You can use GrantMatch for a single application — but most NGOs find that the matching engine, deadline tracking, and proposal writer pay for themselves many times over across a year." },
+    { q: "Is this another tool that doesn't understand African funders?", a: "No. Find The Grant is built specifically for African NGOs by people who have run them. Our funder database is weighted heavily toward Africa-active funders — local trusts, corporate foundations, and international funders with active African portfolios." },
+    { q: "What if I only need help with one proposal?", a: "You can use Find The Grant for a single application — but most NGOs find that the matching engine, deadline tracking, and proposal writer pay for themselves many times over across a year." },
     { q: "Is my organisation data safe?", a: "Yes. Your profile and proposals are private to your organisation. We do not share, sell, or expose your data to other users or funders without your action." },
-    { q: "How is this different from just Googling for grants?", a: "Google returns lists. GrantMatch matches funders to your specific mission, programme areas, geography, and budget — then ranks them by likelihood of funding you. Plus we track deadlines, draft proposals, and manage your pipeline." },
+    { q: "How is this different from just Googling for grants?", a: "Google returns lists. Find The Grant matches funders to your specific mission, programme areas, geography, and budget — then ranks them by likelihood of funding you. Plus we track deadlines, draft proposals, and manage your pipeline." },
     { q: "Can I cancel anytime?", a: "Yes. Cancel any time, no questions asked. Founding members keep the $47/month rate for life as long as they remain subscribed." },
     { q: "Do you cover funders outside South Africa?", a: "Yes. Our database covers funders active across the African continent, plus major international funders (USA, UK, Europe) with African portfolios." },
   ];
@@ -331,7 +333,7 @@ const LandingPage = () => {
               <span className="text-primary">in seconds.</span>
             </h1>
             <p className="text-lg text-muted-foreground mb-8 max-w-xl leading-relaxed">
-              GrantMatch instantly connects your mission to a growing database of active funders across Africa and beyond. Discover your highest-probability matches, and let AI help you write the proposals.
+              Find The Grant instantly connects your mission to a growing database of active funders across Africa and beyond. Discover your highest-probability matches, and let AI help you write the proposals.
             </p>
             <a href="#pricing">
               <Button size="lg" className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-xl text-base px-7 py-6 h-auto shadow-md">
@@ -386,14 +388,14 @@ const LandingPage = () => {
         <div className="max-w-5xl mx-auto text-center">
           <SectionEyebrow>The Solution</SectionEyebrow>
           <h2 className="text-4xl lg:text-5xl font-bold tracking-tight mb-6">
-            GrantMatch does the heavy lifting.<br />You focus on the work.
+            Find The Grant does the heavy lifting.<br />You focus on the work.
           </h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-16">
             Match with the right funders. Write proposals that win. Track everything in one place. In a fraction of the time.
           </p>
           <div className="grid md:grid-cols-3 gap-6 text-left">
             {[
-              { t: "Find your funders in seconds", b: "Tell us your mission once. GrantMatch scores all funders against your profile and surfaces the ones most likely to fund you. No more digging through PDF lists." },
+              { t: "Find your funders in seconds", b: "Tell us your mission once. Find The Grant scores all funders against your profile and surfaces the ones most likely to fund you. No more digging through PDF lists." },
               { t: "AI writes your proposals", b: "Full proposals, letters of enquiry, concept notes. Generated in minutes from your profile. Reviewed by you. Submitted when you're ready." },
               { t: "Track every application", b: "Kanban pipeline, deadline calendar, funder relationship history. Know exactly where every application stands and what to do next." },
             ].map((s) => (
@@ -455,8 +457,8 @@ const LandingPage = () => {
           <div className="grid md:grid-cols-3 gap-6 text-left">
             {[
               { n: "01", t: "Complete your profile once", b: "Tell us about your organisation, your mission, your programmes, and who you serve. Our guided onboarding takes 10-15 minutes and powers everything after it." },
-              { n: "02", t: "See your matched funders", b: "GrantMatch scores all funders against your profile instantly. You see the ones most likely to fund you, ranked by match score, with application windows clearly shown." },
-              { n: "03", t: "Write and submit with AI", b: "Click apply on any funder. GrantMatch reads their requirements and opens the right document type. Full proposal, letter of enquiry, or concept note, generated and ready to review." },
+              { n: "02", t: "See your matched funders", b: "Find The Grant scores all funders against your profile instantly. You see the ones most likely to fund you, ranked by match score, with application windows clearly shown." },
+              { n: "03", t: "Write and submit with AI", b: "Click apply on any funder. Find The Grant reads their requirements and opens the right document type. Full proposal, letter of enquiry, or concept note, generated and ready to review." },
             ].map((s) => (
               <div key={s.n} className="bg-card border border-border rounded-2xl p-7 shadow-sm">
                 <div className="text-sm font-bold text-primary mb-3">{s.n}</div>
@@ -603,7 +605,7 @@ const LandingPage = () => {
       <footer className="border-t border-border py-10 px-6 lg:px-12">
         <div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
           <Wordmark size="text-lg" />
-          <p className="text-xs text-muted-foreground">© {new Date().getFullYear()} GrantMatch. Built for African NGOs.</p>
+          <p className="text-xs text-muted-foreground">© {new Date().getFullYear()} Find The Grant. Built for African NGOs.</p>
           <Link
             to="/login"
             className="text-xs text-muted-foreground hover:text-primary transition-colors"

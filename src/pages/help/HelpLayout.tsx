@@ -30,7 +30,7 @@ export default function HelpLayout() {
             <BookOpen className="h-6 w-6 text-primary" /> Help Center
           </h1>
           <p className="text-sm text-muted-foreground mt-1">
-            How to use GrantMatch — concise guides for every part of the app.
+            How to use Find The Grant — concise guides for every part of the app.
           </p>
         </div>
 

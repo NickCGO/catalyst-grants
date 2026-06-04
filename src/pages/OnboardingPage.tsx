@@ -2,6 +2,7 @@ import { useState, useCallback, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
+import brandLogo from "@/assets/find-the-grant-logo.png.asset.json";
 import {
   ArrowRight, ArrowLeft, Sparkles, Check, Building2, Heart, Target,
   MapPin, BarChart3, History, Globe, Info, Save, Users, Briefcase,
@@ -848,10 +849,8 @@ const OnboardingPage = () => {
       {/* Header */}
       <div className="flex items-center justify-between p-4 sm:p-6 border-b border-border/20">
         <div className="flex items-center gap-2">
-          <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center">
-            <Sparkles className="h-4 w-4 text-primary-foreground" />
-          </div>
-          <span className="text-sm font-semibold text-foreground">GrantMatch</span>
+          <img src={brandLogo.url} alt="Find The Grant" className="h-8 w-8 rounded-lg object-cover" />
+          <span className="text-sm font-semibold text-foreground">Find The Grant</span>
         </div>
         <div className="flex items-center gap-3">
           {isAdmin && (
@@ -1894,7 +1893,7 @@ const OnboardingPage = () => {
                         <div className="flex items-center justify-between p-3 rounded-lg border border-border/30 mt-3">
                           <div>
                             <div className="text-xs text-foreground">Discoverable to other NGOs?</div>
-                            <div className="text-[10px] text-muted-foreground">Other GrantMatch users can find and message you</div>
+                            <div className="text-[10px] text-muted-foreground">Other Find The Grant users can find and message you</div>
                           </div>
                           <Switch checked={isDiscoverable} onCheckedChange={setIsDiscoverable} />
                         </div>
