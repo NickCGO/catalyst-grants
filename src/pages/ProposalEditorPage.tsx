@@ -14,7 +14,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { streamAI, callAIJSON } from "@/lib/ai";
+import { streamClaude, callClaudeJSON } from "@/lib/claudeAI";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
@@ -187,91 +187,102 @@ const ProposalEditorPage = () => {
   const totalWords = Object.values(sectionContent).reduce((sum, t) => sum + wordCount(t), 0);
   const completedSections = sections.filter(s => wordCount(sectionContent[s.key] || "") > 20).length;
 
-  const orgContext = org ? `Organisation: ${org.name}, Mission: ${org.mission_statement || "N/A"}, Programmes: ${(org.programmes || []).join(", ")}, Focus: ${(org.focus_areas || []).join(", ")}, Country: ${org.country || "N/A"}, Region: ${org.region || "N/A"}` : "";
-  const funderContext = funder ? `Funder: ${funder.donor_name}, Focus: ${funder.funder_focus || "N/A"}, Category: ${funder.category || "N/A"}, Method: ${funder.method_of_approach || "N/A"}` : "";
+  const requireFunder = () => {
+    if (!proposal?.funder_id) {
+      toast({
+        title: "Attach a grant first",
+        description: "Claude needs a funder attached to this proposal to tailor the writing. Open it from a grant or your applications.",
+        variant: "destructive",
+      });
+      return false;
+    }
+    return true;
+  };
 
   const generateSection = useCallback(async (idx: number) => {
     const section = sections[idx];
     if (!section) return;
+    if (!requireFunder()) return;
     setGenerating(true);
     setGeneratingSection(idx);
     setActiveSection(idx);
     let content = "";
-
-    const formatInstructions = format === "loe"
-      ? "You are writing a Letter of Enquiry (LOE) — a brief professional letter (700-900 words total). Tone: professional, warm, concise. NOT a full proposal."
-      : format === "concept_note"
-      ? "You are writing a Concept Note (1,000-1,500 words total). More detailed than an LOE but less than a full proposal."
-      : "You are an expert grant proposal writer for NGOs. Write in professional, compelling, evidence-based style.";
-
     try {
-      await streamAI(
-        [
-          { role: "system", content: `${formatInstructions} Write in first person plural ("we", "our organisation"). Do not use placeholders.` },
-          { role: "user", content: `Write the "${section.label}" section (~${section.target} words). ${orgContext}. ${funderContext}. Return only the section content.` },
-        ],
+      await streamClaude(
+        {
+          mode: "section",
+          org_id: org?.id,
+          funder_id: proposal?.funder_id,
+          format,
+          section_key: section.key,
+          section_label: section.label,
+          section_target: section.target,
+          current_content: sectionContent[section.key],
+        },
         (delta) => { content += delta; setSectionContent(prev => ({ ...prev, [section.key]: content })); },
         () => { setGenerating(false); setGeneratingSection(null); setAiGenerated(prev => new Set(prev).add(section.key)); toast({ title: `${section.label} generated` }); },
       );
-    } catch {
+    } catch (e: any) {
       setGenerating(false); setGeneratingSection(null);
-      toast({ title: "AI unavailable", description: "Try again or write manually.", variant: "destructive" });
+      toast({ title: "Claude unavailable", description: e?.message || "Try again or write manually.", variant: "destructive" });
     }
-  }, [sections, orgContext, funderContext, format]);
+  }, [sections, org, proposal, format, sectionContent]);
 
   const generateAll = useCallback(async () => {
+    if (!requireFunder()) return;
     setGeneratingAll(true);
-    const keys = sections.map(s => s.key);
-    const formatInstructions = format === "loe"
-      ? "Generate a complete Letter of Enquiry as JSON. 700-900 words total."
-      : format === "concept_note"
-      ? "Generate a complete Concept Note as JSON. 1,000-1,500 words total."
-      : "Generate a complete grant proposal as JSON. Each section 200-350 words.";
     try {
-      const result = await callAIJSON<Record<string, string>>([
-        { role: "system", content: `You are an expert grant proposal writer. ${formatInstructions} Write in first person plural. Professional, specific, tailored.` },
-        { role: "user", content: `Generate as JSON with keys: ${keys.join(", ")}. ${orgContext}. ${funderContext}. Return ONLY valid JSON.` },
-      ]);
+      const result = await callClaudeJSON<Record<string, string>>({
+        mode: "all",
+        org_id: org?.id,
+        funder_id: proposal?.funder_id,
+        format,
+        section_keys: sections.map(s => s.key),
+      });
       setSectionContent(result);
       setAiGenerated(new Set(Object.keys(result)));
-      toast({ title: "All sections generated!", description: "Ready for review." });
-    } catch {
-      toast({ title: "Generation failed", variant: "destructive" });
+      toast({ title: "All sections generated", description: "Ready for review." });
+    } catch (e: any) {
+      toast({ title: "Generation failed", description: e?.message, variant: "destructive" });
     }
     setGeneratingAll(false);
-  }, [sections, orgContext, funderContext, format]);
+  }, [sections, org, proposal, format]);
 
   const generateFormPrep = useCallback(async () => {
+    if (!requireFunder()) return;
     setGeneratingAll(true);
     try {
-      const result = await callAIJSON<Record<string, string>>([
-        { role: "system", content: "You are preparing copy-paste answers for an NGO to fill into a funder's online application form. Generate SHORT, self-contained answers for common form fields. Return JSON." },
-        { role: "user", content: `Generate JSON with keys: org_overview, mission, problem, project_description, objectives, beneficiaries, outcomes, methodology, mne, budget_narrative, sustainability, capacity. ${orgContext}. ${funderContext}. Be specific. Use real numbers. First person plural. No placeholders.` },
-      ]);
-      // Handle arrays by joining them
+      const result = await callClaudeJSON<Record<string, any>>({
+        mode: "form_prep",
+        org_id: org?.id,
+        funder_id: proposal?.funder_id,
+        format,
+      });
       const processed: Record<string, string> = {};
       for (const [k, v] of Object.entries(result)) {
         processed[k] = Array.isArray(v) ? (v as string[]).map((item, i) => `${i + 1}. ${item}`).join("\n") : String(v);
       }
       setSectionContent(processed);
-      toast({ title: "Form prep answers generated!" });
-    } catch {
-      toast({ title: "Generation failed", variant: "destructive" });
+      toast({ title: "Form prep answers generated" });
+    } catch (e: any) {
+      toast({ title: "Generation failed", description: e?.message, variant: "destructive" });
     }
     setGeneratingAll(false);
-  }, [orgContext, funderContext]);
+  }, [org, proposal, format]);
 
   const scoreProposal = useCallback(async () => {
     setScoring(true);
     try {
       const proposalText = sections.map(s => `## ${s.label}\n${sectionContent[s.key] || "(empty)"}`).join("\n\n");
-      const result = await callAIJSON<ScoreResult>([
-        { role: "system", content: "You are a grant proposal expert. Return ONLY valid JSON." },
-        { role: "user", content: `Evaluate this proposal for ${funder?.donor_name || "Unknown"} (focus: ${funder?.funder_focus || "N/A"}):\n\n${proposalText}\n\nReturn JSON: { "overall_score": <0-100>, "executive_summary_score": <0-100>, "problem_statement_score": <0-100>, "objectives_score": <0-100>, "methodology_score": <0-100>, "impact_score": <0-100>, "budget_score": <0-100>, "organisation_score": <0-100>, "strengths": ["..."], "improvements": [{"section":"...","issue":"...","suggestion":"..."}], "funder_alignment_note": "..." }` },
-      ]);
+      const result = await callClaudeJSON<ScoreResult>({
+        mode: "score",
+        org_id: org?.id,
+        funder_id: proposal?.funder_id,
+        format,
+        current_content: proposalText,
+      });
       setScoreResult(result);
       setRightPanel("score");
-      // Save score
       if (proposalId) {
         await supabase.from("proposal_scores").insert({
           proposal_id: proposalId,
@@ -288,11 +299,11 @@ const ProposalEditorPage = () => {
         });
         await supabase.from("proposals").update({ ai_score: result.overall_score }).eq("id", proposalId);
       }
-    } catch {
-      toast({ title: "Scoring failed", variant: "destructive" });
+    } catch (e: any) {
+      toast({ title: "Scoring failed", description: e?.message, variant: "destructive" });
     }
     setScoring(false);
-  }, [sectionContent, sections, funder, proposalId]);
+  }, [sectionContent, sections, org, proposal, format, proposalId]);
 
   const addComment = async () => {
     if (!newComment.trim() || !proposalId || !user) return;
@@ -316,9 +327,19 @@ const ProposalEditorPage = () => {
 
   const approveProposal = async () => {
     if (!proposalId) return;
+    // Gate: every section must have meaningful content (>20 words) before approving.
+    const incomplete = sections.filter(s => wordCount(sectionContent[s.key] || "") <= 20);
+    if (incomplete.length) {
+      toast({
+        title: "Cannot approve yet",
+        description: `${incomplete.length} section${incomplete.length === 1 ? "" : "s"} still incomplete: ${incomplete.map(s => s.label).join(", ")}`,
+        variant: "destructive",
+      });
+      return;
+    }
     await supabase.from("proposals").update({ status: "approved", approved_at: new Date().toISOString() }).eq("id", proposalId);
     setProposalStatus("approved");
-    toast({ title: "Proposal approved ✓" });
+    toast({ title: "Proposal approved" });
   };
 
   const requestChanges = async () => {
