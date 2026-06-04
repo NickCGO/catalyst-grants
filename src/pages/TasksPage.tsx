@@ -1,6 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { motion } from "framer-motion";
-import { CheckSquare, Plus, Calendar, Flag, Circle, CheckCircle, Clock, Pencil, Trash2 } from "lucide-react";
+import { CheckSquare, Plus, Calendar, Flag, Circle, CheckCircle, Clock, Pencil, Trash2, List, LayoutGrid, ChevronLeft, ChevronRight } from "lucide-react";
 import DashboardLayout from "@/components/DashboardLayout";
 import GlassCard from "@/components/GlassCard";
 import { Button } from "@/components/ui/button";
@@ -25,6 +25,8 @@ const TasksPage = () => {
   const [tasks, setTasks] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<"all" | "open" | "in_progress" | "done">("all");
+  const [view, setView] = useState<"list" | "calendar">("list");
+  const [calMonth, setCalMonth] = useState(() => { const d = new Date(); d.setDate(1); return d; });
   const [createOpen, setCreateOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<any>(null);
@@ -205,16 +207,28 @@ const TasksPage = () => {
           </Dialog>
         </div>
 
-        <div className="flex gap-2 mb-4">
-          {([["all", "All"], ["open", "Open"], ["in_progress", "In Progress"], ["done", "Done"]] as const).map(([key, label]) => (
-            <button key={key} onClick={() => setFilter(key)}
-              className={`px-3 py-1.5 rounded-lg text-xs transition-colors ${filter === key ? "bg-primary/15 text-primary border border-primary/30" : "text-muted-foreground hover:bg-secondary/30 border border-transparent"}`}>
-              {label}
+        <div className="flex items-center justify-between gap-2 mb-4 flex-wrap">
+          <div className="flex gap-2">
+            {([["all", "All"], ["open", "Open"], ["in_progress", "In Progress"], ["done", "Done"]] as const).map(([key, label]) => (
+              <button key={key} onClick={() => setFilter(key)}
+                className={`px-3 py-1.5 rounded-lg text-xs transition-colors ${filter === key ? "bg-primary/15 text-primary border border-primary/30" : "text-muted-foreground hover:bg-secondary/30 border border-transparent"}`}>
+                {label}
+              </button>
+            ))}
+          </div>
+          <div className="flex items-center gap-1 rounded-lg border border-border/40 p-0.5 bg-secondary/20">
+            <button onClick={() => setView("list")} className={`px-2.5 py-1 rounded text-xs flex items-center gap-1 ${view === "list" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground"}`}>
+              <List className="h-3.5 w-3.5" /> List
             </button>
-          ))}
+            <button onClick={() => setView("calendar")} className={`px-2.5 py-1 rounded text-xs flex items-center gap-1 ${view === "calendar" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground"}`}>
+              <LayoutGrid className="h-3.5 w-3.5" /> Calendar
+            </button>
+          </div>
         </div>
 
-        {filtered.length === 0 ? (
+        {view === "calendar" ? (
+          <CalendarView tasks={tasks} month={calMonth} setMonth={setCalMonth} onTaskClick={openEdit} priorityConfig={priorityConfig} />
+        ) : filtered.length === 0 ? (
           <GlassCard className="p-8 text-center">
             <CheckSquare className="h-8 w-8 text-muted-foreground/30 mx-auto mb-2" />
             <p className="text-sm text-muted-foreground">No tasks yet. Create your first task to get started.</p>
@@ -282,3 +296,73 @@ const TasksPage = () => {
 };
 
 export default TasksPage;
+
+function CalendarView({ tasks, month, setMonth, onTaskClick, priorityConfig }: { tasks: any[]; month: Date; setMonth: (d: Date) => void; onTaskClick: (t: any) => void; priorityConfig: any }) {
+  const year = month.getFullYear();
+  const m = month.getMonth();
+  const first = new Date(year, m, 1);
+  const startDay = first.getDay(); // 0=Sun
+  const daysInMonth = new Date(year, m + 1, 0).getDate();
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+
+  const cells: Array<{ date: Date | null; iso: string | null }> = [];
+  for (let i = 0; i < startDay; i++) cells.push({ date: null, iso: null });
+  for (let d = 1; d <= daysInMonth; d++) {
+    const date = new Date(year, m, d);
+    cells.push({ date, iso: date.toISOString().slice(0, 10) });
+  }
+  while (cells.length % 7 !== 0) cells.push({ date: null, iso: null });
+
+  const tasksByDay: Record<string, any[]> = {};
+  tasks.forEach(t => {
+    if (!t.due_date) return;
+    (tasksByDay[t.due_date] ||= []).push(t);
+  });
+
+  const monthName = first.toLocaleDateString("en-ZA", { month: "long", year: "numeric" });
+
+  return (
+    <div className="rounded-xl border border-border/40 bg-card p-4">
+      <div className="flex items-center justify-between mb-3">
+        <h3 className="text-sm font-semibold text-foreground">{monthName}</h3>
+        <div className="flex items-center gap-1">
+          <button onClick={() => setMonth(new Date(year, m - 1, 1))} className="p-1.5 rounded hover:bg-secondary/40 text-muted-foreground"><ChevronLeft className="h-4 w-4" /></button>
+          <button onClick={() => setMonth(new Date(today.getFullYear(), today.getMonth(), 1))} className="px-2 py-1 rounded text-[11px] hover:bg-secondary/40 text-muted-foreground">Today</button>
+          <button onClick={() => setMonth(new Date(year, m + 1, 1))} className="p-1.5 rounded hover:bg-secondary/40 text-muted-foreground"><ChevronRight className="h-4 w-4" /></button>
+        </div>
+      </div>
+      <div className="grid grid-cols-7 gap-1 mb-1">
+        {["Sun","Mon","Tue","Wed","Thu","Fri","Sat"].map(d => (
+          <div key={d} className="text-[10px] uppercase tracking-wider text-muted-foreground text-center py-1">{d}</div>
+        ))}
+      </div>
+      <div className="grid grid-cols-7 gap-1">
+        {cells.map((c, i) => {
+          if (!c.date) return <div key={i} className="min-h-[88px] rounded bg-secondary/10" />;
+          const dayTasks = c.iso ? (tasksByDay[c.iso] || []) : [];
+          const isToday = c.date.getTime() === today.getTime();
+          const isPast = c.date < today;
+          return (
+            <div key={i} className={`min-h-[88px] rounded border p-1.5 ${isToday ? "border-primary bg-primary/5" : "border-border/30 bg-card"}`}>
+              <div className={`text-[10px] mb-1 ${isToday ? "font-semibold text-primary" : isPast ? "text-muted-foreground/60" : "text-muted-foreground"}`}>{c.date.getDate()}</div>
+              <div className="space-y-0.5">
+                {dayTasks.slice(0, 3).map(t => {
+                  const pri = priorityConfig[t.priority || "medium"];
+                  return (
+                    <button key={t.id} onClick={() => onTaskClick(t)} title={t.title}
+                      className={`block w-full text-left text-[9px] px-1 py-0.5 rounded truncate ${t.status === "done" ? "line-through text-muted-foreground bg-secondary/30" : `${pri.bg} ${pri.color}`}`}>
+                      {t.title}
+                    </button>
+                  );
+                })}
+                {dayTasks.length > 3 && (
+                  <div className="text-[9px] text-muted-foreground px-1">+{dayTasks.length - 3} more</div>
+                )}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}

@@ -18,6 +18,9 @@ import { toast } from "@/hooks/use-toast";
 import { hints } from "@/lib/formHints";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth, useOrganisation } from "@/hooks/useAuth";
+import { useAccess } from "@/hooks/useAccess";
+import { TIER_LIMITS } from "@/lib/tierLimits";
+import { Link } from "react-router-dom";
 
 // Role hierarchy & metadata
 const roleConfig = {
@@ -40,6 +43,7 @@ const INBOUND_DOMAIN = "inbox.grant-match.app";
 const TeamManagementPage = () => {
   const { user } = useAuth();
   const { org, refetch: refetchOrg } = useOrganisation();
+  const { access } = useAccess();
   const [members, setMembers] = useState<any[]>([]);
   const [invites, setInvites] = useState<any[]>([]);
   const [myRole, setMyRole] = useState<Role | null>(null);
@@ -223,6 +227,37 @@ const TeamManagementPage = () => {
             </Dialog>
           )}
         </div>
+
+        {/* Seat usage banner */}
+        {(() => {
+          const tier = access.state === "paid" || access.state === "limit_reached" ? access.tier : null;
+          const seatLimit = tier && tier !== "trial" ? TIER_LIMITS[tier as "starter" | "growth"]?.teamSeats : 1;
+          const activeCount = members.filter(m => m.status === "active").length + invites.length;
+          const tierLabel = tier && tier !== "trial" ? TIER_LIMITS[tier as "starter" | "growth"].label : "Trial";
+          const atLimit = seatLimit !== undefined && activeCount >= seatLimit;
+          return (
+            <div className={`p-4 rounded-lg border ${atLimit ? "border-accent-amber/40 bg-accent-amber/5" : "border-border/40 bg-secondary/20"} flex items-center justify-between gap-3`}>
+              <div className="flex items-center gap-3">
+                <Users className="h-4 w-4 text-primary" />
+                <div>
+                  <p className="text-xs font-medium text-foreground">
+                    {activeCount} of {seatLimit ?? "—"} seats used <span className="text-muted-foreground font-normal">· {tierLabel} plan</span>
+                  </p>
+                  <p className="text-[10px] text-muted-foreground mt-0.5">
+                    {atLimit
+                      ? "You've reached your seat limit. Upgrade to invite more members."
+                      : "Includes active members and pending invites."}
+                  </p>
+                </div>
+              </div>
+              {(atLimit || tier === "starter") && (
+                <Link to="/pricing">
+                  <Button size="sm" variant="outline" className="text-xs h-7">Upgrade plan</Button>
+                </Link>
+              )}
+            </div>
+          );
+        })()}
 
         {/* Per-org inbound mailbox */}
         <GlassCard hoverable={false}>
