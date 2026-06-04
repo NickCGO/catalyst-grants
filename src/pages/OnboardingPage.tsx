@@ -2,6 +2,7 @@ import { useState, useCallback, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
+import brandLogo from "@/assets/find-the-grant-logo.png.asset.json";
 import {
   ArrowRight, ArrowLeft, Sparkles, Check, Building2, Heart, Target,
   MapPin, BarChart3, History, Globe, Info, Save, Users, Briefcase,

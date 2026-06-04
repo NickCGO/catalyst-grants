@@ -18,6 +18,7 @@ import {
 import { useNotifications } from "@/hooks/useNotifications";
 import { formatDistanceToNow } from "date-fns";
 import { useAuth, useOrganisation } from "@/hooks/useAuth";
+import brandLogo from "@/assets/find-the-grant-logo.png.asset.json";
 import { Skeleton } from "@/components/ui/skeleton";
 
 const ADMIN_EMAILS = ["founders@grantmatch.co.za", "admin@grantmatch.co.za", "info@nickfernandes.co.za", "hello@chantalehlen.com"];
