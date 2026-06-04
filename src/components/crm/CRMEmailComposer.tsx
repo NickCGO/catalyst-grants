@@ -169,12 +169,12 @@ export default function CRMEmailComposer({ orgId, funderId, funderName, funderEm
         <Button size="sm" className="h-7 text-xs flex-1" onClick={() => saveEmail("queued")} disabled={saving}>
           {saving ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : <Send className="h-3 w-3 mr-1" />}
           Send
-          <Badge variant="outline" className="ml-1 text-[8px] h-4 border-primary/30">Soon</Badge>
         </Button>
       </div>
       <p className="text-[9px] text-muted-foreground">
-        Email sending will activate once your email domain is configured. Drafts and queued emails are saved.
+        Sends via your connected Gmail account. Connect one in Settings → Connected Inboxes if you haven't yet.
       </p>
+
     </GlassCard>
   );
 }
