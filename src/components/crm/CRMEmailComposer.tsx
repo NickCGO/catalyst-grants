@@ -61,6 +61,38 @@ export default function CRMEmailComposer({ orgId, funderId, funderName, funderEm
       return;
     }
     setSaving(true);
+
+    // If sending, attempt real delivery via Gmail
+    if (status === "queued") {
+      if (!to.trim()) {
+        toast({ title: "Recipient email required", variant: "destructive" });
+        setSaving(false);
+        return;
+      }
+      const { data, error } = await supabase.functions.invoke("gmail-send", {
+        body: {
+          to: to.trim(),
+          subject: subject.trim(),
+          body: body.trim(),
+          funder_id: funderId,
+          relationship_id: relationshipId || null,
+        },
+      });
+      setSaving(false);
+      if (error || data?.error) {
+        const msg = data?.error === "gmail_not_connected"
+          ? "Connect your Gmail account in Settings → Connected Inboxes to send."
+          : (data?.error || error?.message || "Send failed");
+        toast({ title: "Could not send email", description: msg, variant: "destructive" });
+        return;
+      }
+      toast({ title: "Email sent ✓", description: `Delivered to ${to}` });
+      setSubject(""); setBody(""); setTo(funderEmail || ""); setTemplate("");
+      onEmailSaved();
+      return;
+    }
+
+    // Draft path
     const { error } = await supabase.from("crm_emails").insert({
       org_id: orgId,
       funder_id: funderId,
@@ -68,52 +100,18 @@ export default function CRMEmailComposer({ orgId, funderId, funderName, funderEm
       recipient_email: to || null,
       subject: subject.trim(),
       body: body.trim(),
-      status,
+      status: "draft",
     });
     setSaving(false);
     if (error) {
-      toast({ title: "Failed to save email", variant: "destructive" });
+      toast({ title: "Failed to save draft", variant: "destructive" });
       return;
     }
-
-    // Also log as interaction
-    await supabase.from("funder_interactions").insert({
-      org_id: orgId,
-      funder_id: funderId,
-      relationship_id: relationshipId || null,
-      interaction_type: status === "queued" ? "email_sent" : "email_sent",
-      summary: `${status === "draft" ? "Draft" : "Email"}: ${subject}`,
-      sentiment: "neutral",
-    });
-
-    // Advance the relationship to "contacted" once a real email goes out
-    if (status === "queued") {
-      const today = new Date().toISOString().slice(0, 10);
-      if (relationshipId) {
-        await supabase
-          .from("funder_relationships")
-          .update({ relationship_status: "contacted", last_interaction_date: today })
-          .eq("id", relationshipId)
-          .in("relationship_status", ["prospect", "contacted"]);
-      } else {
-        // No relationship row yet — create one in "contacted" state
-        await supabase.from("funder_relationships").insert({
-          org_id: orgId,
-          funder_id: funderId,
-          relationship_status: "contacted",
-          health_score: 55,
-          last_interaction_date: today,
-        });
-      }
-    }
-
-    toast({ title: status === "draft" ? "Draft saved" : "Email queued — moved to Contacted" });
-    setSubject("");
-    setBody("");
-    setTo(funderEmail || "");
-    setTemplate("");
+    toast({ title: "Draft saved" });
+    setSubject(""); setBody(""); setTo(funderEmail || ""); setTemplate("");
     onEmailSaved();
   };
+
 
   return (
     <GlassCard className="p-4 space-y-3">
@@ -171,12 +169,12 @@ export default function CRMEmailComposer({ orgId, funderId, funderName, funderEm
         <Button size="sm" className="h-7 text-xs flex-1" onClick={() => saveEmail("queued")} disabled={saving}>
           {saving ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : <Send className="h-3 w-3 mr-1" />}
           Send
-          <Badge variant="outline" className="ml-1 text-[8px] h-4 border-primary/30">Soon</Badge>
         </Button>
       </div>
       <p className="text-[9px] text-muted-foreground">
-        Email sending will activate once your email domain is configured. Drafts and queued emails are saved.
+        Sends via your connected Gmail account. Connect one in Settings → Connected Inboxes if you haven't yet.
       </p>
+
     </GlassCard>
   );
 }
