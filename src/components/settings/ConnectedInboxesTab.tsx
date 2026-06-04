@@ -3,9 +3,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import GlassCard from "@/components/GlassCard";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "@/hooks/use-toast";
 import { Loader2, Mail, Trash2, CheckCircle2, AlertCircle } from "lucide-react";
 import { format } from "date-fns";
@@ -23,8 +20,7 @@ export default function ConnectedInboxesTab() {
   const [orgId, setOrgId] = useState<string | null>(null);
   const [cred, setCred] = useState<Cred | null>(null);
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [form, setForm] = useState({ provider: "gmail", email_address: "" });
+  const [connecting, setConnecting] = useState(false);
 
   useEffect(() => {
     if (!user) return;
@@ -38,34 +34,19 @@ export default function ConnectedInboxesTab() {
     })();
   }, [user]);
 
-  const connect = async () => {
-    if (!orgId || !form.email_address.trim()) {
-      toast({ title: "Email address is required", variant: "destructive" });
-      return;
-    }
-    setSaving(true);
-    const { data, error } = await supabase
-      .from("email_credentials")
-      .insert({
-        org_id: orgId,
-        provider: form.provider as any,
-        email_address: form.email_address,
-      })
-      .select()
-      .single();
-    setSaving(false);
-    if (error) {
-      toast({
-        title: "Could not connect",
-        description: error.message.includes("row-level")
-          ? "Only org admins can connect an inbox."
-          : error.message,
-        variant: "destructive",
+  const connectGmail = async () => {
+    if (!orgId) return;
+    setConnecting(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("gmail-oauth-start", {
+        body: { returnTo: window.location.pathname + window.location.search },
       });
-      return;
+      if (error || !data?.url) throw error || new Error("Could not start OAuth");
+      window.location.href = data.url;
+    } catch (e: any) {
+      toast({ title: "Could not start Gmail connection", description: e.message || String(e), variant: "destructive" });
+      setConnecting(false);
     }
-    setCred(data as Cred);
-    toast({ title: "Inbox registered", description: "OAuth flow will be triggered next." });
   };
 
   const disconnect = async () => {
@@ -99,7 +80,7 @@ export default function ConnectedInboxesTab() {
                   )}
                 </div>
                 <div className="text-xs text-muted-foreground capitalize">
-                  {cred.provider} · {cred.last_synced_at ? `synced ${format(new Date(cred.last_synced_at), "MMM d, HH:mm")}` : "not yet synced"}
+                  {cred.provider} · {cred.last_synced_at ? `last used ${format(new Date(cred.last_synced_at), "MMM d, HH:mm")}` : "not yet used"}
                 </div>
               </div>
               <Button variant="ghost" size="icon" onClick={disconnect}>
@@ -107,39 +88,20 @@ export default function ConnectedInboxesTab() {
               </Button>
             </div>
             <p className="text-xs text-muted-foreground">
-              OAuth authorization is not yet wired up. Once configured, replies from funders will be threaded into your CRM automatically.
+              Your Gmail account is connected. Emails sent from the Email Hub and Funder CRM will be delivered through your inbox.
             </p>
           </div>
         ) : (
           <div className="space-y-3">
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <Label className="text-xs">Provider</Label>
-                <Select value={form.provider} onValueChange={(v) => setForm({ ...form, provider: v })}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="gmail">Gmail</SelectItem>
-                    <SelectItem value="outlook">Outlook</SelectItem>
-                    <SelectItem value="smtp">SMTP / IMAP</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label className="text-xs">Email address</Label>
-                <Input
-                  type="email"
-                  value={form.email_address}
-                  onChange={(e) => setForm({ ...form, email_address: e.target.value })}
-                  placeholder="grants@yourorg.org"
-                />
-              </div>
-            </div>
-            <Button onClick={connect} disabled={saving} size="sm">
-              {saving ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : <Mail className="h-3 w-3 mr-1" />}
-              Connect inbox
+            <p className="text-sm text-muted-foreground">
+              Connect your Gmail account to send emails to funders directly from Find The Grant. We'll only request permission to send mail and read your own messages.
+            </p>
+            <Button onClick={connectGmail} disabled={connecting} size="sm">
+              {connecting ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : <Mail className="h-3 w-3 mr-1" />}
+              Connect Gmail
             </Button>
             <p className="text-xs text-muted-foreground">
-              Only org admins can connect an inbox. OAuth authorization will be requested in a follow-up step.
+              Only org admins can connect an inbox. Outlook support is coming soon.
             </p>
           </div>
         )}
