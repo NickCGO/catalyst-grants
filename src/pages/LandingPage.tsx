@@ -12,6 +12,7 @@ import founderChantal from "@/assets/founder-chantal.jpeg";
 import previewMatchEngine from "@/assets/preview-match-engine.jpg";
 import previewProposalWriter from "@/assets/preview-proposal-writer.jpg";
 import previewPipeline from "@/assets/preview-pipeline.jpg";
+import brandLogo from "@/assets/find-the-grant-logo.png.asset.json";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 
@@ -23,10 +24,11 @@ const fadeUp = (delay = 0) => ({
 
 /* ─── Brand wordmark ─── */
 function Wordmark({ size = "text-2xl" }: { size?: string }) {
+  const iconSize = size === "text-lg" ? "h-7 w-7" : "h-9 w-9";
   return (
-    <div className="flex items-center gap-1">
-      <span className={`${size} font-bold text-foreground`}>Grant</span>
-      <span className={`${size} font-bold text-primary`}>Match</span>
+    <div className="flex items-center gap-2">
+      <img src={brandLogo.url} alt="Find The Grant" className={`${iconSize} rounded-md object-cover`} />
+      <span className={`${size} font-bold text-foreground tracking-tight`}>Find The Grant</span>
     </div>
   );
 }
@@ -73,7 +75,7 @@ function DashboardMock() {
     <div className="w-full max-w-md mx-auto">
       <div className="bg-card rounded-2xl border border-border p-6 shadow-[0_24px_48px_-12px_hsl(var(--foreground)/0.12)]">
         <div className="flex items-center justify-between mb-5">
-          <span className="text-[11px] font-semibold text-muted-foreground tracking-[0.12em]">GRANTMATCH DASHBOARD</span>
+          <span className="text-[11px] font-semibold text-muted-foreground tracking-[0.12em]">FIND THE GRANT · DASHBOARD</span>
           <div className="flex gap-1.5">
             <div className="h-2.5 w-2.5 rounded-full bg-destructive" />
             <div className="h-2.5 w-2.5 rounded-full bg-accent-amber" />
@@ -258,7 +260,7 @@ function WaitlistSuccess({ data }: { data: { name: string; email: string; positi
 
 /* ─── Main Page ─── */
 const LandingPage = () => {
-  const BASE_COUNT = 7;
+  const BASE_COUNT = 17;
   const [waitlistCount, setWaitlistCount] = useState(BASE_COUNT);
   const [successData, setSuccessData] = useState<{ name: string; email: string; position: number } | null>(null);
   const [activeTab, setActiveTab] = useState(0);
