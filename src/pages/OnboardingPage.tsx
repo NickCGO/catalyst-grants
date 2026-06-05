@@ -701,6 +701,47 @@ const OnboardingPage = () => {
     setSelectedFocus(prev => prev.includes(key) ? prev.filter(k => k !== key) : [...prev, key]);
   };
 
+  const applyExtractedProfile = (d: any) => {
+    if (!d) return;
+    if (d.org_name) setOrgName(d.org_name);
+    if (d.trading_name) setTradingName(d.trading_name);
+    if (d.org_type) setOrgType(d.org_type);
+    if (d.registration_number) setRegNumber(d.registration_number);
+    if (d.country) setCountry(d.country);
+    if (d.region) setRegion(d.region);
+    if (d.founded_year) setYearEstablished(String(d.founded_year));
+    if (d.tax_status) setTaxStatus(d.tax_status);
+    if (d.pbo_number) setPboNumber(d.pbo_number);
+    if (d.physical_address) setPhysicalAddress(d.physical_address);
+    if (d.mission_statement) setMission(d.mission_statement);
+    if (d.vision_statement) setVision(d.vision_statement);
+    if (d.core_values?.length) setCoreValues(d.core_values);
+    if (d.problem_statement) setProblemStatement(d.problem_statement);
+    if (d.focus_areas?.length) setSelectedFocus(d.focus_areas);
+    if (d.beneficiary_groups?.length) setSelectedBeneficiaries(d.beneficiary_groups);
+    if (d.annual_beneficiary_reach) setBeneficiaryReach(String(d.annual_beneficiary_reach));
+    if (d.primary_target_group) setPrimaryTargetGroup(d.primary_target_group);
+    if (d.annual_budget) setAnnualBudget(String(d.annual_budget));
+    if (d.ceo_name) setCeoName(d.ceo_name);
+    if (d.fte_count) setFteCount(String(d.fte_count));
+    if (d.volunteer_count) setVolunteerCount(String(d.volunteer_count));
+    if (d.board_count) setBoardCount(String(d.board_count));
+    if (d.sdgs?.length) setSelectedSDGs(d.sdgs);
+    if (d.theory_of_change) setTheoryOfChange(d.theory_of_change);
+    if (d.impact_statement) setImpactStatement(d.impact_statement);
+    if (d.key_outcomes?.length) setKeyOutcomes(d.key_outcomes.length >= 3 ? d.key_outcomes : [...d.key_outcomes, ...Array(3 - d.key_outcomes.length).fill("")]);
+    if (d.is_audited !== undefined) setIsAudited(d.is_audited);
+    if (d.achievements?.length) setOrgAchievements(d.achievements.length >= 3 ? d.achievements : [...d.achievements, ...Array(3 - d.achievements.length).fill("")]);
+    if (d.programmes?.length) {
+      setProgrammes(d.programmes.map((p: any) => ({
+        name: p.name || "", shortDesc: p.description || "", fullDesc: p.description || "",
+        approaches: [], activities: ["", "", ""], outputs: ["", ""], outcomes: ["", ""],
+        impactStory: "", areas: "", reach: "", reachUnit: "individuals",
+        budget: "", status: "Active", yearStarted: "", partners: "",
+      })));
+    }
+  };
+
   const fillDummyData = () => {
     // Step 1: Legal Identity
     setOrgName("Bright Futures Foundation");
