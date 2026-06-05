@@ -5,6 +5,34 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+function bytesToBase64(bytes: Uint8Array): string {
+  // Chunked conversion to avoid stack overflow on large files
+  let binary = "";
+  const CHUNK = 0x8000;
+  for (let i = 0; i < bytes.length; i += CHUNK) {
+    binary += String.fromCharCode.apply(null, Array.from(bytes.subarray(i, i + CHUNK)));
+  }
+  return btoa(binary);
+}
+
+function stripHtml(html: string): string {
+  // Remove scripts/styles, then tags, decode basic entities, collapse whitespace
+  let s = html.replace(/<script[\s\S]*?<\/script>/gi, " ")
+              .replace(/<style[\s\S]*?<\/style>/gi, " ")
+              .replace(/<noscript[\s\S]*?<\/noscript>/gi, " ")
+              .replace(/<!--[\s\S]*?-->/g, " ")
+              .replace(/<\/(p|div|section|article|li|h[1-6]|br|tr)>/gi, "\n")
+              .replace(/<br\s*\/?\s*>/gi, "\n")
+              .replace(/<[^>]+>/g, " ");
+  s = s.replace(/&nbsp;/gi, " ")
+       .replace(/&amp;/gi, "&")
+       .replace(/&lt;/gi, "<")
+       .replace(/&gt;/gi, ">")
+       .replace(/&quot;/gi, '"')
+       .replace(/&#39;/gi, "'");
+  return s.replace(/[ \t]+/g, " ").replace(/\n{3,}/g, "\n\n").trim();
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
@@ -12,76 +40,79 @@ serve(async (req) => {
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
-    const formData = await req.formData();
-    const file = formData.get("file") as File | null;
-    if (!file) throw new Error("No file provided");
-
-    // Read file content as text (supports PDF text extraction, docx, txt, etc.)
-    const arrayBuffer = await file.arrayBuffer();
-    const bytes = new Uint8Array(arrayBuffer);
-    
-    // Try to extract text content - for text-based files read directly
     let textContent = "";
-    const fileName = file.name.toLowerCase();
-    
-    if (fileName.endsWith(".txt") || fileName.endsWith(".csv") || fileName.endsWith(".md")) {
-      textContent = new TextDecoder().decode(bytes);
-    } else {
-      // For PDF/DOCX, encode as base64 and send to AI with instructions to extract
-      const base64 = btoa(String.fromCharCode(...bytes));
-      
-      // Use AI to extract text from the document via multimodal
-      const extractResp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${LOVABLE_API_KEY}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          model: "google/gemini-2.5-flash",
-          messages: [
-            {
-              role: "system",
-              content: "You are a document parser. Extract ALL text content from the provided document. Return the raw text content only, preserving structure with newlines. Do not add any commentary.",
-            },
-            {
-              role: "user",
-              content: [
-                {
-                  type: "text",
-                  text: `Extract all text from this ${fileName.endsWith(".pdf") ? "PDF" : "document"} file:`,
-                },
-                {
-                  type: "image_url",
-                  image_url: {
-                    url: `data:${file.type || "application/octet-stream"};base64,${base64}`,
-                  },
-                },
-              ],
-            },
-          ],
-          stream: false,
-        }),
+    let sourceLabel = "document";
+
+    const contentType = req.headers.get("content-type") || "";
+
+    if (contentType.includes("application/json")) {
+      // URL mode
+      const { url } = await req.json();
+      if (!url || typeof url !== "string") throw new Error("No url provided");
+      sourceLabel = url;
+      const pageResp = await fetch(url, {
+        headers: { "User-Agent": "Mozilla/5.0 (compatible; FindTheGrantBot/1.0)" },
+        redirect: "follow",
       });
-
-      if (!extractResp.ok) {
-        const errText = await extractResp.text();
-        console.error("Extract error:", extractResp.status, errText);
-        throw new Error("Failed to extract text from document");
+      if (!pageResp.ok) throw new Error(`Failed to fetch URL (${pageResp.status})`);
+      const ct = pageResp.headers.get("content-type") || "";
+      if (ct.includes("text/html") || ct.includes("application/xhtml")) {
+        textContent = stripHtml(await pageResp.text());
+      } else if (ct.includes("text/")) {
+        textContent = await pageResp.text();
+      } else {
+        throw new Error(`Unsupported URL content type: ${ct}. Please upload the file directly.`);
       }
+    } else {
+      const formData = await req.formData();
+      const file = formData.get("file") as File | null;
+      if (!file) throw new Error("No file provided");
+      sourceLabel = file.name;
 
-      const extractData = await extractResp.json();
-      textContent = extractData.choices?.[0]?.message?.content || "";
+      const arrayBuffer = await file.arrayBuffer();
+      const bytes = new Uint8Array(arrayBuffer);
+      const fileName = file.name.toLowerCase();
+
+      if (fileName.endsWith(".txt") || fileName.endsWith(".csv") || fileName.endsWith(".md") || fileName.endsWith(".html") || fileName.endsWith(".htm")) {
+        const raw = new TextDecoder().decode(bytes);
+        textContent = (fileName.endsWith(".html") || fileName.endsWith(".htm")) ? stripHtml(raw) : raw;
+      } else {
+        const base64 = bytesToBase64(bytes);
+        const extractResp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${LOVABLE_API_KEY}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            model: "google/gemini-2.5-flash",
+            messages: [
+              { role: "system", content: "You are a document parser. Extract ALL text content from the provided document. Return the raw text content only, preserving structure with newlines. Do not add any commentary." },
+              { role: "user", content: [
+                { type: "text", text: `Extract all text from this ${fileName.endsWith(".pdf") ? "PDF" : "document"} file:` },
+                { type: "image_url", image_url: { url: `data:${file.type || "application/octet-stream"};base64,${base64}` } },
+              ]},
+            ],
+            stream: false,
+          }),
+        });
+
+        if (!extractResp.ok) {
+          const errText = await extractResp.text();
+          console.error("Extract error:", extractResp.status, errText);
+          throw new Error("Failed to extract text from document");
+        }
+        const extractData = await extractResp.json();
+        textContent = extractData.choices?.[0]?.message?.content || "";
+      }
     }
 
     if (!textContent || textContent.length < 50) {
-      throw new Error("Could not extract sufficient text from the document. Please try a text-based file or a clearer PDF.");
+      throw new Error("Could not extract sufficient text. Please try a different file or URL.");
     }
 
-    // Truncate to avoid token limits
     const truncated = textContent.slice(0, 15000);
 
-    // Now use AI to extract structured NGO profile data
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -89,11 +120,11 @@ serve(async (req) => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-3-flash-preview",
+        model: "google/gemini-2.5-flash",
         messages: [
           {
             role: "system",
-            content: `You are an expert at extracting NGO/nonprofit organisational data from annual reports and organisational documents. Extract as much relevant information as possible. Return a JSON object with these fields (use null for anything not found):
+            content: `You are an expert at extracting NGO/nonprofit organisational data from annual reports, organisational documents and websites. Extract as much relevant information as possible. Return a JSON object with these fields (use null for anything not found):
 
 {
   "org_name": "string",
@@ -132,42 +163,29 @@ serve(async (req) => {
 
 Only include fields you can confidently extract. Return ONLY valid JSON, no markdown code blocks.`,
           },
-          {
-            role: "user",
-            content: `Extract NGO profile data from this document:\n\n${truncated}`,
-          },
+          { role: "user", content: `Extract NGO profile data from this content (source: ${sourceLabel}):\n\n${truncated}` },
         ],
         stream: false,
       }),
     });
 
     if (!response.ok) {
-      if (response.status === 429) {
-        return new Response(JSON.stringify({ error: "Rate limited. Please try again shortly." }), {
-          status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-      if (response.status === 402) {
-        return new Response(JSON.stringify({ error: "AI credits exhausted. Please add funds." }), {
-          status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
+      if (response.status === 429) return new Response(JSON.stringify({ error: "Rate limited. Please try again shortly." }), { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      if (response.status === 402) return new Response(JSON.stringify({ error: "AI credits exhausted. Please add funds." }), { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } });
       throw new Error("AI service unavailable");
     }
 
     const data = await response.json();
     const content = data.choices?.[0]?.message?.content || "";
-    
-    // Parse JSON from response (handle markdown code blocks)
     const jsonMatch = content.match(/```(?:json)?\s*([\s\S]*?)```/) || [null, content];
     const jsonStr = (jsonMatch[1]?.trim() || content.trim());
-    
+
     let parsed;
     try {
       parsed = JSON.parse(jsonStr);
     } catch {
       console.error("Failed to parse AI response:", content);
-      throw new Error("Could not parse document data. Please try again.");
+      throw new Error("Could not parse extracted data. Please try again.");
     }
 
     return new Response(JSON.stringify({ success: true, data: parsed }), {
