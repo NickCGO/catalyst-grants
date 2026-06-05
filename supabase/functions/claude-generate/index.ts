@@ -10,7 +10,7 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-const MODEL = "claude-3-5-sonnet-20241022";
+const MODEL = "claude-sonnet-4-5";
 
 function buildFormatInstruction(format: string, mode: string) {
   if (mode === "form_prep") {
