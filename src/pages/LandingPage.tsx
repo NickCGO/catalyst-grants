@@ -544,6 +544,7 @@ const LandingPage = () => {
               <p className="text-sm text-muted-foreground mb-6">(for life, locks in at launch)</p>
               <ul className="space-y-3">
                 {[
+                  "Unlimited grant applications",
                   "Full funder database with match scores",
                   "AI proposal writer (full proposals, LOEs, concept notes)",
                   "Application pipeline & Kanban",
