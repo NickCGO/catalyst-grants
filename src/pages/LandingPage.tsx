@@ -54,6 +54,11 @@ function Nav({ waitlistCount }: { waitlistCount: number }) {
           <span className="h-2 w-2 rounded-full bg-success" />
           <AnimatedCounter end={waitlistCount} className="text-foreground font-semibold" /> NGOs already waiting
         </span>
+        <Link to="/login" className="hidden md:inline-flex">
+          <Button variant="ghost" className="text-sm font-semibold text-muted-foreground hover:text-foreground hover:bg-secondary rounded-xl px-4">
+            Log In
+          </Button>
+        </Link>
         <a href="#pricing">
           <Button className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-xl text-sm px-5 py-2 shadow-sm">
             Claim your spot
