@@ -340,6 +340,13 @@ const LandingPage = () => {
                 Claim your spot: $47/month at launch <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
             </a>
+            <div className="mt-4">
+              <Link to="/login">
+                <Button variant="outline" size="lg" className="rounded-xl text-base px-7 py-5 h-auto border-2 border-primary/30 text-primary hover:bg-primary/5 hover:border-primary/50">
+                  Already have access? Log In
+                </Button>
+              </Link>
+            </div>
             <div className="flex items-center gap-2 mt-5 text-sm text-muted-foreground">
               <span className="h-2 w-2 rounded-full bg-success animate-pulse" />
               <AnimatedCounter end={waitlistCount} className="text-foreground font-semibold" /> NGOs already waiting
