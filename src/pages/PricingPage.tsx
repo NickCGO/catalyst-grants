@@ -15,7 +15,7 @@ export default function PricingPage() {
   const { access } = useAccess();
   const [checkoutPrice, setCheckoutPrice] = useState<string | null>(null);
 
-  const tiers: Exclude<Tier, 'trial'>[] = ['starter', 'growth'];
+  const tiers: Exclude<Tier, 'trial'>[] = ['founders', 'starter', 'growth'];
   const a = access as any;
   const currentTier = access.state === 'paid' ? a.tier : null;
 
@@ -35,14 +35,18 @@ export default function PricingPage() {
           </p>
         </div>
 
-        <div className="grid md:grid-cols-2 gap-6 max-w-3xl mx-auto">
+        <div className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto">
           {tiers.map(tierKey => {
             const t = TIER_LIMITS[tierKey];
+            const isFounders = tierKey === 'founders';
             const isFeatured = tierKey === 'growth';
             const isCurrent = currentTier === tierKey;
 
             return (
-              <Card key={tierKey} className={`p-6 relative ${isFeatured ? 'border-primary shadow-lg' : ''}`}>
+              <Card key={tierKey} className={`p-6 relative ${isFeatured ? 'border-primary shadow-lg' : ''} ${isFounders ? 'border-accent-amber shadow-lg' : ''}`}>
+                {isFounders && (
+                  <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 bg-accent-amber text-foreground"><Sparkles className="h-3 w-3 mr-1" />Founders discount</Badge>
+                )}
                 {isFeatured && (
                   <Badge className="absolute -top-3 left-1/2 -translate-x-1/2"><Sparkles className="h-3 w-3 mr-1" />Best value</Badge>
                 )}

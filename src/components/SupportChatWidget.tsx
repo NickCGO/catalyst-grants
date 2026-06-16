@@ -1,10 +1,11 @@
 import { useEffect, useRef, useState } from "react";
-import { MessageCircle, X, Send, Loader2, LifeBuoy } from "lucide-react";
+import { MessageCircle, X, Send, LifeBuoy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import AfricaSpinner from "./AfricaSpinner";
 
 type Msg = { role: "user" | "assistant"; content: string };
 
@@ -180,6 +181,7 @@ export default function SupportChatWidget() {
       {/* Floating launcher */}
       {!open && (
         <button
+          type="button"
           onClick={() => setOpen(true)}
           aria-label="Open support chat"
           className="fixed bottom-5 right-5 z-50 flex items-center gap-2 rounded-full bg-primary text-primary-foreground shadow-lg shadow-primary/30 px-4 py-3 hover:scale-105 transition-transform"
@@ -226,7 +228,7 @@ export default function SupportChatWidget() {
             {isLoading && (
               <div className="flex justify-start">
                 <div className="bg-secondary rounded-2xl rounded-bl-sm px-3 py-2 text-sm text-muted-foreground flex items-center gap-2">
-                  <Loader2 className="h-3 w-3 animate-spin" /> thinking…
+                  <AfricaSpinner className="h-3 w-3 animate-spin" /> thinking…
                 </div>
               </div>
             )}
@@ -265,7 +267,7 @@ export default function SupportChatWidget() {
                     Cancel
                   </Button>
                   <Button size="sm" onClick={submitEscalation} disabled={escSubmitting}>
-                    {escSubmitting ? <Loader2 className="h-3 w-3 animate-spin" /> : "Send"}
+                    {escSubmitting ? <AfricaSpinner className="h-3 w-3 animate-spin" /> : "Send"}
                   </Button>
                 </div>
               </div>

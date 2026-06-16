@@ -1,12 +1,13 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowLeft, Mail, Lock, Loader2 } from "lucide-react";
+import { ArrowLeft, Mail, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth, useOrganisation } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
+import AfricaSpinner from "../components/AfricaSpinner";
 
 const AuthPage = () => {
   const location = useLocation();
@@ -82,28 +83,28 @@ const AuthPage = () => {
       <div className="min-h-screen bg-background flex items-center justify-center px-6">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="glass-card p-8 max-w-md w-full">
           <div className="flex items-center gap-1 mb-1">
-            <span className="text-xl font-bold text-foreground">Grant</span>
-            <span className="text-xl font-bold text-primary">Match</span>
+            <span className="text-xl font-bold text-foreground">Find Your</span>
+            <span className="text-xl font-bold text-primary">Grant</span>
           </div>
           <p className="text-sm font-semibold text-muted-foreground mb-4">Beta Access</p>
           <p className="text-xs text-muted-foreground/80 mb-6">This portal is for beta testers only. If you are on the waitlist, you will receive access when we launch.</p>
           <form className="space-y-4" onSubmit={handleSubmit}>
             <div>
-              <Label className="text-xs text-muted-foreground">Email</Label>
+              <Label htmlFor="login-email" className="text-xs text-muted-foreground">Email</Label>
               <div className="relative mt-1">
                 <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/80" />
-                <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required className="pl-10 bg-secondary border-input text-foreground" placeholder="you@organisation.org" />
+                <Input id="login-email" name="email" type="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} required className="pl-10 bg-secondary border-input text-foreground" placeholder="you@organisation.org" />
               </div>
             </div>
             <div>
-              <Label className="text-xs text-muted-foreground">Password</Label>
+              <Label htmlFor="login-password" className="text-xs text-muted-foreground">Password</Label>
               <div className="relative mt-1">
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/80" />
-                <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} className="pl-10 bg-secondary border-input text-foreground" placeholder="••••••••" />
+                <Input id="login-password" name="password" type="password" autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} className="pl-10 bg-secondary border-input text-foreground" placeholder="••••••••" />
               </div>
             </div>
             <Button type="submit" disabled={submitting} className="w-full bg-primary text-primary-foreground hover:bg-primary/90 rounded-xl border-0">
-              {submitting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+              {submitting ? <AfricaSpinner className="h-4 w-4 animate-spin mr-2" /> : null}
               Sign in to beta
             </Button>
           </form>
@@ -121,26 +122,26 @@ const AuthPage = () => {
         <p className="text-xs text-muted-foreground/80 mb-6">Only for invited beta testers.</p>
         <form className="space-y-4" onSubmit={handleSubmit}>
           <div>
-            <Label className="text-xs text-muted-foreground">Organisation Name</Label>
-            <Input value={orgName} onChange={(e) => setOrgName(e.target.value)} required className="mt-1 bg-secondary border-input text-foreground" placeholder="e.g. Ubuntu Youth Foundation" />
+            <Label htmlFor="signup-org" className="text-xs text-muted-foreground">Organisation Name</Label>
+            <Input id="signup-org" name="organization" autoComplete="organization" value={orgName} onChange={(e) => setOrgName(e.target.value)} required className="mt-1 bg-secondary border-input text-foreground" placeholder="e.g. Ubuntu Youth Foundation" />
           </div>
           <div>
-            <Label className="text-xs text-muted-foreground">Country</Label>
-            <select value={country} onChange={(e) => setCountry(e.target.value)} required className="mt-1 w-full rounded-md bg-secondary border border-input text-foreground text-sm px-3 py-2">
+            <Label htmlFor="signup-country" className="text-xs text-muted-foreground">Country</Label>
+            <select id="signup-country" name="country" autoComplete="country-name" value={country} onChange={(e) => setCountry(e.target.value)} required className="mt-1 w-full rounded-md bg-secondary border border-input text-foreground text-sm px-3 py-2">
               <option value="">Select country</option>
               {["South Africa", "Nigeria", "Kenya", "Ghana", "Tanzania", "Uganda", "Ethiopia", "Rwanda"].map((c) => <option key={c} value={c}>{c}</option>)}
             </select>
           </div>
           <div>
-            <Label className="text-xs text-muted-foreground">Email</Label>
-            <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required className="mt-1 bg-secondary border-input text-foreground" />
+            <Label htmlFor="signup-email" className="text-xs text-muted-foreground">Email</Label>
+            <Input id="signup-email" name="email" type="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} required className="mt-1 bg-secondary border-input text-foreground" />
           </div>
           <div>
-            <Label className="text-xs text-muted-foreground">Password</Label>
-            <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} className="mt-1 bg-secondary border-input text-foreground" />
+            <Label htmlFor="signup-password" className="text-xs text-muted-foreground">Password</Label>
+            <Input id="signup-password" name="password" type="password" autoComplete="new-password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} className="mt-1 bg-secondary border-input text-foreground" />
           </div>
           <Button type="submit" disabled={submitting} className="w-full bg-primary text-primary-foreground hover:bg-primary/90 rounded-xl border-0">
-            {submitting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+            {submitting ? <AfricaSpinner className="h-4 w-4 animate-spin mr-2" /> : null}
             Create account
           </Button>
         </form>

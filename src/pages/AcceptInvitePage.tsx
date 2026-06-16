@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { Loader2, Check, AlertCircle } from "lucide-react";
+import { Check, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import GlassCard from "@/components/GlassCard";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import AfricaSpinner from "../components/AfricaSpinner";
 
 const AcceptInvitePage = () => {
   const [params] = useSearchParams();
@@ -59,7 +60,7 @@ const AcceptInvitePage = () => {
       <GlassCard hoverable={false} className="max-w-md w-full p-8 text-center">
         {status === "working" || status === "idle" ? (
           <>
-            <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto" />
+            <AfricaSpinner className="h-8 w-8 animate-spin text-primary mx-auto" />
             <p className="text-sm text-muted-foreground mt-3">Accepting your invitation…</p>
           </>
         ) : status === "ok" ? (

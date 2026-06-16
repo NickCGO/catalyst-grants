@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { FileText, Plus, Download, Loader2, Sparkles, CheckCircle } from "lucide-react";
+import { FileText, Plus, Download, Sparkles, CheckCircle } from "lucide-react";
 import DashboardLayout from "@/components/DashboardLayout";
 import GlassCard from "@/components/GlassCard";
 import StatusBadge from "@/components/StatusBadge";
@@ -12,6 +12,7 @@ import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth, useOrganisation } from "@/hooks/useAuth";
 import { hints } from "@/lib/formHints";
+import AfricaSpinner from "../components/AfricaSpinner";
 
 type Step = "select" | "format" | "input" | "preview";
 
@@ -146,7 +147,7 @@ const ReportsPage = () => {
                 className="min-h-[200px] bg-secondary/30 border-border/50" />
               <p className="text-[10px] text-muted-foreground mt-1">{hints.report.projectUpdates}</p>
               <Button className="mt-4 bg-primary text-primary-foreground hover:bg-primary/90" onClick={generateReport} disabled={generating || !projectUpdates.trim()}>
-                {generating ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Sparkles className="h-4 w-4 mr-1" />}
+                {generating ? <AfricaSpinner className="h-4 w-4 mr-1 animate-spin" /> : <Sparkles className="h-4 w-4 mr-1" />}
                 Generate Report
               </Button>
             </GlassCard>
@@ -191,7 +192,7 @@ const ReportsPage = () => {
         </div>
 
         {loading ? (
-          <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>
+          <div className="flex justify-center py-12"><AfricaSpinner className="h-6 w-6 animate-spin text-primary" /></div>
         ) : reports.length === 0 ? (
           <GlassCard hoverable={false}>
             <div className="text-center py-8">

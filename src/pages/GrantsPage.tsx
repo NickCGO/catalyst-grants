@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
-import { Search, SlidersHorizontal, Users, Loader2, Sparkles } from "lucide-react";
+import { Search, SlidersHorizontal, Users, Sparkles } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import DashboardLayout from "@/components/DashboardLayout";
 import FunderCard from "@/components/FunderCard";
@@ -16,6 +16,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useOrganisation } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { computeMatchScores } from "@/lib/matchingEngine";
+import AfricaSpinner from "../components/AfricaSpinner";
 
 const categories = ["SACorp", "United Kingdom", "USA", "Europe Trusts/ Foundation", "SA Trusts/ Foundations", "Other", "Foreign Missions"];
 
@@ -306,7 +307,7 @@ const GrantsPage = () => {
             size="sm"
             className="gap-2"
           >
-            {computing ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Sparkles className="h-3.5 w-3.5" />}
+            {computing ? <AfricaSpinner className="h-3.5 w-3.5 animate-spin" /> : <Sparkles className="h-3.5 w-3.5" />}
             {computing ? "Computing..." : "Recalculate Matches"}
           </Button>
         </motion.div>

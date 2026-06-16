@@ -1,11 +1,7 @@
 import { useState, useCallback, useEffect } from "react";
 import { useParams, useSearchParams, Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import {
-  Sparkles, FileText, CheckCircle, Circle, Loader2, BarChart3,
-  ChevronRight, X, MessageSquare, History, Send, Users, Lock,
-  Eye, ThumbsUp, ThumbsDown, Copy, ExternalLink, ArrowLeft, Info,
-} from "lucide-react";
+import { Sparkles, FileText, CheckCircle, Circle, BarChart3, ChevronRight, X, MessageSquare, History, Send, Users, Lock, Eye, ThumbsUp, ThumbsDown, Copy, ExternalLink, ArrowLeft, Info } from "lucide-react";
 import DashboardLayout from "@/components/DashboardLayout";
 import GlassCard from "@/components/GlassCard";
 import MatchScoreRing from "@/components/MatchScoreRing";
@@ -19,6 +15,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
 import { routeLabels, type ApplicationRoute } from "@/components/StartApplicationModal";
+import AfricaSpinner from "../components/AfricaSpinner";
 
 // Section definitions per format
 const fullProposalSections = [
@@ -367,7 +364,7 @@ const ProposalEditorPage = () => {
 
   if (loading) return (
     <DashboardLayout>
-      <div className="flex items-center justify-center h-64"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>
+      <div className="flex items-center justify-center h-64"><AfricaSpinner className="h-6 w-6 animate-spin text-primary" /></div>
     </DashboardLayout>
   );
 
@@ -463,7 +460,7 @@ const ProposalEditorPage = () => {
                 </a>
               )}
               <Button size="sm" className="bg-primary text-primary-foreground text-xs" onClick={generateFormPrep} disabled={generatingAll}>
-                {generatingAll ? <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" /> : <Sparkles className="h-3.5 w-3.5 mr-1" />}
+                {generatingAll ? <AfricaSpinner className="h-3.5 w-3.5 mr-1 animate-spin" /> : <Sparkles className="h-3.5 w-3.5 mr-1" />}
                 Generate all answers
               </Button>
             </div>
@@ -571,15 +568,15 @@ const ProposalEditorPage = () => {
           {/* Toolbar */}
           <div className="flex items-center gap-2 mb-3 flex-wrap">
             <Button size="sm" className="bg-primary text-primary-foreground hover:bg-primary/90" disabled={generating || generatingAll} onClick={() => generateSection(activeSection)}>
-              {generatingSection === activeSection ? <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" /> : <Sparkles className="h-3.5 w-3.5 mr-1" />}
+              {generatingSection === activeSection ? <AfricaSpinner className="h-3.5 w-3.5 mr-1 animate-spin" /> : <Sparkles className="h-3.5 w-3.5 mr-1" />}
               Generate Section
             </Button>
             <Button size="sm" variant="outline" className="border-border/50" disabled={generating || generatingAll} onClick={generateAll}>
-              {generatingAll ? <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" /> : <Sparkles className="h-3.5 w-3.5 mr-1" />}
+              {generatingAll ? <AfricaSpinner className="h-3.5 w-3.5 mr-1 animate-spin" /> : <Sparkles className="h-3.5 w-3.5 mr-1" />}
               Generate All
             </Button>
             <Button size="sm" variant="outline" className="border-border/50" disabled={scoring || totalWords < 50} onClick={scoreProposal}>
-              {scoring ? <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" /> : <BarChart3 className="h-3.5 w-3.5 mr-1" />}
+              {scoring ? <AfricaSpinner className="h-3.5 w-3.5 mr-1 animate-spin" /> : <BarChart3 className="h-3.5 w-3.5 mr-1" />}
               Score
             </Button>
 

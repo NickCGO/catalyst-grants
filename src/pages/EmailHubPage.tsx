@@ -1,10 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import {
-  Mail, Plus, Copy, Send, Loader2, Sparkles, FileText, X, BookmarkPlus,
-  Pencil, Trash2, CheckCircle, ArrowRight, Settings as SettingsIcon, ChevronDown,
-} from "lucide-react";
+import { Mail, Plus, Copy, Send, Sparkles, FileText, X, BookmarkPlus, Pencil, Trash2, CheckCircle, ArrowRight, Settings as SettingsIcon, ChevronDown } from "lucide-react";
 import DashboardLayout from "@/components/DashboardLayout";
 import GlassCard from "@/components/GlassCard";
 import { Button } from "@/components/ui/button";
@@ -16,6 +13,7 @@ import { toast } from "@/hooks/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { useOrganisation, useAuth } from "@/hooks/useAuth";
+import AfricaSpinner from "../components/AfricaSpinner";
 
 const purposes = [
   "Introduction / Letter of Intent",
@@ -91,6 +89,7 @@ const EmailHubPage = () => {
   const [funders, setFunders] = useState<any[]>([]);
   const [customTemplates, setCustomTemplates] = useState<EmailTemplate[]>([]);
   const [hasInbox, setHasInbox] = useState<boolean | null>(null);
+  const [inboxProvider, setInboxProvider] = useState<string | null>(null);
   const [walkthroughCollapsed, setWalkthroughCollapsed] = useState(false);
   const [editingTemplate, setEditingTemplate] = useState<EmailTemplate | null>(null);
   const [showTemplateForm, setShowTemplateForm] = useState(false);
@@ -105,7 +104,7 @@ const EmailHubPage = () => {
       const [{ data: apps }, { data: tpls }, { data: creds }] = await Promise.all([
         supabase.from("applications").select("funder_id, funders(donor_name, contact_person, email)").eq("org_id", org.id),
         supabase.from("email_templates").select("*").eq("org_id", org.id).order("sort_order").order("created_at"),
-        supabase.from("email_credentials").select("id").eq("org_id", org.id).limit(1),
+        supabase.from("email_credentials").select("id, provider").eq("org_id", org.id).limit(1),
       ]);
       const seen = new Set<string>();
       const unique = (apps || []).filter(a => {
@@ -116,6 +115,7 @@ const EmailHubPage = () => {
       setFunders(unique);
       setCustomTemplates(tpls || []);
       setHasInbox((creds || []).length > 0);
+      setInboxProvider(creds?.[0]?.provider ?? null);
     };
     load();
   }, [org]);
@@ -314,7 +314,7 @@ const EmailHubPage = () => {
                     </div>
                     <div className="flex gap-2">
                       <Button onClick={() => generateEmail()} disabled={generating || !purpose} className="bg-primary text-primary-foreground">
-                        {generating ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Sparkles className="h-4 w-4 mr-1" />}
+                        {generating ? <AfricaSpinner className="h-4 w-4 mr-1 animate-spin" /> : <Sparkles className="h-4 w-4 mr-1" />}
                         Generate
                       </Button>
                       <Button variant="ghost" onClick={() => setShowDrafter(false)} className="text-muted-foreground">Cancel</Button>
@@ -338,7 +338,7 @@ const EmailHubPage = () => {
                       {hasInbox ? (
                         <Button size="sm" className="bg-primary text-primary-foreground" disabled={sending || !toAddress || !subject} onClick={async () => {
                           setSending(true);
-                          const { data, error } = await supabase.functions.invoke("gmail-send", {
+                          const { data, error } = await supabase.functions.invoke("send-email", {
                             body: { to: toAddress, subject, body },
                           });
                           setSending(false);
@@ -349,8 +349,8 @@ const EmailHubPage = () => {
                             setShowDrafter(false); setGenerated(false); setToAddress(""); setSubject(""); setBody("");
                           }
                         }}>
-                          {sending ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : <Send className="h-3 w-3 mr-1" />}
-                          Send via Gmail
+                          {sending ? <AfricaSpinner className="h-3 w-3 mr-1 animate-spin" /> : <Send className="h-3 w-3 mr-1" />}
+                          Send via {inboxProvider === "outlook" ? "Outlook" : "Gmail"}
                         </Button>
                       ) : (
                         <a href={`mailto:${toAddress}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`}>

@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowRight, Check, Copy, Globe, Loader2 } from "lucide-react";
+import { ArrowRight, Check, Copy, Globe } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -15,6 +15,7 @@ import previewPipeline from "@/assets/preview-pipeline.jpg";
 import brandLogo from "@/assets/find-the-grant-logo.png.asset.json";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
+import AfricaSpinner from "../components/AfricaSpinner";
 
 /* ─── Helpers ─── */
 const fadeUp = (delay = 0) => ({
@@ -206,35 +207,35 @@ function WaitlistForm({ onSuccess }: { onSuccess: (d: { name: string; email: str
     <form onSubmit={handleSubmit} className="space-y-4">
       <h3 className="text-xl font-bold text-foreground mb-1">Reserve your founding member spot</h3>
       <div>
-        <Label className="text-xs font-medium text-muted-foreground">Your name</Label>
-        <Input value={name} onChange={(e) => setName(e.target.value)} required className="mt-1" placeholder="Full name" />
+        <Label htmlFor="waitlist-name" className="text-xs font-medium text-muted-foreground">Your name</Label>
+        <Input id="waitlist-name" name="name" autoComplete="name" value={name} onChange={(e) => setName(e.target.value)} required className="mt-1" placeholder="Full name" />
       </div>
       <div>
-        <Label className="text-xs font-medium text-muted-foreground">Work email address</Label>
-        <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required className="mt-1" placeholder="you@organisation.org" />
+        <Label htmlFor="waitlist-email" className="text-xs font-medium text-muted-foreground">Work email address</Label>
+        <Input id="waitlist-email" name="email" type="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} required className="mt-1" placeholder="you@organisation.org" />
       </div>
       <div>
-        <Label className="text-xs font-medium text-muted-foreground">Organisation name</Label>
-        <Input value={org} onChange={(e) => setOrg(e.target.value)} required className="mt-1" placeholder="Your NGO name" />
+        <Label htmlFor="waitlist-org" className="text-xs font-medium text-muted-foreground">Organisation name</Label>
+        <Input id="waitlist-org" name="organization" autoComplete="organization" value={org} onChange={(e) => setOrg(e.target.value)} required className="mt-1" placeholder="Your NGO name" />
       </div>
       <div>
-        <Label className="text-xs font-medium text-muted-foreground">Country</Label>
-        <select value={country} onChange={(e) => setCountry(e.target.value)} className="mt-1 w-full rounded-md bg-background border border-input text-foreground text-sm px-3 py-2">
+        <Label htmlFor="waitlist-country" className="text-xs font-medium text-muted-foreground">Country</Label>
+        <select id="waitlist-country" name="country" autoComplete="country-name" value={country} onChange={(e) => setCountry(e.target.value)} className="mt-1 w-full rounded-md bg-background border border-input text-foreground text-sm px-3 py-2">
           {countries.map((c) => <option key={c} value={c}>{c}</option>)}
         </select>
       </div>
       <div>
-        <Label className="text-xs font-medium text-muted-foreground">Your role</Label>
-        <select value={role} onChange={(e) => setRole(e.target.value)} className="mt-1 w-full rounded-md bg-background border border-input text-foreground text-sm px-3 py-2">
+        <Label htmlFor="waitlist-role" className="text-xs font-medium text-muted-foreground">Your role</Label>
+        <select id="waitlist-role" name="role" autoComplete="organization-title" value={role} onChange={(e) => setRole(e.target.value)} className="mt-1 w-full rounded-md bg-background border border-input text-foreground text-sm px-3 py-2">
           {roles.map((r) => <option key={r} value={r}>{r}</option>)}
         </select>
       </div>
       <label className="flex items-start gap-3 cursor-pointer">
-        <input type="checkbox" checked={committed} onChange={(e) => setCommitted(e.target.checked)} className="mt-1 h-4 w-4 rounded border-input accent-primary" />
+        <input type="checkbox" name="commit" checked={committed} onChange={(e) => setCommitted(e.target.checked)} className="mt-1 h-4 w-4 rounded border-input accent-primary" />
         <span className="text-xs text-muted-foreground">I commit to paying $47/month when Find The Grant launches. (No charge until launch day.)</span>
       </label>
       <Button type="submit" disabled={submitting} className="w-full bg-primary text-primary-foreground hover:bg-primary/90 text-base py-4 rounded-xl h-auto">
-        {submitting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+        {submitting ? <AfricaSpinner className="h-4 w-4 animate-spin mr-2" /> : null}
         Claim my founding member spot →
       </Button>
     </form>

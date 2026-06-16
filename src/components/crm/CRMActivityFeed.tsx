@@ -1,9 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import {
-  MessageSquare, Mail, Phone, Users, FileText, TrendingUp, Eye,
-  Calendar, Pin, PinOff, Trash2, Plus, Send, Loader2,
-} from "lucide-react";
+import { MessageSquare, Mail, Phone, Users, FileText, TrendingUp, Eye, Calendar, Pin, PinOff, Trash2, Plus, Send } from "lucide-react";
 import GlassCard from "@/components/GlassCard";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -11,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import AfricaSpinner from "../AfricaSpinner";
 
 const noteTypeLabels: Record<string, string> = {
   note: "Note",
@@ -144,7 +142,7 @@ export default function CRMActivityFeed({ orgId, funderId, interactions, onRefre
           <div className="flex gap-2 justify-end">
             <Button size="sm" variant="ghost" className="h-7 text-xs" onClick={() => setShowComposer(false)}>Cancel</Button>
             <Button size="sm" className="h-7 text-xs" onClick={addNote} disabled={adding || !newNote.trim()}>
-              {adding ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : <Send className="h-3 w-3 mr-1" />}
+              {adding ? <AfricaSpinner className="h-3 w-3 animate-spin mr-1" /> : <Send className="h-3 w-3 mr-1" />}
               Save
             </Button>
           </div>

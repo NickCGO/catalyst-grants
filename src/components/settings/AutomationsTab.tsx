@@ -8,7 +8,8 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "@/hooks/use-toast";
-import { Loader2, Plus, Trash2, Zap } from "lucide-react";
+import { Plus, Trash2, Zap } from "lucide-react";
+import AfricaSpinner from "../AfricaSpinner";
 
 const TRIGGERS = [
   { value: "application_submitted", label: "Application submitted" },
@@ -107,7 +108,7 @@ export default function AutomationsTab() {
     setRules(rules.filter((r) => r.id !== id));
   };
 
-  if (loading) return <div className="flex justify-center p-12"><Loader2 className="h-5 w-5 animate-spin text-primary" /></div>;
+  if (loading) return <div className="flex justify-center p-12"><AfricaSpinner className="h-5 w-5 animate-spin text-primary" /></div>;
 
   return (
     <div className="space-y-6">
@@ -146,7 +147,7 @@ export default function AutomationsTab() {
             <Input value={form.payload_text} onChange={(e) => setForm({ ...form, payload_text: e.target.value })} placeholder="Task title or email subject" />
           </div>
           <Button onClick={create} disabled={creating} size="sm">
-            {creating ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : <Plus className="h-3 w-3 mr-1" />}
+            {creating ? <AfricaSpinner className="h-3 w-3 animate-spin mr-1" /> : <Plus className="h-3 w-3 mr-1" />}
             Create rule
           </Button>
         </div>

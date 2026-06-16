@@ -5,10 +5,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import MatchScoreRing from "./MatchScoreRing";
-import { Calendar, Globe, FileText, DollarSign, Loader2 } from "lucide-react";
+import { Calendar, Globe, FileText, DollarSign } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { hints } from "@/lib/formHints";
+import AfricaSpinner from "./AfricaSpinner";
 
 type ApplicationRoute = "full_proposal" | "loe" | "concept_note" | "online_form" | "guided";
 
@@ -198,7 +199,7 @@ export default function StartApplicationModal({ open, onClose, funder, matchScor
           <div className="flex justify-end gap-2 pt-2 border-t border-border/30">
             <Button variant="ghost" onClick={onClose}>Cancel</Button>
             <Button className="bg-primary text-primary-foreground" onClick={handleStart} disabled={creating}>
-              {creating ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : null}
+              {creating ? <AfricaSpinner className="h-4 w-4 mr-1 animate-spin" /> : null}
               Start Application →
             </Button>
           </div>

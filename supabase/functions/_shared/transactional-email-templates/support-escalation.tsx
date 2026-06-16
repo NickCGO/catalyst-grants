@@ -12,7 +12,7 @@ import {
 } from 'npm:@react-email/components@0.0.22'
 import type { TemplateEntry } from './registry.ts'
 
-const SITE_NAME = 'GrantMatch'
+const SITE_NAME = 'Find Your Grant'
 
 interface SupportEscalationProps {
   fromName?: string
@@ -69,13 +69,13 @@ const SupportEscalationEmail = ({
 export const template = {
   component: SupportEscalationEmail,
   subject: (data: Record<string, any>) =>
-    `Support request from ${data?.fromName || data?.fromEmail || 'GrantMatch visitor'}`,
+    `Support request from ${data?.fromName || data?.fromEmail || 'Find Your Grant visitor'}`,
   displayName: 'Support escalation',
   previewData: {
     fromName: 'Jane Doe',
     fromEmail: 'jane@example.org',
     message: 'I would like to know more about pricing for our NGO.',
-    pageUrl: 'https://grant-match.app/',
+    pageUrl: 'https://findyourgrant.app/',
     conversation: [
       { role: 'user', content: 'Hi, what is the pricing?' },
       { role: 'assistant', content: 'Founding-member tier is $47/month USD.' },

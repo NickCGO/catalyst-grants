@@ -1,6 +1,6 @@
 import { useEffect, useState, useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Inbox, Mail, Reply, ExternalLink, Loader2, Search } from "lucide-react";
+import { Inbox, Mail, Reply, ExternalLink, Search } from "lucide-react";
 import DashboardLayout from "@/components/DashboardLayout";
 import GlassCard from "@/components/GlassCard";
 import { Input } from "@/components/ui/input";
@@ -10,6 +10,7 @@ import { formatDistanceToNow } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth, useOrganisation } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
+import AfricaSpinner from "../components/AfricaSpinner";
 
 interface InboundEmail {
   id: string;
@@ -122,7 +123,7 @@ const InboxPage = () => {
 
         {loading ? (
           <div className="flex items-center justify-center py-20">
-            <Loader2 className="h-6 w-6 animate-spin text-primary" />
+            <AfricaSpinner className="h-6 w-6 animate-spin text-primary" />
           </div>
         ) : emails.length === 0 ? (
           <GlassCard hoverable={false}>

@@ -4,8 +4,9 @@ import { useAuth } from "@/hooks/useAuth";
 import GlassCard from "@/components/GlassCard";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/hooks/use-toast";
-import { Loader2, Mail, Trash2, CheckCircle2, AlertCircle } from "lucide-react";
+import { Mail, Trash2, CheckCircle2, AlertCircle } from "lucide-react";
 import { format } from "date-fns";
+import AfricaSpinner from "../AfricaSpinner";
 
 type Cred = {
   id: string;
@@ -20,7 +21,7 @@ export default function ConnectedInboxesTab() {
   const [orgId, setOrgId] = useState<string | null>(null);
   const [cred, setCred] = useState<Cred | null>(null);
   const [loading, setLoading] = useState(true);
-  const [connecting, setConnecting] = useState(false);
+  const [connecting, setConnecting] = useState<"gmail" | "outlook" | null>(null);
 
   useEffect(() => {
     if (!user) return;
@@ -34,18 +35,19 @@ export default function ConnectedInboxesTab() {
     })();
   }, [user]);
 
-  const connectGmail = async () => {
+  const connectProvider = async (provider: "gmail" | "outlook") => {
     if (!orgId) return;
-    setConnecting(true);
+    setConnecting(provider);
+    const label = provider === "gmail" ? "Google" : "Microsoft";
     const oauthWindow = window.open("", "_blank", "width=560,height=720");
 
     if (oauthWindow) {
-      oauthWindow.document.write(`<!doctype html><title>Connecting Gmail</title><body style="font-family:system-ui;padding:24px;color:#0f172a">Opening Google…</body>`);
+      oauthWindow.document.write(`<!doctype html><title>Connecting ${provider === "gmail" ? "Gmail" : "Outlook"}</title><body style="font-family:system-ui;padding:24px;color:#0f172a">Opening ${label}…</body>`);
       oauthWindow.document.close();
     }
 
     try {
-      const { data, error } = await supabase.functions.invoke("gmail-oauth-start", {
+      const { data, error } = await supabase.functions.invoke(`${provider}-oauth-start`, {
         body: { returnTo: window.location.pathname + window.location.search, origin: window.location.origin },
       });
       if (error || !data?.url) throw error || new Error("Could not start OAuth");
@@ -57,8 +59,8 @@ export default function ConnectedInboxesTab() {
       }
     } catch (e: any) {
       if (oauthWindow && !oauthWindow.closed) oauthWindow.close();
-      toast({ title: "Could not start Gmail connection", description: e.message || String(e), variant: "destructive" });
-      setConnecting(false);
+      toast({ title: `Could not start ${provider === "gmail" ? "Gmail" : "Outlook"} connection`, description: e.message || String(e), variant: "destructive" });
+      setConnecting(null);
     }
   };
 
@@ -70,7 +72,7 @@ export default function ConnectedInboxesTab() {
     toast({ title: "Inbox disconnected" });
   };
 
-  if (loading) return <div className="flex justify-center p-12"><Loader2 className="h-5 w-5 animate-spin text-primary" /></div>;
+  if (loading) return <div className="flex justify-center p-12"><AfricaSpinner className="h-5 w-5 animate-spin text-primary" /></div>;
 
   return (
     <div className="space-y-6">
@@ -101,20 +103,26 @@ export default function ConnectedInboxesTab() {
               </Button>
             </div>
             <p className="text-xs text-muted-foreground">
-              Your Gmail account is connected. Emails sent from the Email Hub and Funder CRM will be delivered through your inbox.
+              Your {cred.provider === "outlook" ? "Outlook" : "Gmail"} account is connected. Emails sent from the Email Hub and Funder CRM will be delivered through your inbox.
             </p>
           </div>
         ) : (
           <div className="space-y-3">
             <p className="text-sm text-muted-foreground">
-              Connect your Gmail account to send emails to funders directly from Find The Grant. We'll only request permission to send mail and read your own messages.
+              Connect your inbox to send emails to funders directly from Find The Grant. We'll only request permission to send mail and read your own messages.
             </p>
-            <Button onClick={connectGmail} disabled={connecting} size="sm">
-              {connecting ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : <Mail className="h-3 w-3 mr-1" />}
-              Connect Gmail
-            </Button>
+            <div className="flex flex-wrap gap-2">
+              <Button onClick={() => connectProvider("gmail")} disabled={!!connecting} size="sm">
+                {connecting === "gmail" ? <AfricaSpinner className="h-3 w-3 animate-spin mr-1" /> : <Mail className="h-3 w-3 mr-1" />}
+                Connect Gmail
+              </Button>
+              <Button disabled size="sm" variant="outline" title="Outlook connection is temporarily unavailable">
+                <Mail className="h-3 w-3 mr-1" />
+                Connect Outlook
+              </Button>
+            </div>
             <p className="text-xs text-muted-foreground">
-              Only org admins can connect an inbox. Outlook support is coming soon.
+              Only Gmail accounts are supported right now — Outlook support is paused while we sort out a Microsoft Azure issue. Only org admins can connect an inbox.
             </p>
           </div>
         )}

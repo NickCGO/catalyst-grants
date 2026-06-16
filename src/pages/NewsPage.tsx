@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Newspaper, Bookmark, Loader2 } from "lucide-react";
+import { Newspaper, Bookmark } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import DashboardLayout from "@/components/DashboardLayout";
 import GlassCard from "@/components/GlassCard";
@@ -8,6 +8,7 @@ import MatchScoreRing from "@/components/MatchScoreRing";
 import { supabase } from "@/integrations/supabase/client";
 import { useOrganisation } from "@/hooks/useAuth";
 import { callAI } from "@/lib/ai";
+import AfricaSpinner from "../components/AfricaSpinner";
 
 const categoryBadge: Record<string, string> = {
   "Funding Alert": "bg-success/15 text-success",
@@ -117,7 +118,7 @@ const NewsPage = () => {
           {/* Main Feed */}
           <div className="flex-1 space-y-4">
             {loadingNews ? (
-              <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>
+              <div className="flex justify-center py-12"><AfricaSpinner className="h-6 w-6 animate-spin text-primary" /></div>
             ) : newsItems.map((item, i) => (
               <motion.div key={i} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}>
                 <GlassCard>
@@ -152,7 +153,7 @@ const NewsPage = () => {
           <div className="w-72 hidden lg:block space-y-3">
             <h3 className="text-sm font-semibold text-foreground mb-2">🔔 Open This Month</h3>
             {loadingAlerts ? (
-              <Loader2 className="h-5 w-5 animate-spin text-primary mx-auto" />
+              <AfricaSpinner className="h-5 w-5 animate-spin text-primary mx-auto" />
             ) : fundingAlerts.length === 0 ? (
               <p className="text-xs text-muted-foreground">No funders open this month.</p>
             ) : fundingAlerts.map((alert, i) => (

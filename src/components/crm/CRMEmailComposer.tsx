@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Send, Save, Loader2, Mail } from "lucide-react";
+import { Send, Save, Mail } from "lucide-react";
 import GlassCard from "@/components/GlassCard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { hints } from "@/lib/formHints";
+import AfricaSpinner from "../AfricaSpinner";
 
 const emailTemplates: Record<string, { subject: string; body: string }> = {
   introduction: {
@@ -62,14 +63,14 @@ export default function CRMEmailComposer({ orgId, funderId, funderName, funderEm
     }
     setSaving(true);
 
-    // If sending, attempt real delivery via Gmail
+    // If sending, attempt real delivery via the org's connected inbox (Gmail or Outlook)
     if (status === "queued") {
       if (!to.trim()) {
         toast({ title: "Recipient email required", variant: "destructive" });
         setSaving(false);
         return;
       }
-      const { data, error } = await supabase.functions.invoke("gmail-send", {
+      const { data, error } = await supabase.functions.invoke("send-email", {
         body: {
           to: to.trim(),
           subject: subject.trim(),
@@ -80,8 +81,8 @@ export default function CRMEmailComposer({ orgId, funderId, funderName, funderEm
       });
       setSaving(false);
       if (error || data?.error) {
-        const msg = data?.error === "gmail_not_connected"
-          ? "Connect your Gmail account in Settings → Connected Inboxes to send."
+        const msg = data?.error === "inbox_not_connected"
+          ? "Connect your Gmail or Outlook account in Settings → Connected Inboxes to send."
           : (data?.error || error?.message || "Send failed");
         toast({ title: "Could not send email", description: msg, variant: "destructive" });
         return;
@@ -163,11 +164,11 @@ export default function CRMEmailComposer({ orgId, funderId, funderName, funderEm
       </div>
       <div className="flex gap-2">
         <Button size="sm" variant="outline" className="h-7 text-xs flex-1" onClick={() => saveEmail("draft")} disabled={saving}>
-          {saving ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : <Save className="h-3 w-3 mr-1" />}
+          {saving ? <AfricaSpinner className="h-3 w-3 animate-spin mr-1" /> : <Save className="h-3 w-3 mr-1" />}
           Save Draft
         </Button>
         <Button size="sm" className="h-7 text-xs flex-1" onClick={() => saveEmail("queued")} disabled={saving}>
-          {saving ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : <Send className="h-3 w-3 mr-1" />}
+          {saving ? <AfricaSpinner className="h-3 w-3 animate-spin mr-1" /> : <Send className="h-3 w-3 mr-1" />}
           Send
         </Button>
       </div>

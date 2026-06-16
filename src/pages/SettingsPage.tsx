@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Settings, User, Sparkles, Bell, Puzzle, Upload, Check, Loader2, Users, Zap, Mail } from "lucide-react";
+import { Settings, User, Sparkles, Bell, Puzzle, Upload, Check, Users, Zap, Mail } from "lucide-react";
 import AutomationsTab from "@/components/settings/AutomationsTab";
 import ConnectedInboxesTab from "@/components/settings/ConnectedInboxesTab";
 import { useNavigate } from "react-router-dom";
@@ -17,6 +17,7 @@ import { useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { hints } from "@/lib/formHints";
+import AfricaSpinner from "../components/AfricaSpinner";
 
 const focusAreaKeys = [
   { key: "children", label: "Children" }, { key: "families_parents", label: "Families/Parents" },
@@ -195,7 +196,7 @@ const SettingsPage = () => {
     return (
       <DashboardLayout>
         <div className="flex items-center justify-center h-64">
-          <Loader2 className="h-6 w-6 animate-spin text-primary" />
+          <AfricaSpinner className="h-6 w-6 animate-spin text-primary" />
         </div>
       </DashboardLayout>
     );
@@ -324,7 +325,7 @@ const SettingsPage = () => {
                   </div>
                   <div className="flex gap-3 pt-2">
                     <Button className="bg-primary text-primary-foreground hover:bg-primary/90" onClick={saveProfile} disabled={saving}>
-                      {saving ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : null}
+                      {saving ? <AfricaSpinner className="h-4 w-4 mr-1 animate-spin" /> : null}
                       Save Changes
                     </Button>
                   </div>
@@ -417,7 +418,7 @@ const SettingsPage = () => {
                   </div>
                 </div>
                 <Button className="bg-primary text-primary-foreground hover:bg-primary/90" onClick={saveAIPrefs} disabled={saving}>
-                  {saving ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : null}
+                  {saving ? <AfricaSpinner className="h-4 w-4 mr-1 animate-spin" /> : null}
                   Save Preferences
                 </Button>
               </div>
@@ -461,7 +462,7 @@ const SettingsPage = () => {
               </GlassCard>
               <div>
                 <Button className="bg-primary text-primary-foreground hover:bg-primary/90" onClick={saveNotifications} disabled={saving}>
-                  {saving ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : null}
+                  {saving ? <AfricaSpinner className="h-4 w-4 mr-1 animate-spin" /> : null}
                   Save Notification Preferences
                 </Button>
               </div>
@@ -491,7 +492,7 @@ const SettingsPage = () => {
             </GlassCard>
             <div className="mt-4">
               <Button className="bg-primary text-primary-foreground hover:bg-primary/90" onClick={saveModules} disabled={saving}>
-                {saving ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : null}
+                {saving ? <AfricaSpinner className="h-4 w-4 mr-1 animate-spin" /> : null}
                 Save Module Preferences
               </Button>
             </div>

@@ -1,9 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
-import {
-  Users, Plus, Mail, Shield, Eye, PenTool, Clock, Trash2, Copy,
-  Check, Inbox, Send, Loader2,
-} from "lucide-react";
+import { Users, Plus, Mail, Shield, Eye, PenTool, Clock, Trash2, Copy, Check, Inbox, Send } from "lucide-react";
 import DashboardLayout from "@/components/DashboardLayout";
 import GlassCard from "@/components/GlassCard";
 import { Button } from "@/components/ui/button";
@@ -21,6 +18,7 @@ import { useAuth, useOrganisation } from "@/hooks/useAuth";
 import { useAccess } from "@/hooks/useAccess";
 import { TIER_LIMITS } from "@/lib/tierLimits";
 import { Link } from "react-router-dom";
+import AfricaSpinner from "../components/AfricaSpinner";
 
 // Role hierarchy & metadata
 const roleConfig = {
@@ -219,7 +217,7 @@ const TeamManagementPage = () => {
                     disabled={sending}
                     className="w-full bg-primary text-primary-foreground hover:bg-primary/90"
                   >
-                    {sending ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Mail className="h-4 w-4 mr-1" />}
+                    {sending ? <AfricaSpinner className="h-4 w-4 mr-1 animate-spin" /> : <Mail className="h-4 w-4 mr-1" />}
                     Send Invitation
                   </Button>
                 </div>
@@ -231,9 +229,9 @@ const TeamManagementPage = () => {
         {/* Seat usage banner */}
         {(() => {
           const tier = access.state === "paid" || access.state === "limit_reached" ? access.tier : null;
-          const seatLimit = tier && tier !== "trial" ? TIER_LIMITS[tier as "starter" | "growth"]?.teamSeats : 1;
+          const seatLimit = tier && tier !== "trial" ? TIER_LIMITS[tier as "founders" | "starter" | "growth"]?.teamSeats : 1;
           const activeCount = members.filter(m => m.status === "active").length + invites.length;
-          const tierLabel = tier && tier !== "trial" ? TIER_LIMITS[tier as "starter" | "growth"].label : "Trial";
+          const tierLabel = tier && tier !== "trial" ? TIER_LIMITS[tier as "founders" | "starter" | "growth"].label : "Trial";
           const atLimit = seatLimit !== undefined && activeCount >= seatLimit;
           return (
             <div className={`p-4 rounded-lg border ${atLimit ? "border-accent-amber/40 bg-accent-amber/5" : "border-border/40 bg-secondary/20"} flex items-center justify-between gap-3`}>
@@ -250,7 +248,7 @@ const TeamManagementPage = () => {
                   </p>
                 </div>
               </div>
-              {(atLimit || tier === "starter") && (
+              {(atLimit || tier === "founders" || tier === "starter") && (
                 <Link to="/pricing">
                   <Button size="sm" variant="outline" className="text-xs h-7">Upgrade plan</Button>
                 </Link>

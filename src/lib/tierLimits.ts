@@ -1,4 +1,4 @@
-export type Tier = 'trial' | 'starter' | 'growth';
+export type Tier = 'trial' | 'founders' | 'starter' | 'growth';
 
 export interface TierLimits {
   proposalsPerMonth: number;
@@ -11,6 +11,22 @@ export interface TierLimits {
 }
 
 export const TIER_LIMITS: Record<Exclude<Tier, 'trial'>, TierLimits> = {
+  founders: {
+    label: 'Founders',
+    proposalsPerMonth: 3,
+    teamSeats: 3,
+    aiTokensPerMonth: 100_000,
+    monthlyPriceCents: 4700,
+    monthlyPriceId: 'founders_monthly',
+    highlights: [
+      'Locked-in founding-member price for life',
+      '3 AI grant proposals / month',
+      '3 team seats',
+      'Full funder database access',
+      'Deadline tracking & reminders',
+      'Email support',
+    ],
+  },
   starter: {
     label: 'Starter',
     proposalsPerMonth: 3,

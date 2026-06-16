@@ -1,14 +1,14 @@
 // Public chat endpoint for the landing page chatbot.
-// Streams responses from Lovable AI, grounded with a system prompt about GrantMatch services.
+// Streams responses from Lovable AI, grounded with a system prompt about Find Your Grant services.
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-const SYSTEM_PROMPT = `You are GrantMatch's friendly support assistant on the public landing page.
+const SYSTEM_PROMPT = `You are Find Your Grant's friendly support assistant on the public landing page.
 
-About GrantMatch:
+About Find Your Grant:
 - A grant discovery and proposal platform purpose-built for African NGOs.
 - Database of 2,400+ vetted funders with AI-powered matching (0–100 compatibility scoring across focus, geography, timing, method).
 - Features: AI proposal writer, deadline intelligence with workload forecasting, partnership/consortia hub with MOU generator, funder CRM with email hub, automated impact report generator, team collaboration with roles, in-platform notifications and analytics.

@@ -72,6 +72,7 @@ Deno.serve(async (req) => {
       line_items: [{ price: stripePrice.id, quantity: 1 }],
       mode: isRecurring ? "subscription" : "payment",
       ui_mode: "embedded_page",
+      allow_promotion_codes: true,
       return_url: returnUrl,
       customer: customerId,
       metadata: { userId: user.id, lovable_price_id: priceId },

@@ -8,6 +8,7 @@ const supabaseAdmin = createClient(
 );
 
 const PRICE_TO_TIER: Record<string, string> = {
+  founders_monthly: 'founders',
   starter_monthly: 'starter',
   growth_monthly: 'growth',
 };

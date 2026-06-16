@@ -2,8 +2,9 @@ import { useSearchParams, Link } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { CheckCircle2, Loader2 } from "lucide-react";
+import { CheckCircle2 } from "lucide-react";
 import { useAccess } from "@/hooks/useAccess";
+import AfricaSpinner from "../components/AfricaSpinner";
 
 export default function CheckoutReturnPage() {
   const [params] = useSearchParams();
@@ -38,7 +39,7 @@ export default function CheckoutReturnPage() {
           </>
         ) : (
           <>
-            <Loader2 className="h-10 w-10 animate-spin text-primary mx-auto mb-4" />
+            <AfricaSpinner className="h-10 w-10 animate-spin text-primary mx-auto mb-4" />
             <h1 className="text-lg font-semibold">Finalising your subscription…</h1>
             <p className="text-sm text-muted-foreground mt-2">
               We're activating your plan. This usually takes a few seconds.
