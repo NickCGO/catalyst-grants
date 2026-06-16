@@ -5,6 +5,7 @@ import { ArrowLeft, Mail, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { useAuth, useOrganisation } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
 import AfricaSpinner from "../components/AfricaSpinner";
@@ -22,6 +23,7 @@ const AuthPage = () => {
   const [country, setCountry] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [waitlistMessage, setWaitlistMessage] = useState(false);
+  const [loginError, setLoginError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!authLoading && user) {
@@ -55,7 +57,20 @@ const AuthPage = () => {
         }
       }
     } catch (error: any) {
-      toast({ title: "Login failed", description: error.message || "Please try again.", variant: "destructive" });
+      const msg = error?.message || "";
+      if (isSignup) {
+        toast({ title: "Sign up failed", description: msg || "Please try again.", variant: "destructive" });
+      } else {
+        let friendly = "We couldn't sign you in with those details. Double-check your email and password, and give it another go — you've got this.";
+        if (/invalid login credentials/i.test(msg)) {
+          friendly = "Those details don't quite match what we have on file. Take another look at your email and password and try again — we're rooting for you.";
+        } else if (/email not confirmed/i.test(msg)) {
+          friendly = "Almost there! Please confirm your email address from the link we sent you, then sign in again.";
+        } else if (/network|fetch|timeout/i.test(msg)) {
+          friendly = "We had trouble reaching the server. Check your connection and try once more.";
+        }
+        setLoginError(friendly);
+      }
     }
     setSubmitting(false);
   };
@@ -110,6 +125,22 @@ const AuthPage = () => {
           </form>
           <Link to="/" className="block text-center text-xs text-muted-foreground/80 hover:text-muted-foreground mt-4">← Back to homepage</Link>
         </motion.div>
+        <Dialog open={!!loginError} onOpenChange={(o) => !o && setLoginError(null)}>
+          <DialogContent className="max-w-md text-center border-border bg-card">
+            <DialogHeader>
+              <div className="mx-auto text-4xl mb-2">🌱</div>
+              <DialogTitle className="text-center text-foreground">Let's try that again</DialogTitle>
+              <DialogDescription className="text-center text-muted-foreground pt-2">
+                {loginError}
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter className="sm:justify-center">
+              <Button onClick={() => setLoginError(null)} className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-xl">
+                Try again
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     );
   }
