@@ -125,6 +125,22 @@ const AuthPage = () => {
           </form>
           <Link to="/" className="block text-center text-xs text-muted-foreground/80 hover:text-muted-foreground mt-4">← Back to homepage</Link>
         </motion.div>
+        <Dialog open={!!loginError} onOpenChange={(o) => !o && setLoginError(null)}>
+          <DialogContent className="max-w-md text-center border-border bg-card">
+            <DialogHeader>
+              <div className="mx-auto text-4xl mb-2">🌱</div>
+              <DialogTitle className="text-center text-foreground">Let's try that again</DialogTitle>
+              <DialogDescription className="text-center text-muted-foreground pt-2">
+                {loginError}
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter className="sm:justify-center">
+              <Button onClick={() => setLoginError(null)} className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-xl">
+                Try again
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     );
   }
