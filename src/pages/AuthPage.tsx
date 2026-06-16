@@ -57,7 +57,20 @@ const AuthPage = () => {
         }
       }
     } catch (error: any) {
-      toast({ title: "Login failed", description: error.message || "Please try again.", variant: "destructive" });
+      const msg = error?.message || "";
+      if (isSignup) {
+        toast({ title: "Sign up failed", description: msg || "Please try again.", variant: "destructive" });
+      } else {
+        let friendly = "We couldn't sign you in with those details. Double-check your email and password, and give it another go — you've got this.";
+        if (/invalid login credentials/i.test(msg)) {
+          friendly = "Those details don't quite match what we have on file. Take another look at your email and password and try again — we're rooting for you.";
+        } else if (/email not confirmed/i.test(msg)) {
+          friendly = "Almost there! Please confirm your email address from the link we sent you, then sign in again.";
+        } else if (/network|fetch|timeout/i.test(msg)) {
+          friendly = "We had trouble reaching the server. Check your connection and try once more.";
+        }
+        setLoginError(friendly);
+      }
     }
     setSubmitting(false);
   };
