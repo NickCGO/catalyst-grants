@@ -18,6 +18,7 @@ import {
 import { useNotifications } from "@/hooks/useNotifications";
 import { formatDistanceToNow } from "date-fns";
 import { useAuth, useOrganisation } from "@/hooks/useAuth";
+import AfricaSpinner from "@/components/AfricaSpinner";
 import brandLogo from "@/assets/find-the-grant-logo.png.asset.json";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -230,7 +231,7 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
     return (
       <div className="min-h-screen gradient-bg flex items-center justify-center">
         <div className="text-center space-y-4">
-          <Sparkles className="h-8 w-8 text-primary mx-auto animate-pulse" />
+          <AfricaSpinner className="h-12 w-12 text-primary mx-auto animate-spin" />
           <p className="text-sm text-muted-foreground">Loading...</p>
         </div>
       </div>
