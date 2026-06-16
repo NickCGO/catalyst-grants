@@ -9,11 +9,42 @@ function b64url(s: string) {
   return btoa(unescape(encodeURIComponent(s))).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
 }
 
-function buildMime(from: string, to: string, subject: string, body: string, cc?: string, bcc?: string) {
-  const lines = [`From: ${from}`, `To: ${to}`];
-  if (cc) lines.push(`Cc: ${cc}`);
-  if (bcc) lines.push(`Bcc: ${bcc}`);
-  lines.push(`Subject: ${subject}`, `MIME-Version: 1.0`, `Content-Type: text/plain; charset="UTF-8"`, ``, body);
+interface EmailAttachment {
+  filename: string;
+  contentBase64: string;
+  mimeType?: string;
+}
+
+function buildMime(from: string, to: string, subject: string, body: string, cc?: string, bcc?: string, attachment?: EmailAttachment) {
+  const headerLines = [`From: ${from}`, `To: ${to}`];
+  if (cc) headerLines.push(`Cc: ${cc}`);
+  if (bcc) headerLines.push(`Bcc: ${bcc}`);
+  headerLines.push(`Subject: ${subject}`, `MIME-Version: 1.0`);
+
+  if (!attachment) {
+    headerLines.push(`Content-Type: text/plain; charset="UTF-8"`, ``, body);
+    return headerLines.join("\r\n");
+  }
+
+  const boundary = `boundary_${crypto.randomUUID().replace(/-/g, "")}`;
+  const lines = [
+    ...headerLines,
+    `Content-Type: multipart/mixed; boundary="${boundary}"`,
+    ``,
+    `--${boundary}`,
+    `Content-Type: text/plain; charset="UTF-8"`,
+    ``,
+    body,
+    ``,
+    `--${boundary}`,
+    `Content-Type: ${attachment.mimeType || "application/octet-stream"}; name="${attachment.filename}"`,
+    `Content-Disposition: attachment; filename="${attachment.filename}"`,
+    `Content-Transfer-Encoding: base64`,
+    ``,
+    attachment.contentBase64,
+    ``,
+    `--${boundary}--`,
+  ];
   return lines.join("\r\n");
 }
 
@@ -65,9 +96,9 @@ async function refreshOutlook(admin: ReturnType<typeof createClient>, cred: Reco
   return tk.access_token;
 }
 
-async function sendViaGmail(admin: ReturnType<typeof createClient>, cred: Record<string, any>, to: string, subject: string, body: string, cc?: string, bcc?: string) {
+async function sendViaGmail(admin: ReturnType<typeof createClient>, cred: Record<string, any>, to: string, subject: string, body: string, cc?: string, bcc?: string, attachment?: EmailAttachment) {
   const accessToken = await refreshGmail(admin, cred);
-  const mime = buildMime(cred.email_address, to, subject, body, cc, bcc);
+  const mime = buildMime(cred.email_address, to, subject, body, cc, bcc, attachment);
   const raw = b64url(mime);
   const res = await fetch("https://gmail.googleapis.com/gmail/v1/users/me/messages/send", {
     method: "POST",
@@ -79,17 +110,23 @@ async function sendViaGmail(admin: ReturnType<typeof createClient>, cred: Record
   return data;
 }
 
-async function sendViaOutlook(admin: ReturnType<typeof createClient>, cred: Record<string, any>, to: string, subject: string, body: string, cc?: string, bcc?: string) {
+async function sendViaOutlook(admin: ReturnType<typeof createClient>, cred: Record<string, any>, to: string, subject: string, body: string, cc?: string, bcc?: string, attachment?: EmailAttachment) {
   const accessToken = await refreshOutlook(admin, cred);
   const toRecipients = to.split(",").map((addr) => ({ emailAddress: { address: addr.trim() } }));
   const ccRecipients = cc ? cc.split(",").map((addr) => ({ emailAddress: { address: addr.trim() } })) : undefined;
   const bccRecipients = bcc ? bcc.split(",").map((addr) => ({ emailAddress: { address: addr.trim() } })) : undefined;
+  const attachments = attachment ? [{
+    "@odata.type": "#microsoft.graph.fileAttachment",
+    name: attachment.filename,
+    contentType: attachment.mimeType || "application/octet-stream",
+    contentBytes: attachment.contentBase64,
+  }] : undefined;
 
   const res = await fetch("https://graph.microsoft.com/v1.0/me/sendMail", {
     method: "POST",
     headers: { Authorization: `Bearer ${accessToken}`, "Content-Type": "application/json" },
     body: JSON.stringify({
-      message: { subject, body: { contentType: "Text", content: body }, toRecipients, ccRecipients, bccRecipients },
+      message: { subject, body: { contentType: "Text", content: body }, toRecipients, ccRecipients, bccRecipients, attachments },
       saveToSentItems: true,
     }),
   });
@@ -114,9 +151,16 @@ Deno.serve(async (req) => {
     if (!user) return new Response(JSON.stringify({ error: "unauthorized" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
     const body = await req.json();
-    const { to, subject, body: messageBody, cc, bcc, funder_id, relationship_id } = body;
+    const { to, subject, body: messageBody, cc, bcc, funder_id, relationship_id, attachment } = body;
     if (!to || !subject || !messageBody) {
       return new Response(JSON.stringify({ error: "to, subject, body required" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+    let parsedAttachment: EmailAttachment | undefined;
+    if (attachment && typeof attachment === "object" && attachment.filename && attachment.contentBase64) {
+      if (typeof attachment.filename !== "string" || typeof attachment.contentBase64 !== "string") {
+        return new Response(JSON.stringify({ error: "invalid_attachment" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+      parsedAttachment = { filename: attachment.filename, contentBase64: attachment.contentBase64, mimeType: attachment.mimeType };
     }
 
     const { data: org } = await supabase.from("organisations").select("id").eq("user_id", user.id).maybeSingle();
@@ -130,9 +174,9 @@ Deno.serve(async (req) => {
 
     let sendResult: Record<string, any>;
     if (cred.provider === "gmail") {
-      sendResult = await sendViaGmail(admin, cred, to, subject, messageBody, cc, bcc);
+      sendResult = await sendViaGmail(admin, cred, to, subject, messageBody, cc, bcc, parsedAttachment);
     } else if (cred.provider === "outlook") {
-      sendResult = await sendViaOutlook(admin, cred, to, subject, messageBody, cc, bcc);
+      sendResult = await sendViaOutlook(admin, cred, to, subject, messageBody, cc, bcc, parsedAttachment);
     } else {
       return new Response(JSON.stringify({ error: `unsupported_provider: ${cred.provider}` }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }

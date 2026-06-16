@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect } from "react";
 import { useParams, useSearchParams, Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Sparkles, FileText, CheckCircle, Circle, BarChart3, ChevronRight, X, MessageSquare, History, Send, Users, Lock, Eye, ThumbsUp, ThumbsDown, Copy, ExternalLink, ArrowLeft, Info } from "lucide-react";
+import { Sparkles, FileText, CheckCircle, Circle, BarChart3, ChevronRight, X, MessageSquare, History, Send, Users, Lock, Eye, ThumbsUp, ThumbsDown, Copy, ExternalLink, ArrowLeft, Info, Download, Mail } from "lucide-react";
 import DashboardLayout from "@/components/DashboardLayout";
 import GlassCard from "@/components/GlassCard";
 import MatchScoreRing from "@/components/MatchScoreRing";
@@ -16,6 +16,8 @@ import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
 import { routeLabels, type ApplicationRoute } from "@/components/StartApplicationModal";
 import AfricaSpinner from "../components/AfricaSpinner";
+import SendProposalModal from "@/components/SendProposalModal";
+import { downloadProposalPdf } from "@/lib/proposalPdf";
 
 // Section definitions per format
 const fullProposalSections = [
@@ -118,6 +120,7 @@ const ProposalEditorPage = () => {
   const [comments, setComments] = useState<any[]>([]);
   const [newComment, setNewComment] = useState("");
   const [saving, setSaving] = useState(false);
+  const [sendModalOpen, setSendModalOpen] = useState(false);
 
   const isFormPrep = format === "online_form" || format === "form_prep";
   const isGuided = format === "guided";
@@ -362,6 +365,17 @@ const ProposalEditorPage = () => {
     toast({ title: "Copied to clipboard" });
   };
 
+  const handleDownloadPdf = () => {
+    downloadProposalPdf({
+      orgName: org?.name || "Organisation",
+      funderName: funder?.donor_name || "Funder",
+      formatLabel: formatInfo.label,
+      sections,
+      sectionContent,
+    });
+    toast({ title: "Proposal downloaded" });
+  };
+
   if (loading) return (
     <DashboardLayout>
       <div className="flex items-center justify-center h-64"><AfricaSpinner className="h-6 w-6 animate-spin text-primary" /></div>
@@ -602,6 +616,18 @@ const ProposalEditorPage = () => {
               </Button>
             )}
 
+            {totalWords > 0 && (
+              <Button size="sm" variant="outline" className="ml-1 border-border/50" onClick={handleDownloadPdf}>
+                <Download className="h-3.5 w-3.5 mr-1" /> Download PDF
+              </Button>
+            )}
+
+            {totalWords > 0 && funder?.email && (
+              <Button size="sm" variant="outline" className="border-border/50" onClick={() => setSendModalOpen(true)}>
+                <Mail className="h-3.5 w-3.5 mr-1" /> Send to Funder
+              </Button>
+            )}
+
             <span className="ml-auto text-[10px] text-muted-foreground">{funder?.donor_name}</span>
           </div>
 
@@ -752,6 +778,22 @@ const ProposalEditorPage = () => {
           )}
         </AnimatePresence>
       </div>
+
+      {funder && org && (
+        <SendProposalModal
+          open={sendModalOpen}
+          onClose={() => setSendModalOpen(false)}
+          orgId={org.id}
+          orgName={org.name || "Organisation"}
+          funderId={funder.id}
+          funderName={funder.donor_name}
+          funderEmail={funder.email}
+          funderContact={funder.contact_person}
+          formatLabel={formatInfo.label}
+          sections={sections}
+          sectionContent={sectionContent}
+        />
+      )}
     </DashboardLayout>
   );
 };

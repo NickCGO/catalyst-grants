@@ -145,12 +145,12 @@ const AuthPage = () => {
     );
   }
 
-  // Signup page (for beta testers who need accounts)
+  // Signup page
   return (
     <div className="min-h-screen bg-background flex items-center justify-center px-6">
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="glass-card p-8 max-w-md w-full">
-        <h1 className="text-xl font-bold text-foreground mb-2">Create beta account</h1>
-        <p className="text-xs text-muted-foreground/80 mb-6">Only for invited beta testers.</p>
+        <h1 className="text-xl font-bold text-foreground mb-2">Create your account</h1>
+        <p className="text-xs text-muted-foreground/80 mb-6">Start your free 7-day trial — no credit card required.</p>
         <form className="space-y-4" onSubmit={handleSubmit}>
           <div>
             <Label htmlFor="signup-org" className="text-xs text-muted-foreground">Organisation Name</Label>

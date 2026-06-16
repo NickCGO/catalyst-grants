@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowRight, Check, Copy, Globe } from "lucide-react";
+import { ArrowRight, Check, Copy, Globe, Play } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -58,6 +58,11 @@ function Nav({ waitlistCount }: { waitlistCount: number }) {
         <Link to="/login" className="hidden md:inline-flex">
           <Button variant="ghost" className="text-sm font-semibold text-muted-foreground hover:text-foreground hover:bg-secondary rounded-xl px-4">
             Log In
+          </Button>
+        </Link>
+        <Link to="/signup" className="hidden md:inline-flex">
+          <Button variant="outline" className="text-sm font-semibold rounded-xl px-4 border-primary/30 text-primary hover:bg-primary/5">
+            Sign Up
           </Button>
         </Link>
         <a href="#pricing">
@@ -159,6 +164,37 @@ function LiveTicker() {
 /* ─── Section header ─── */
 function SectionEyebrow({ children }: { children: React.ReactNode }) {
   return <p className="text-[11px] font-bold text-primary tracking-[0.18em] uppercase mb-4">{children}</p>;
+}
+
+/* ─── Demo video ─── */
+function DemoVideo() {
+  const [playing, setPlaying] = useState(false);
+  return (
+    <div className="relative aspect-video rounded-2xl overflow-hidden border border-border shadow-[0_24px_48px_-12px_hsl(var(--foreground)/0.12)] bg-card">
+      {playing ? (
+        <video
+          src="/video/demo.mp4"
+          poster="/video/demo-poster.jpg"
+          controls
+          autoPlay
+          className="w-full h-full object-cover"
+        />
+      ) : (
+        <button
+          onClick={() => setPlaying(true)}
+          aria-label="Play demo video"
+          className="group relative w-full h-full block"
+        >
+          <img src="/video/demo-poster.jpg" alt="Find The Grant demo preview" className="w-full h-full object-cover" loading="lazy" />
+          <div className="absolute inset-0 bg-foreground/20 group-hover:bg-foreground/30 transition-colors flex items-center justify-center">
+            <span className="h-16 w-16 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+              <Play className="h-6 w-6 fill-current ml-0.5" />
+            </span>
+          </div>
+        </button>
+      )}
+    </div>
+  );
 }
 
 /* ─── Waitlist form ─── */
@@ -368,6 +404,17 @@ const LandingPage = () => {
       </section>
 
       <LiveTicker />
+
+      {/* ─── Watch the Demo ─── */}
+      <section className="py-24 px-6 lg:px-12">
+        <div className="max-w-4xl mx-auto text-center">
+          <SectionEyebrow>Watch the Demo</SectionEyebrow>
+          <h2 className="text-4xl lg:text-5xl font-bold tracking-tight mb-10">
+            See Find The Grant in action.
+          </h2>
+          <DemoVideo />
+        </div>
+      </section>
 
       {/* ─── The Problem ─── */}
       <section className="py-24 px-6 lg:px-12">
@@ -633,6 +680,9 @@ const LandingPage = () => {
             </Link>
             <Link to="/terms" className="text-xs text-muted-foreground hover:text-primary transition-colors">
               Terms
+            </Link>
+            <Link to="/signup" className="text-xs text-muted-foreground hover:text-primary transition-colors">
+              Sign up
             </Link>
             <Link to="/login" className="text-xs text-muted-foreground hover:text-primary transition-colors">
               Team login
