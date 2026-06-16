@@ -24,11 +24,12 @@ Deno.serve(async (req) => {
     const { data: org } = await supabase.from("organisations").select("id").eq("user_id", user.id).maybeSingle();
     if (!org) return new Response(JSON.stringify({ error: "no_org" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
-    const { returnTo } = await req.json().catch(() => ({ returnTo: "" }));
+    const { returnTo, origin: bodyOrigin } = await req.json().catch(() => ({ returnTo: "", origin: "" }));
+    const appOrigin = bodyOrigin || req.headers.get("origin") || req.headers.get("referer") || "";
 
     const clientId = Deno.env.get("GOOGLE_OAUTH_CLIENT_ID")!;
     const redirectUri = `${Deno.env.get("SUPABASE_URL")}/functions/v1/gmail-oauth-callback`;
-    const state = btoa(JSON.stringify({ org_id: org.id, user_id: user.id, return_to: returnTo || "/settings", t: Date.now() }));
+    const state = btoa(JSON.stringify({ org_id: org.id, user_id: user.id, return_to: returnTo || "/settings", origin: appOrigin, t: Date.now() }));
 
     const scope = [
       "https://www.googleapis.com/auth/gmail.send",

@@ -25,16 +25,17 @@ Deno.serve(async (req) => {
   const stateRaw = url.searchParams.get("state");
   const errorParam = url.searchParams.get("error");
 
-  const origin = req.headers.get("origin") || req.headers.get("referer") || "https://grant-match.app";
-  let returnTo = `${origin}/settings`;
+  const fallbackOrigin = req.headers.get("origin") || "https://catalyst-grants.lovable.app";
+  let returnTo = `${fallbackOrigin}/settings`;
 
   if (errorParam) return htmlResponse(`Google returned: ${errorParam}`, returnTo, false);
   if (!code || !stateRaw) return htmlResponse("Missing code or state parameter.", returnTo, false);
 
   let state: any;
   try { state = JSON.parse(atob(stateRaw)); } catch { return htmlResponse("Invalid state.", returnTo, false); }
-  const { org_id, user_id, return_to } = state;
-  if (return_to) returnTo = return_to.startsWith("http") ? return_to : `https://grant-match.app${return_to}`;
+  const { org_id, user_id, return_to, origin: stateOrigin } = state;
+  const appOrigin = stateOrigin || fallbackOrigin;
+  if (return_to) returnTo = return_to.startsWith("http") ? return_to : `${appOrigin}${return_to}`;
 
   try {
     const clientId = Deno.env.get("GOOGLE_OAUTH_CLIENT_ID")!;
