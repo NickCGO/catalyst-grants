@@ -3,6 +3,23 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import type { User, Session } from "@supabase/supabase-js";
 
+const AUTH_RESTORE_TIMEOUT_MS = 5000;
+const BACKEND_QUERY_TIMEOUT_MS = 8000;
+
+const withAsyncTimeout = async <T,>(task: PromiseLike<T>, timeoutMs: number, label: string): Promise<T> => {
+  let timeoutId: ReturnType<typeof setTimeout> | undefined;
+  try {
+    return await Promise.race([
+      Promise.resolve(task),
+      new Promise<T>((_, reject) => {
+        timeoutId = setTimeout(() => reject(new Error(`${label} timed out`)), timeoutMs);
+      }),
+    ]);
+  } finally {
+    if (timeoutId) clearTimeout(timeoutId);
+  }
+};
+
 type AuthSnapshot = {
   user: User | null;
   session: Session | null;
@@ -32,6 +49,7 @@ const ensureAuthInitialized = () => {
 
   supabase.auth
     .getSession()
+    .then((sessionResult) => withAsyncTimeout(Promise.resolve(sessionResult), AUTH_RESTORE_TIMEOUT_MS, "Session restore"))
     .then(({ data: { session } }) => updateAuthSnapshot(session, false))
     .catch((error) => {
       console.error("Session restore error:", error);
@@ -64,6 +82,7 @@ export function useAuth() {
       },
     });
     if (error) throw error;
+    if (data.session) updateAuthSnapshot(data.session, false);
     
     // Create organisation record if user was created
     if (data.user) {
@@ -82,11 +101,16 @@ export function useAuth() {
   const signIn = async (email: string, password: string) => {
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) throw error;
+    updateAuthSnapshot(data.session, false);
     return data;
   };
 
   const signOut = async () => {
-    await supabase.auth.signOut();
+    try {
+      await supabase.auth.signOut();
+    } finally {
+      updateAuthSnapshot(null, false);
+    }
   };
 
   const signInWithGoogle = async () => {
@@ -139,11 +163,15 @@ export function useOrganisation() {
       setLoading(true);
 
       try {
-        const { data, error } = await supabase
+        const { data, error } = await withAsyncTimeout(
+          supabase
           .from("organisations")
           .select("*")
           .eq("user_id", user.id)
-          .maybeSingle();
+            .maybeSingle(),
+          BACKEND_QUERY_TIMEOUT_MS,
+          "Organisation load"
+        );
 
         if (!isActive) return;
 
