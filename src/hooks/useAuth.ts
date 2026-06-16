@@ -47,9 +47,7 @@ const ensureAuthInitialized = () => {
     updateAuthSnapshot(session, false);
   });
 
-  supabase.auth
-    .getSession()
-    .then((sessionResult) => withAsyncTimeout(Promise.resolve(sessionResult), AUTH_RESTORE_TIMEOUT_MS, "Session restore"))
+  withAsyncTimeout(supabase.auth.getSession(), AUTH_RESTORE_TIMEOUT_MS, "Session restore")
     .then(({ data: { session } }) => updateAuthSnapshot(session, false))
     .catch((error) => {
       console.error("Session restore error:", error);
