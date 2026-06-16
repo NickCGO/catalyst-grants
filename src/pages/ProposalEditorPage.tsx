@@ -349,6 +349,18 @@ const ProposalEditorPage = () => {
     toast({ title: "Changes requested" });
   };
 
+  const markAsSubmitted = async () => {
+    if (!proposalId) return;
+    if (!confirm("Mark this proposal as submitted to the funder? This will also update the linked application.")) return;
+    const submittedAt = new Date().toISOString();
+    await supabase.from("proposals").update({ status: "submitted", submitted_at: submittedAt }).eq("id", proposalId);
+    if (proposal?.application_id) {
+      await supabase.from("applications").update({ status: "submitted", submitted_at: submittedAt }).eq("id", proposal.application_id);
+    }
+    setProposalStatus("submitted");
+    toast({ title: "Marked as submitted", description: "Tracked in your application pipeline." });
+  };
+
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
     toast({ title: "Copied to clipboard" });
