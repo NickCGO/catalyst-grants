@@ -6,14 +6,19 @@ const corsHeaders = {
 };
 
 function htmlResponse(message: string, returnTo: string, ok: boolean) {
+  const safeMessage = message.replace(/[&<>"]/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[char] ?? char));
+  const safeReturnTo = returnTo.startsWith("http") ? returnTo : "https://catalyst-grants.lovable.app/settings";
   const html = `<!doctype html><html><head><title>Gmail ${ok ? "Connected" : "Error"}</title>
 <style>body{font-family:system-ui;background:#fff;color:#0f172a;display:flex;align-items:center;justify-content:center;height:100vh;margin:0}
 .card{max-width:420px;padding:32px;border:1px solid #e2e8f0;border-radius:12px;text-align:center;box-shadow:0 4px 16px rgba(0,0,0,0.05)}
 h1{font-size:18px;margin:0 0 8px} p{color:#64748b;font-size:14px;margin:0 0 16px}
 a{display:inline-block;padding:8px 16px;background:#0ea5e9;color:#fff;text-decoration:none;border-radius:8px;font-size:14px}</style></head>
-<body><div class="card"><h1>${ok ? "✓ Gmail connected" : "Connection failed"}</h1><p>${message}</p>
-<a href="${returnTo}">Return to app</a></div>
-<script>setTimeout(()=>{window.location.href=${JSON.stringify(returnTo)}},2000)</script></body></html>`;
+<body><div class="card"><h1>${ok ? "✓ Gmail connected" : "Connection failed"}</h1><p>${safeMessage}</p>
+<a href="${safeReturnTo}" target="_top">Return to app</a></div>
+<script>
+  try { if (window.opener) window.opener.location.href = ${JSON.stringify(safeReturnTo)}; } catch (_) {}
+  setTimeout(()=>{window.location.href=${JSON.stringify(safeReturnTo)}},2000)
+</script></body></html>`;
   return new Response(html, { headers: { "Content-Type": "text/html" } });
 }
 
