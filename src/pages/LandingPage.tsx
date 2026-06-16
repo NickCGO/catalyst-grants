@@ -54,6 +54,11 @@ function Nav({ waitlistCount }: { waitlistCount: number }) {
           <span className="h-2 w-2 rounded-full bg-success" />
           <AnimatedCounter end={waitlistCount} className="text-foreground font-semibold" /> NGOs already waiting
         </span>
+        <Link to="/login" className="hidden md:inline-flex">
+          <Button variant="ghost" className="text-sm font-semibold text-muted-foreground hover:text-foreground hover:bg-secondary rounded-xl px-4">
+            Log In
+          </Button>
+        </Link>
         <a href="#pricing">
           <Button className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-xl text-sm px-5 py-2 shadow-sm">
             Claim your spot
@@ -340,6 +345,13 @@ const LandingPage = () => {
                 Claim your spot: $47/month at launch <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
             </a>
+            <div className="mt-4">
+              <Link to="/login">
+                <Button variant="outline" size="lg" className="rounded-xl text-base px-7 py-5 h-auto border-2 border-primary/30 text-primary hover:bg-primary/5 hover:border-primary/50">
+                  Already have access? Log In
+                </Button>
+              </Link>
+            </div>
             <div className="flex items-center gap-2 mt-5 text-sm text-muted-foreground">
               <span className="h-2 w-2 rounded-full bg-success animate-pulse" />
               <AnimatedCounter end={waitlistCount} className="text-foreground font-semibold" /> NGOs already waiting
@@ -599,6 +611,13 @@ const LandingPage = () => {
           <p className="text-xs text-muted-foreground mt-5">
             No charge until launch. Cancel any time. $47/month for life if you join now.
           </p>
+          <div className="mt-6">
+            <Link to="/login">
+              <Button variant="outline" className="rounded-xl text-sm px-6 py-3 h-auto border border-primary/30 text-primary hover:bg-primary/5 hover:border-primary/50">
+                Already have access? Log In
+              </Button>
+            </Link>
+          </div>
         </div>
       </section>
 
