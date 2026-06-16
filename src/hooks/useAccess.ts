@@ -2,6 +2,23 @@ import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { getStripeEnvironment } from "@/lib/stripe";
 import type { Tier } from "@/lib/tierLimits";
+import { useAuth } from "@/hooks/useAuth";
+
+const ACCESS_TIMEOUT_MS = 8000;
+
+const withTimeout = async <T,>(task: PromiseLike<T>, timeoutMs: number): Promise<T> => {
+  let timeoutId: ReturnType<typeof setTimeout> | undefined;
+  try {
+    return await Promise.race([
+      Promise.resolve(task),
+      new Promise<T>((_, reject) => {
+        timeoutId = setTimeout(() => reject(new Error("Access check timed out")), timeoutMs);
+      }),
+    ]);
+  } finally {
+    if (timeoutId) clearTimeout(timeoutId);
+  }
+};
 
 export type AccessState =
   | { state: 'loading' }
@@ -12,36 +29,46 @@ export type AccessState =
   | { state: 'limit_reached'; tier: Tier; price_id: string | null; status: string; current_period_end: string | null; cancel_at_period_end: boolean; proposals_used: number; proposals_limit: number };
 
 export function useAccess() {
+  const { user, loading: authLoading } = useAuth();
   const [access, setAccess] = useState<AccessState>({ state: 'loading' });
 
   const refresh = useCallback(async () => {
-    const { data, error } = await supabase.rpc('get_access_state', { _env: getStripeEnvironment() });
-    if (error || !data) {
+    if (authLoading) return;
+    if (!user) {
       setAccess({ state: 'anonymous' });
       return;
     }
-    setAccess(data as AccessState);
-  }, []);
+    try {
+      const { data, error } = await withTimeout(
+        supabase.rpc('get_access_state', { _env: getStripeEnvironment() }),
+        ACCESS_TIMEOUT_MS
+      );
+      if (error || !data) {
+        setAccess({ state: 'anonymous' });
+        return;
+      }
+      setAccess(data as AccessState);
+    } catch (error) {
+      console.error("Access state load error:", error);
+      setAccess({ state: 'anonymous' });
+    }
+  }, [authLoading, user]);
 
   useEffect(() => {
+    if (authLoading) return;
     refresh();
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(() => refresh());
+    if (!user) return;
 
     // Realtime: refresh on any subscriptions change for current user
-    let channel: ReturnType<typeof supabase.channel> | null = null;
-    supabase.auth.getUser().then(({ data }) => {
-      if (!data.user) return;
-      channel = supabase
-        .channel(`subscriptions-${data.user.id}`)
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'subscriptions', filter: `user_id=eq.${data.user.id}` }, () => refresh())
-        .subscribe();
-    });
+    const channel = supabase
+      .channel(`subscriptions-${user.id}-${crypto.randomUUID()}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'subscriptions', filter: `user_id=eq.${user.id}` }, () => refresh())
+      .subscribe();
 
     return () => {
-      subscription.unsubscribe();
-      if (channel) supabase.removeChannel(channel);
+      supabase.removeChannel(channel);
     };
-  }, [refresh]);
+  }, [authLoading, user, refresh]);
 
   return { access, refresh };
 }
