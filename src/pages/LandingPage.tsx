@@ -611,6 +611,13 @@ const LandingPage = () => {
           <p className="text-xs text-muted-foreground mt-5">
             No charge until launch. Cancel any time. $47/month for life if you join now.
           </p>
+          <div className="mt-6">
+            <Link to="/login">
+              <Button variant="outline" className="rounded-xl text-sm px-6 py-3 h-auto border border-primary/30 text-primary hover:bg-primary/5 hover:border-primary/50">
+                Already have access? Log In
+              </Button>
+            </Link>
+          </div>
         </div>
       </section>
 
