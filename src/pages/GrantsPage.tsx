@@ -206,32 +206,53 @@ const GrantsPage = () => {
         query = query.in("category", selectedCategories);
       }
 
-      query = query.order(sortBy === "name" ? "donor_name" : "donor_name", { ascending: sortBy === "name" });
-      query = query.range(page * PAGE_SIZE, (page + 1) * PAGE_SIZE - 1);
+      let funderRows: any[] = [];
+      let count = 0;
+      let focusMap: Record<string, any> = {};
+      let windowMap: Record<string, any> = {};
 
-      const { data: funderRows, count, error } = await query;
-      if (error) throw error;
+      if (sortBy === "score") {
+        query = query.order("donor_name", { ascending: true });
+        const { data, count: dbCount, error } = await query;
+        if (error) throw error;
+        funderRows = data || [];
+        count = dbCount || 0;
 
-      const funderIds = (funderRows || []).map(f => f.id);
-      if (funderIds.length === 0) {
+        if (funderRows.length > 0) {
+          const [allFocus, allWindows] = await Promise.all([
+            fetchAllRows("funder_focus_areas", "*"),
+            fetchAllRows("funder_windows", "*"),
+          ]);
+          allFocus.forEach((r: any) => { if (r.funder_id) focusMap[r.funder_id] = r; });
+          allWindows.forEach((r: any) => { if (r.funder_id) windowMap[r.funder_id] = r; });
+        }
+      } else {
+        query = query.order("donor_name", { ascending: true });
+        query = query.range(page * PAGE_SIZE, (page + 1) * PAGE_SIZE - 1);
+        const { data, count: dbCount, error } = await query;
+        if (error) throw error;
+        funderRows = data || [];
+        count = dbCount || 0;
+
+        const funderIds = (funderRows || []).map((f: any) => f.id);
+        if (funderIds.length > 0) {
+          const [focusRes, windowsRes] = await Promise.all([
+            supabase.from("funder_focus_areas").select("*").in("funder_id", funderIds),
+            supabase.from("funder_windows").select("*").in("funder_id", funderIds),
+          ]);
+          (focusRes.data || []).forEach((r: any) => { if (r.funder_id) focusMap[r.funder_id] = r; });
+          (windowsRes.data || []).forEach((r: any) => { if (r.funder_id) windowMap[r.funder_id] = r; });
+        }
+      }
+
+      if (funderRows.length === 0) {
         setFunders([]);
-        setTotalCount(count || 0);
+        setTotalCount(count);
         setLoading(false);
         return;
       }
 
-      // Fetch focus areas and windows in parallel
-      const [focusRes, windowsRes] = await Promise.all([
-        supabase.from("funder_focus_areas").select("*").in("funder_id", funderIds),
-        supabase.from("funder_windows").select("*").in("funder_id", funderIds),
-      ]);
-
-      const focusMap: Record<string, any> = {};
-      (focusRes.data || []).forEach(r => { if (r.funder_id) focusMap[r.funder_id] = r; });
-      const windowMap: Record<string, any> = {};
-      (windowsRes.data || []).forEach(r => { if (r.funder_id) windowMap[r.funder_id] = r; });
-
-      let combined = (funderRows || []).map(f => ({
+      let combined = funderRows.map(f => ({
         id: f.id,
         name: f.donor_name,
         category: f.category || "Other",
@@ -266,13 +287,17 @@ const GrantsPage = () => {
       if (consortiumOnly) {
         combined = combined.filter(f => f.consortium);
       }
-      // Sort by match score client-side if needed
+      // Sort by match score and paginate client-side when in score mode
       if (sortBy === "score") {
         combined.sort((a, b) => b.matchScore - a.matchScore);
+        const totalFiltered = combined.length;
+        combined = combined.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
+        setTotalCount(totalFiltered);
+      } else {
+        setTotalCount(count);
       }
 
       setFunders(combined);
-      setTotalCount(count || 0);
     } catch (err: any) {
       console.error("Error fetching funders:", err);
       toast.error("Failed to load funders");
