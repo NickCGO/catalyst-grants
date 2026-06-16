@@ -3,25 +3,55 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import type { User, Session } from "@supabase/supabase-js";
 
+type AuthSnapshot = {
+  user: User | null;
+  session: Session | null;
+  loading: boolean;
+};
+
+let authSnapshot: AuthSnapshot = { user: null, session: null, loading: true };
+let authInitialized = false;
+const authSubscribers = new Set<() => void>();
+
+const updateAuthSnapshot = (session: Session | null, loading = false) => {
+  authSnapshot = {
+    session,
+    user: session?.user ?? null,
+    loading,
+  };
+  authSubscribers.forEach((notify) => notify());
+};
+
+const ensureAuthInitialized = () => {
+  if (authInitialized) return;
+  authInitialized = true;
+
+  supabase.auth.onAuthStateChange((_event, session) => {
+    updateAuthSnapshot(session, false);
+  });
+
+  supabase.auth
+    .getSession()
+    .then(({ data: { session } }) => updateAuthSnapshot(session, false))
+    .catch((error) => {
+      console.error("Session restore error:", error);
+      updateAuthSnapshot(null, false);
+    });
+};
+
 export function useAuth() {
-  const [user, setUser] = useState<User | null>(null);
-  const [session, setSession] = useState<Session | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [state, setState] = useState<AuthSnapshot>(authSnapshot);
 
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      setLoading(false);
-    });
+    ensureAuthInitialized();
 
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      setLoading(false);
-    });
+    const notify = () => setState(authSnapshot);
+    authSubscribers.add(notify);
+    notify();
 
-    return () => subscription.unsubscribe();
+    return () => {
+      authSubscribers.delete(notify);
+    };
   }, []);
 
   const signUp = async (email: string, password: string, orgName: string, country: string) => {
@@ -67,7 +97,7 @@ export function useAuth() {
     if (error) throw error;
   };
 
-  return { user, session, loading, signUp, signIn, signOut, signInWithGoogle };
+  return { ...state, signUp, signIn, signOut, signInWithGoogle };
 }
 
 export function useRequireAuth() {
@@ -84,6 +114,7 @@ export function useRequireAuth() {
 }
 
 export function useOrganisation() {
+  const { user, loading: authLoading } = useAuth();
   const [org, setOrg] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [refreshKey, setRefreshKey] = useState(0);
@@ -94,10 +125,10 @@ export function useOrganisation() {
     let isActive = true;
 
     const loadOrganisation = async () => {
-      setLoading(true);
-
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!isActive) return;
+      if (authLoading) {
+        setLoading(true);
+        return;
+      }
 
       if (!user) {
         setOrg(null);
@@ -105,37 +136,38 @@ export function useOrganisation() {
         return;
       }
 
-      const { data, error } = await supabase
-        .from("organisations")
-        .select("*")
-        .eq("user_id", user.id)
-        .maybeSingle();
+      setLoading(true);
 
-      if (!isActive) return;
+      try {
+        const { data, error } = await supabase
+          .from("organisations")
+          .select("*")
+          .eq("user_id", user.id)
+          .maybeSingle();
 
-      if (error) {
-        console.error("Organisation load error:", error);
+        if (!isActive) return;
+
+        if (error) {
+          console.error("Organisation load error:", error);
+          setOrg(null);
+        } else {
+          setOrg(data ?? null);
+        }
+      } catch (error) {
+        if (!isActive) return;
+        console.error("Organisation load exception:", error);
         setOrg(null);
-      } else {
-        setOrg(data ?? null);
+      } finally {
+        if (isActive) setLoading(false);
       }
-
-      setLoading(false);
     };
 
     loadOrganisation();
 
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(() => {
-      loadOrganisation();
-    });
-
     return () => {
       isActive = false;
-      subscription.unsubscribe();
     };
-  }, [refreshKey]);
+  }, [authLoading, user?.id, refreshKey]);
 
   return { org, loading, refetch };
 }
