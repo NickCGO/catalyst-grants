@@ -80,6 +80,21 @@ function isConsortium(funder: FunderRow): boolean {
   return /consortium|partnership|joint|multi-org/.test(text);
 }
 
+async function fetchAllRows(table: string, select: string): Promise<any[]> {
+  const rows: any[] = [];
+  let from = 0;
+  const chunk = 1000;
+  while (true) {
+    const { data, error } = await supabase.from(table as any).select(select).range(from, from + chunk - 1);
+    if (error) throw error;
+    const batch = data || [];
+    rows.push(...batch);
+    if (batch.length < chunk) break;
+    from += chunk;
+  }
+  return rows;
+}
+
 const GrantsPage = () => {
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
