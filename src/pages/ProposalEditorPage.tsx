@@ -349,6 +349,17 @@ const ProposalEditorPage = () => {
     toast({ title: "Changes requested" });
   };
 
+  const markAsSubmitted = async () => {
+    if (!proposalId) return;
+    if (!confirm("Mark this proposal as submitted to the funder? This will also update the linked application.")) return;
+    await supabase.from("proposals").update({ status: "submitted" }).eq("id", proposalId);
+    if (proposal?.application_id) {
+      await supabase.from("applications").update({ status: "submitted" }).eq("id", proposal.application_id);
+    }
+    setProposalStatus("submitted");
+    toast({ title: "Marked as submitted", description: "Tracked in your application pipeline." });
+  };
+
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
     toast({ title: "Copied to clipboard" });
@@ -547,6 +558,16 @@ const ProposalEditorPage = () => {
             </div>
           )}
 
+          {/* Header row with back link */}
+          <div className="flex items-center justify-between mb-3">
+            <Link to="/writer" className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground">
+              <ArrowLeft className="h-3 w-3" /> Back to Proposals
+            </Link>
+            {proposalStatus === "submitted" && (
+              <span className="text-[10px] px-2 py-1 rounded-full bg-purple-500/15 text-purple-400 font-medium">✓ Submitted</span>
+            )}
+          </div>
+
           {/* Toolbar */}
           <div className="flex items-center gap-2 mb-3 flex-wrap">
             <Button size="sm" className="bg-primary text-primary-foreground hover:bg-primary/90" disabled={generating || generatingAll} onClick={() => generateSection(activeSection)}>
@@ -575,6 +596,12 @@ const ProposalEditorPage = () => {
             {proposalStatus === "draft" && totalWords > 50 && (
               <Button size="sm" variant="outline" className="ml-2 border-accent-amber/30 text-accent-amber hover:bg-accent-amber/10" onClick={submitForReview}>
                 <Send className="h-3.5 w-3.5 mr-1" /> Submit for Review
+              </Button>
+            )}
+
+            {proposalStatus !== "submitted" && totalWords > 50 && (
+              <Button size="sm" className="ml-1 bg-purple-500 text-white hover:bg-purple-500/90" onClick={markAsSubmitted}>
+                <Send className="h-3.5 w-3.5 mr-1" /> Mark as Submitted
               </Button>
             )}
 

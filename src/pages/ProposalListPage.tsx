@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Plus, FileText, Sparkles } from "lucide-react";
+import { Plus, FileText, Send } from "lucide-react";
 import DashboardLayout from "@/components/DashboardLayout";
 import GlassCard from "@/components/GlassCard";
 import MatchScoreRing from "@/components/MatchScoreRing";
@@ -11,6 +11,7 @@ import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { toast } from "@/hooks/use-toast";
 
 const ProposalListPage = () => {
   const { user } = useAuth();
@@ -71,6 +72,17 @@ const ProposalListPage = () => {
               const funderName = p.funders?.donor_name || "Unknown Funder";
               const project = p.applications?.project_name || "Proposal";
               const wordPct = p.target_word_count ? Math.min(100, Math.round(((p.word_count || 0) / p.target_word_count) * 100)) : 0;
+              const isSubmitted = ["submitted","successful","denied","follow_up","report_due"].includes(p.status);
+              const handleSubmit = async (e: React.MouseEvent) => {
+                e.stopPropagation();
+                if (!confirm(`Mark "${project}" as submitted to ${funderName}?`)) return;
+                await supabase.from("proposals").update({ status: "submitted" }).eq("id", p.id);
+                if (p.application_id) {
+                  await supabase.from("applications").update({ status: "submitted" }).eq("id", p.application_id);
+                }
+                setProposals(prev => prev.map(x => x.id === p.id ? { ...x, status: "submitted" } : x));
+                toast({ title: "Marked as submitted" });
+              };
               return (
                 <motion.div key={p.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.04 }}>
                   <GlassCard className="p-4 hover:border-primary/30 transition-all cursor-pointer" onClick={() => navigate(`/writer/${p.id}`)}>
@@ -91,7 +103,14 @@ const ProposalListPage = () => {
                           </span>
                         </div>
                       </div>
-                      {p.ai_score && <MatchScoreRing score={p.ai_score} size="sm" />}
+                      <div className="flex items-center gap-3 shrink-0">
+                        {!isSubmitted && (
+                          <Button size="sm" variant="outline" className="h-7 text-[10px] border-purple-500/40 text-purple-500 hover:bg-purple-500/10" onClick={handleSubmit}>
+                            <Send className="h-3 w-3 mr-1" /> Mark Submitted
+                          </Button>
+                        )}
+                        {p.ai_score && <MatchScoreRing score={p.ai_score} size="sm" />}
+                      </div>
                     </div>
                   </GlassCard>
                 </motion.div>
