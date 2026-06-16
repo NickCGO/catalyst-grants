@@ -39,7 +39,7 @@ export default function ConnectedInboxesTab() {
     setConnecting(true);
     try {
       const { data, error } = await supabase.functions.invoke("gmail-oauth-start", {
-        body: { returnTo: window.location.pathname + window.location.search },
+        body: { returnTo: window.location.pathname + window.location.search, origin: window.location.origin },
       });
       if (error || !data?.url) throw error || new Error("Could not start OAuth");
       window.location.href = data.url;
