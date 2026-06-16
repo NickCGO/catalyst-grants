@@ -558,6 +558,16 @@ const ProposalEditorPage = () => {
             </div>
           )}
 
+          {/* Header row with back link */}
+          <div className="flex items-center justify-between mb-3">
+            <Link to="/writer" className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground">
+              <ArrowLeft className="h-3 w-3" /> Back to Proposals
+            </Link>
+            {proposalStatus === "submitted" && (
+              <span className="text-[10px] px-2 py-1 rounded-full bg-purple-500/15 text-purple-400 font-medium">✓ Submitted</span>
+            )}
+          </div>
+
           {/* Toolbar */}
           <div className="flex items-center gap-2 mb-3 flex-wrap">
             <Button size="sm" className="bg-primary text-primary-foreground hover:bg-primary/90" disabled={generating || generatingAll} onClick={() => generateSection(activeSection)}>
