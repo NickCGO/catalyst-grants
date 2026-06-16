@@ -599,6 +599,12 @@ const ProposalEditorPage = () => {
               </Button>
             )}
 
+            {proposalStatus !== "submitted" && totalWords > 50 && (
+              <Button size="sm" className="ml-1 bg-purple-500 text-white hover:bg-purple-500/90" onClick={markAsSubmitted}>
+                <Send className="h-3.5 w-3.5 mr-1" /> Mark as Submitted
+              </Button>
+            )}
+
             <span className="ml-auto text-[10px] text-muted-foreground">{funder?.donor_name}</span>
           </div>
 
