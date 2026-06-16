@@ -2,6 +2,26 @@ import { supabase } from "@/integrations/supabase/client";
 
 const MONTH_KEYS = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"] as const;
 
+const PAGE_SIZE = 1000;
+
+/**
+ * Supabase's REST API caps unbounded `select()` calls at a default row limit (1000).
+ * Page through with `.range()` until a page comes back short, to fetch the full table.
+ */
+async function fetchAllRows<T = any>(table: string, select: string): Promise<T[]> {
+  const rows: T[] = [];
+  let from = 0;
+  while (true) {
+    const { data, error } = await supabase.from(table as any).select(select).range(from, from + PAGE_SIZE - 1);
+    if (error) throw error;
+    const batch = (data || []) as T[];
+    rows.push(...batch);
+    if (batch.length < PAGE_SIZE) break;
+    from += PAGE_SIZE;
+  }
+  return rows;
+}
+
 interface OrgProfile {
   id: string;
   focus_areas: string[] | null;
@@ -26,16 +46,13 @@ export async function computeMatchScores(org: OrgProfile): Promise<number> {
   const orgFocus = new Set(org.focus_areas || []);
   if (orgFocus.size === 0) return 0;
 
-  // Fetch all funder focus areas, windows, and funders in parallel
-  const [focusRes, windowsRes, fundersRes] = await Promise.all([
-    supabase.from("funder_focus_areas").select("*"),
-    supabase.from("funder_windows").select("*"),
-    supabase.from("funders").select("id, geographical_area, method_of_approach, category"),
+  // Fetch all funder focus areas, windows, and funders in parallel (paginated — these
+  // tables can exceed the API's default 1000-row cap on a single select).
+  const [focusRows, windowRows, funderRows] = await Promise.all([
+    fetchAllRows<any>("funder_focus_areas", "*"),
+    fetchAllRows<any>("funder_windows", "*"),
+    fetchAllRows<any>("funders", "id, geographical_area, method_of_approach, category"),
   ]);
-
-  const focusRows = focusRes.data || [];
-  const windowRows = windowsRes.data || [];
-  const funderRows = fundersRes.data || [];
 
   // Index windows and funders by id
   const windowMap: Record<string, any> = {};
@@ -47,8 +64,8 @@ export async function computeMatchScores(org: OrgProfile): Promise<number> {
   const orgGeo = `${org.country || ""} ${org.region || ""} ${(org.regions_of_operation || []).join(" ")}`.toLowerCase();
 
   const matches: Array<{
-    funder_id: string; match_score: number;
-    focus_score: number; geo_score: number; timing_score: number; method_score: number;
+    funder_id: string; match_score: number | null;
+    focus_score: number | null; geo_score: number | null; timing_score: number | null; method_score: number | null;
   }> = [];
 
   for (const row of focusRows) {
@@ -56,9 +73,20 @@ export async function computeMatchScores(org: OrgProfile): Promise<number> {
     const funder = funderMap[row.funder_id];
     if (!funder) continue;
 
-    // 1. Focus score (40%)
+    // 1. Focus score (40%) — funders with no focus-area tags at all are flagged as
+    // "general" (null score) rather than scored, since there's nothing to match against.
     const funderAreas = focusColumns.filter(col => (row as any)[col] === true);
-    if (funderAreas.length === 0) continue;
+    if (funderAreas.length === 0) {
+      matches.push({
+        funder_id: row.funder_id,
+        match_score: null,
+        focus_score: null,
+        geo_score: null,
+        timing_score: null,
+        method_score: null,
+      });
+      continue;
+    }
     const overlap = funderAreas.filter(a => orgFocus.has(a)).length;
     const focusScore = Math.round((overlap / Math.max(orgFocus.size, 1)) * 100);
 

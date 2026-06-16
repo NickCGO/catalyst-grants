@@ -85,7 +85,8 @@ export default function PricingPage() {
 
         <p className="text-center text-xs text-muted-foreground mt-8">
           Cancel anytime. Plans renew monthly. Your proposal counter resets each billing cycle. By subscribing you agree to our{' '}
-          <Link to="/help" className="underline">terms</Link>.
+          <Link to="/terms" className="underline">Terms of Service</Link> and{' '}
+          <Link to="/privacy" className="underline">Privacy Policy</Link>.
         </p>
       </div>
 

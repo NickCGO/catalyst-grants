@@ -40,10 +40,12 @@ import {
 } from "./pages/help/HelpPages";
 import PricingPage from "./pages/PricingPage";
 import CheckoutReturnPage from "./pages/CheckoutReturnPage";
+import PrivacyPolicyPage from "./pages/PrivacyPolicyPage";
+import TermsPage from "./pages/TermsPage";
 
 const queryClient = new QueryClient();
 
-const PUBLIC_ROUTES = ["/", "/login", "/signup"];
+const PUBLIC_ROUTES = ["/", "/login", "/signup", "/privacy", "/terms"];
 
 const AnalyticsTracker = () => {
   useAnalytics();
@@ -119,6 +121,10 @@ const App = () => (
           {/* Billing */}
           <Route path="/pricing" element={<PricingPage />} />
           <Route path="/checkout/return" element={<CheckoutReturnPage />} />
+
+          {/* Legal */}
+          <Route path="/privacy" element={<PrivacyPolicyPage />} />
+          <Route path="/terms" element={<TermsPage />} />
 
           {/* Help center */}
           <Route path="/help" element={<HelpLayout />}>

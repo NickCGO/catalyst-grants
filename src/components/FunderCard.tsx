@@ -14,6 +14,7 @@ interface FunderCardProps {
   email?: string;
   funderFocus?: string;
   matchScore: number;
+  isGeneral?: boolean;
   isOpen?: boolean;
   onSave?: () => void;
   onApply?: () => void;
@@ -51,6 +52,7 @@ const FunderCard = ({
   email,
   funderFocus,
   matchScore,
+  isGeneral,
   isOpen,
   onSave,
   onApply,
@@ -79,7 +81,13 @@ const FunderCard = ({
           )}
           <h3 className="text-base font-semibold text-foreground leading-tight">{name}</h3>
         </div>
-        <MatchScoreRing score={matchScore} size="sm" />
+        {isGeneral ? (
+          <span className="shrink-0 text-[10px] font-medium text-center leading-tight rounded-full px-2.5 py-1.5 bg-muted/60 text-muted-foreground" title="No focus-area information on file for this funder">
+            General funder<br />no specific info
+          </span>
+        ) : (
+          <MatchScoreRing score={matchScore} size="sm" />
+        )}
       </div>
 
       <div className="flex flex-wrap gap-1.5 mb-3">

@@ -341,9 +341,9 @@ const LandingPage = () => {
             <p className="text-lg text-muted-foreground mb-8 max-w-xl leading-relaxed">
               Find The Grant instantly connects your mission to a growing database of active funders across Africa and beyond. Discover your highest-probability matches, and let AI help you write the proposals.
             </p>
-            <a href="#pricing">
-              <Button size="lg" className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-xl text-base px-7 py-6 h-auto shadow-md">
-                Claim your spot: $47/month at launch <ArrowRight className="ml-2 h-4 w-4" />
+            <a href="#pricing" className="block w-full sm:inline-block sm:w-auto">
+              <Button size="lg" className="w-full sm:w-auto whitespace-normal text-center bg-primary text-primary-foreground hover:bg-primary/90 rounded-xl text-base px-7 py-6 h-auto shadow-md">
+                Claim your spot: $47/month at launch <ArrowRight className="ml-2 h-4 w-4 shrink-0" />
               </Button>
             </a>
             <div className="mt-4">
@@ -627,12 +627,17 @@ const LandingPage = () => {
         <div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
           <Wordmark size="text-lg" />
           <p className="text-xs text-muted-foreground">© {new Date().getFullYear()} Find The Grant. Built for African NGOs.</p>
-          <Link
-            to="/login"
-            className="text-xs text-muted-foreground hover:text-primary transition-colors"
-          >
-            Team login
-          </Link>
+          <div className="flex items-center gap-4">
+            <Link to="/privacy" className="text-xs text-muted-foreground hover:text-primary transition-colors">
+              Privacy
+            </Link>
+            <Link to="/terms" className="text-xs text-muted-foreground hover:text-primary transition-colors">
+              Terms
+            </Link>
+            <Link to="/login" className="text-xs text-muted-foreground hover:text-primary transition-colors">
+              Team login
+            </Link>
+          </div>
         </div>
       </footer>
     </div>

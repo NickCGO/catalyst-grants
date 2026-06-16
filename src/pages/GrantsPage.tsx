@@ -93,6 +93,7 @@ const GrantsPage = () => {
   const [page, setPage] = useState(0);
   const [loading, setLoading] = useState(true);
   const [matchScores, setMatchScores] = useState<Record<string, number>>({});
+  const [generalFunderIds, setGeneralFunderIds] = useState<Set<string>>(new Set());
   const [applyModal, setApplyModal] = useState<any>(null);
   const [computing, setComputing] = useState(false);
   const { org } = useOrganisation();
@@ -118,8 +119,14 @@ const GrantsPage = () => {
 
       if (data && data.length > 0) {
         const map: Record<string, number> = {};
-        data.forEach(r => { if (r.funder_id && r.match_score != null) map[r.funder_id] = r.match_score; });
+        const general = new Set<string>();
+        data.forEach(r => {
+          if (!r.funder_id) return;
+          if (r.match_score != null) map[r.funder_id] = r.match_score;
+          else general.add(r.funder_id);
+        });
         setMatchScores(map);
+        setGeneralFunderIds(general);
         setSortBy("score");
       } else if (org.focus_areas && org.focus_areas.length > 0) {
         // Auto-compute matches on first visit
@@ -152,8 +159,14 @@ const GrantsPage = () => {
         .eq("org_id", org.id);
       if (data) {
         const map: Record<string, number> = {};
-        data.forEach(r => { if (r.funder_id && r.match_score != null) map[r.funder_id] = r.match_score; });
+        const general = new Set<string>();
+        data.forEach(r => {
+          if (!r.funder_id) return;
+          if (r.match_score != null) map[r.funder_id] = r.match_score;
+          else general.add(r.funder_id);
+        });
         setMatchScores(map);
+        setGeneralFunderIds(general);
         setSortBy("score");
       }
     } catch (err) {
@@ -215,6 +228,7 @@ const GrantsPage = () => {
         email: f.email || undefined,
         funderFocus: f.funder_focus || undefined,
         matchScore: matchScores[f.id] || 0,
+        isGeneral: generalFunderIds.has(f.id),
         isOpen: isOpenNow(windowMap[f.id] || null),
         consortium: isConsortium(f as FunderRow),
         website: f.website,
@@ -250,7 +264,7 @@ const GrantsPage = () => {
     } finally {
       setLoading(false);
     }
-  }, [debouncedSearch, selectedCategories, selectedFocusAreas, consortiumOnly, sortBy, page, matchScores]);
+  }, [debouncedSearch, selectedCategories, selectedFocusAreas, consortiumOnly, sortBy, page, matchScores, generalFunderIds]);
 
   useEffect(() => { fetchFunders(); }, [fetchFunders]);
 
