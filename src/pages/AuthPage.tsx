@@ -23,6 +23,7 @@ const AuthPage = () => {
   const [country, setCountry] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [waitlistMessage, setWaitlistMessage] = useState(false);
+  const [loginError, setLoginError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!authLoading && user) {
