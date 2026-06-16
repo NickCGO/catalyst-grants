@@ -37,13 +37,26 @@ export default function ConnectedInboxesTab() {
   const connectGmail = async () => {
     if (!orgId) return;
     setConnecting(true);
+    const oauthWindow = window.open("", "_blank", "width=560,height=720");
+
+    if (oauthWindow) {
+      oauthWindow.document.write(`<!doctype html><title>Connecting Gmail</title><body style="font-family:system-ui;padding:24px;color:#0f172a">Opening Google…</body>`);
+      oauthWindow.document.close();
+    }
+
     try {
       const { data, error } = await supabase.functions.invoke("gmail-oauth-start", {
         body: { returnTo: window.location.pathname + window.location.search, origin: window.location.origin },
       });
       if (error || !data?.url) throw error || new Error("Could not start OAuth");
-      window.location.href = data.url;
+
+      if (oauthWindow && !oauthWindow.closed) {
+        oauthWindow.location.replace(data.url);
+      } else {
+        window.location.assign(data.url);
+      }
     } catch (e: any) {
+      if (oauthWindow && !oauthWindow.closed) oauthWindow.close();
       toast({ title: "Could not start Gmail connection", description: e.message || String(e), variant: "destructive" });
       setConnecting(false);
     }
