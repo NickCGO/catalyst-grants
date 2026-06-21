@@ -1132,6 +1132,7 @@ export default function AdminPage() {
         <Tabs defaultValue="overview" className="space-y-6">
           <TabsList className="bg-card/50">
             <TabsTrigger value="overview"><BarChart3 className="h-3.5 w-3.5 mr-1.5" />Overview</TabsTrigger>
+            <TabsTrigger value="org-activity"><Building2 className="h-3.5 w-3.5 mr-1.5" />Org Activity</TabsTrigger>
             <TabsTrigger value="analytics"><Activity className="h-3.5 w-3.5 mr-1.5" />Website Analytics</TabsTrigger>
             <TabsTrigger value="users"><Users className="h-3.5 w-3.5 mr-1.5" />Users</TabsTrigger>
             <TabsTrigger value="waitlist"><ListChecks className="h-3.5 w-3.5 mr-1.5" />Waitlist</TabsTrigger>
@@ -1139,6 +1140,7 @@ export default function AdminPage() {
           </TabsList>
 
           <TabsContent value="overview"><StatsOverview /></TabsContent>
+          <TabsContent value="org-activity"><OrgActivity /></TabsContent>
           <TabsContent value="analytics"><WebsiteAnalytics /></TabsContent>
           <TabsContent value="users"><UserManagement /></TabsContent>
           <TabsContent value="waitlist"><WaitlistManagement /></TabsContent>
