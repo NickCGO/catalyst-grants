@@ -15,7 +15,8 @@ const AuthPage = () => {
   const navigate = useNavigate();
   const isBetaLogin = location.pathname === "/login";
   const isSignup = location.pathname === "/signup";
-  const { user, loading: authLoading, signUp, signIn } = useAuth();
+  const isForgot = location.pathname === "/forgot-password";
+  const { user, loading: authLoading, signUp, signIn, resetPassword } = useAuth();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -24,6 +25,7 @@ const AuthPage = () => {
   const [submitting, setSubmitting] = useState(false);
   const [waitlistMessage, setWaitlistMessage] = useState(false);
   const [loginError, setLoginError] = useState<string | null>(null);
+  const [forgotSent, setForgotSent] = useState(false);
 
   useEffect(() => {
     if (!authLoading && user) {
