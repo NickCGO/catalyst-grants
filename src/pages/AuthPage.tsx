@@ -150,6 +150,62 @@ const AuthPage = () => {
     );
   }
 
+  // Forgot password page
+  if (isForgot) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center px-6">
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="glass-card p-8 max-w-md w-full">
+          {forgotSent ? (
+            <div className="text-center">
+              <CheckCircle className="h-12 w-12 text-success mx-auto mb-4" />
+              <h1 className="text-xl font-bold text-foreground mb-2">Check your email</h1>
+              <p className="text-sm text-muted-foreground mb-6">
+                If an account exists for <strong>{email}</strong>, we've sent a password reset link. Please check your inbox.
+              </p>
+              <Button onClick={() => navigate("/login")} className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-xl">
+                Back to login
+              </Button>
+            </div>
+          ) : (
+            <>
+              <button onClick={() => navigate("/login")} className="flex items-center text-xs text-muted-foreground hover:text-foreground mb-4">
+                <ArrowLeft className="h-3 w-3 mr-1" /> Back to login
+              </button>
+              <h1 className="text-xl font-bold text-foreground mb-2">Reset your password</h1>
+              <p className="text-sm text-muted-foreground mb-6">Enter your email and we'll send you a link to reset your password.</p>
+              <form
+                className="space-y-4"
+                onSubmit={async (e) => {
+                  e.preventDefault();
+                  setSubmitting(true);
+                  try {
+                    await resetPassword(email);
+                    setForgotSent(true);
+                  } catch (err: any) {
+                    toast({ title: "Something went wrong", description: err?.message || "Please try again.", variant: "destructive" });
+                  }
+                  setSubmitting(false);
+                }}
+              >
+                <div>
+                  <Label htmlFor="forgot-email" className="text-xs text-muted-foreground">Email</Label>
+                  <div className="relative mt-1">
+                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/80" />
+                    <Input id="forgot-email" name="email" type="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} required className="pl-10 bg-secondary border-input text-foreground" placeholder="you@organisation.org" />
+                  </div>
+                </div>
+                <Button type="submit" disabled={submitting} className="w-full bg-primary text-primary-foreground hover:bg-primary/90 rounded-xl border-0">
+                  {submitting ? <AfricaSpinner className="h-4 w-4 animate-spin mr-2" /> : null}
+                  Send reset link
+                </Button>
+              </form>
+            </>
+          )}
+        </motion.div>
+      </div>
+    );
+  }
+
   // Signup page
   return (
     <div className="min-h-screen bg-background flex items-center justify-center px-6">
