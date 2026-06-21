@@ -125,7 +125,10 @@ const AuthPage = () => {
               Sign in to beta
             </Button>
           </form>
-          <Link to="/" className="block text-center text-xs text-muted-foreground/80 hover:text-muted-foreground mt-4">← Back to homepage</Link>
+          <div className="mt-3 flex items-center justify-between">
+            <Link to="/" className="text-xs text-muted-foreground/80 hover:text-muted-foreground">← Back to homepage</Link>
+            <Link to="/forgot-password" className="text-xs text-primary hover:underline">Forgot password?</Link>
+          </div>
         </motion.div>
         <Dialog open={!!loginError} onOpenChange={(o) => !o && setLoginError(null)}>
           <DialogContent className="max-w-md text-center border-border bg-card">
