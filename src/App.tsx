@@ -46,7 +46,7 @@ import TermsPage from "./pages/TermsPage";
 
 const queryClient = new QueryClient();
 
-const PUBLIC_ROUTES = ["/", "/login", "/signup", "/privacy", "/terms"];
+const PUBLIC_ROUTES = ["/", "/login", "/signup", "/forgot-password", "/reset-password", "/privacy", "/terms"];
 
 const AnalyticsTracker = () => {
   useAnalytics();
