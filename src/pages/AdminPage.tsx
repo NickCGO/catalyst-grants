@@ -1079,7 +1079,7 @@ function OrgActivity() {
                         </TableCell>
                       </TableRow>
                     )}
-                  </>
+                  </React.Fragment>
                 );
               })}
               {sorted.length === 0 && (
