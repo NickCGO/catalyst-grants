@@ -119,7 +119,14 @@ export function useAuth() {
     if (error) throw error;
   };
 
-  return { ...state, signUp, signIn, signOut, signInWithGoogle };
+  const resetPassword = async (email: string) => {
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: window.location.origin + "/reset-password",
+    });
+    if (error) throw error;
+  };
+
+  return { ...state, signUp, signIn, signOut, signInWithGoogle, resetPassword };
 }
 
 export function useRequireAuth() {
