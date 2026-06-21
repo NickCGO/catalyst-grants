@@ -148,6 +148,145 @@ Deno.serve(async (req) => {
         return new Response(JSON.stringify(data), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
       }
 
+      case "org_activity": {
+        const days = Number(params.days) || 30;
+        const since = new Date(Date.now() - days * 86400000).toISOString();
+
+        const { data: usersData, error: usersErr } = await supabase.auth.admin.listUsers({ page: 1, perPage: 1000 });
+        if (usersErr) throw usersErr;
+        const users = usersData?.users || [];
+
+        const { data: orgs, error: orgsErr } = await supabase
+          .from("organisations")
+          .select("id, name, user_id, created_at, proposals_used, trial_started_at, country, sector");
+        if (orgsErr) throw orgsErr;
+
+        const { data: sessions, error: sessErr } = await supabase
+          .from("analytics_sessions")
+          .select("id, user_id, visitor_id, started_at, last_seen_at, duration_seconds, landing_path, device_type, browser, country, referrer, utm_source")
+          .gte("started_at", since)
+          .order("started_at", { ascending: false })
+          .limit(10000);
+        if (sessErr) throw sessErr;
+
+        const { data: views, error: viewsErr } = await supabase
+          .from("analytics_page_views")
+          .select("id, session_id, path, created_at")
+          .gte("created_at", since)
+          .limit(20000);
+        if (viewsErr) throw viewsErr;
+
+        const orgIds = (orgs || []).map((o: any) => o.id);
+        const placeholder = ["00000000-0000-0000-0000-000000000000"];
+        const [propsRes, appsRes] = await Promise.all([
+          supabase.from("proposals").select("id, org_id").in("org_id", orgIds.length ? orgIds : placeholder),
+          supabase.from("applications").select("id, org_id").in("org_id", orgIds.length ? orgIds : placeholder),
+        ]);
+        const proposals = propsRes.data || [];
+        const applications = appsRes.data || [];
+
+        const sessionUser = new Map<string, string | null>();
+        (sessions || []).forEach((s: any) => sessionUser.set(s.id, s.user_id));
+
+        const userSessions = new Map<string, any[]>();
+        (sessions || []).forEach((s: any) => {
+          if (!s.user_id) return;
+          if (!userSessions.has(s.user_id)) userSessions.set(s.user_id, []);
+          userSessions.get(s.user_id)!.push(s);
+        });
+        const userViews = new Map<string, any[]>();
+        (views || []).forEach((v: any) => {
+          const uid = sessionUser.get(v.session_id);
+          if (!uid) return;
+          if (!userViews.has(uid)) userViews.set(uid, []);
+          userViews.get(uid)!.push(v);
+        });
+
+        const orgByUser = new Map<string, any>();
+        (orgs || []).forEach((o: any) => { if (o.user_id) orgByUser.set(o.user_id, o); });
+
+        const rows = users.map((u: any) => {
+          const org = orgByUser.get(u.id);
+          const uSessions = userSessions.get(u.id) || [];
+          const uViews = userViews.get(u.id) || [];
+          const orgProposals = org ? proposals.filter((p: any) => p.org_id === org.id) : [];
+          const orgApplications = org ? applications.filter((a: any) => a.org_id === org.id) : [];
+
+          const pathCount = new Map<string, number>();
+          uViews.forEach((v: any) => pathCount.set(v.path, (pathCount.get(v.path) || 0) + 1));
+          const topPaths = Array.from(pathCount.entries())
+            .map(([path, count]) => ({ path, count }))
+            .sort((a, b) => b.count - a.count)
+            .slice(0, 8);
+
+          const lastSeenAt = uSessions.reduce((m: string | null, s: any) => {
+            const t = s.last_seen_at || s.started_at;
+            return !m || (t && t > m) ? t : m;
+          }, null);
+
+          const daysSinceSignIn = u.last_sign_in_at
+            ? Math.floor((Date.now() - new Date(u.last_sign_in_at).getTime()) / 86400000)
+            : null;
+
+          let activity_status: string;
+          if (!u.last_sign_in_at) activity_status = "never_signed_in";
+          else if (daysSinceSignIn !== null && daysSinceSignIn <= 7) activity_status = "active";
+          else if (daysSinceSignIn !== null && daysSinceSignIn <= 30) activity_status = "recent";
+          else activity_status = "dormant";
+
+          return {
+            user_id: u.id,
+            email: u.email,
+            created_at: u.created_at,
+            last_sign_in_at: u.last_sign_in_at,
+            days_since_sign_in: daysSinceSignIn,
+            activity_status,
+            beta_tester: !!u.user_metadata?.beta_tester,
+            org: org ? {
+              id: org.id,
+              name: org.name,
+              created_at: org.created_at,
+              country: org.country,
+              sector: org.sector,
+              proposals_used: org.proposals_used,
+            } : null,
+            sessions_count: uSessions.length,
+            page_views_count: uViews.length,
+            last_seen_at: lastSeenAt,
+            total_duration_seconds: uSessions.reduce((a: number, s: any) => a + (Number(s.duration_seconds) || 0), 0),
+            proposals_count: orgProposals.length,
+            applications_count: orgApplications.length,
+            top_paths: topPaths,
+            recent_sessions: uSessions.slice(0, 10).map((s: any) => ({
+              started_at: s.started_at,
+              last_seen_at: s.last_seen_at,
+              duration_seconds: s.duration_seconds,
+              landing_path: s.landing_path,
+              device_type: s.device_type,
+              browser: s.browser,
+              country: s.country,
+              source: s.utm_source || (s.referrer ? (() => { try { return new URL(s.referrer).hostname; } catch { return "Direct"; } })() : "Direct"),
+            })),
+          };
+        });
+
+        const summary = {
+          window_days: days,
+          total_users: users.length,
+          total_orgs: orgs?.length || 0,
+          never_signed_in: rows.filter((r: any) => r.activity_status === "never_signed_in").length,
+          active_7d: rows.filter((r: any) => r.activity_status === "active").length,
+          recent_30d: rows.filter((r: any) => r.activity_status === "recent").length,
+          dormant: rows.filter((r: any) => r.activity_status === "dormant").length,
+          orgs_with_activity: rows.filter((r: any) => r.org && r.sessions_count > 0).length,
+          orgs_no_activity: rows.filter((r: any) => r.org && r.sessions_count === 0).length,
+        };
+
+        return new Response(JSON.stringify({ summary, rows }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
       default:
         return new Response(JSON.stringify({ error: "Unknown action" }), { status: 400, headers: corsHeaders });
     }
