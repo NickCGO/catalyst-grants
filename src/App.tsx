@@ -71,6 +71,8 @@ const App = () => (
           <Route path="/" element={<LandingPage />} />
           <Route path="/login" element={<AuthPage />} />
           <Route path="/signup" element={<AuthPage />} />
+          <Route path="/forgot-password" element={<AuthPage />} />
+          <Route path="/reset-password" element={<ResetPasswordPage />} />
 
           {/* Onboarding */}
           <Route path="/onboarding" element={<OnboardingPage />} />
