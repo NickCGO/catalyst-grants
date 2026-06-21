@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import DashboardLayout from "@/components/DashboardLayout";
 import { supabase } from "@/integrations/supabase/client";
@@ -14,7 +14,7 @@ import { toast } from "@/hooks/use-toast";
 import {
   Users, ListChecks, Database, BarChart3, Shield, Search,
   Trash2, UserCheck, UserX, Download, RefreshCw, Plus, Activity,
-  Globe, Monitor, Clock, TrendingUp,
+  Globe, Monitor, Clock, TrendingUp, ChevronDown, ChevronRight, Building2,
 } from "lucide-react";
 import { LineChart, Line, XAxis, YAxis, Tooltip as RTooltip, ResponsiveContainer, BarChart, Bar, CartesianGrid } from "recharts";
 import {
@@ -822,6 +822,277 @@ function WebsiteAnalytics() {
   );
 }
 
+// ─── Org Activity ────────────────────────────────────────────────────────────
+function OrgActivity() {
+  const [data, setData] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [days, setDays] = useState(30);
+  const [search, setSearch] = useState("");
+  const [filter, setFilter] = useState<"all" | "active" | "recent" | "dormant" | "never_signed_in" | "no_org" | "with_org">("all");
+  const [sortKey, setSortKey] = useState<string>("last_sign_in_at");
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
+  const [expanded, setExpanded] = useState<string | null>(null);
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    try {
+      const res = await adminCall("org_activity", { days });
+      setData(res);
+    } catch (e: any) {
+      toast({ title: "Error", description: e.message, variant: "destructive" });
+    } finally {
+      setLoading(false);
+    }
+  }, [days]);
+
+  useEffect(() => { load(); }, [load]);
+
+  const fmtDur = (s: number) => {
+    if (!s) return "—";
+    if (s < 60) return `${s}s`;
+    const m = Math.floor(s / 60);
+    return m < 60 ? `${m}m` : `${Math.floor(m / 60)}h ${m % 60}m`;
+  };
+
+  const statusBadge = (s: string) => {
+    const map: Record<string, { label: string; cls: string }> = {
+      active: { label: "Active (7d)", cls: "bg-green-500/20 text-green-400 border-green-500/30" },
+      recent: { label: "Recent (30d)", cls: "bg-blue-500/20 text-blue-400 border-blue-500/30" },
+      dormant: { label: "Dormant", cls: "bg-amber-500/20 text-amber-400 border-amber-500/30" },
+      never_signed_in: { label: "Never signed in", cls: "bg-red-500/20 text-red-400 border-red-500/30" },
+    };
+    const m = map[s] || { label: s, cls: "" };
+    return <Badge className={m.cls}>{m.label}</Badge>;
+  };
+
+  const rows: any[] = data?.rows || [];
+  const filtered = rows.filter((r) => {
+    if (search) {
+      const q = search.toLowerCase();
+      const hit = (r.email || "").toLowerCase().includes(q) || (r.org?.name || "").toLowerCase().includes(q);
+      if (!hit) return false;
+    }
+    if (filter === "no_org") return !r.org;
+    if (filter === "with_org") return !!r.org;
+    if (filter !== "all") return r.activity_status === filter;
+    return true;
+  });
+
+  const sorted = [...filtered].sort((a, b) => {
+    const av = a[sortKey] ?? (sortKey === "org_name" ? (a.org?.name ?? "") : "");
+    const bv = b[sortKey] ?? (sortKey === "org_name" ? (b.org?.name ?? "") : "");
+    if (av === bv) return 0;
+    const cmp = av > bv ? 1 : -1;
+    return sortDir === "asc" ? cmp : -cmp;
+  });
+
+  const toggleSort = (k: string) => {
+    if (sortKey === k) setSortDir(sortDir === "asc" ? "desc" : "asc");
+    else { setSortKey(k); setSortDir("desc"); }
+  };
+
+  const exportCSV = () => {
+    const headers = "Email,Org,Country,Status,Registered,LastSignIn,DaysSince,Sessions,PageViews,DurationSec,Proposals,Applications\n";
+    const csv = sorted.map((r) =>
+      [
+        r.email,
+        r.org?.name || "",
+        r.org?.country || "",
+        r.activity_status,
+        r.created_at,
+        r.last_sign_in_at || "",
+        r.days_since_sign_in ?? "",
+        r.sessions_count,
+        r.page_views_count,
+        r.total_duration_seconds,
+        r.proposals_count,
+        r.applications_count,
+      ].map((v) => `"${String(v).replace(/"/g, '""')}"`).join(",")
+    ).join("\n");
+    const blob = new Blob([headers + csv], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `org-activity-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+  };
+
+  const s = data?.summary;
+  const summaryCards = [
+    { label: "Total Users", value: s?.total_users ?? 0, icon: Users },
+    { label: "Orgs", value: s?.total_orgs ?? 0, icon: Building2 },
+    { label: "Active (7d)", value: s?.active_7d ?? 0, icon: Activity, color: "text-green-400" },
+    { label: "Recent (30d)", value: s?.recent_30d ?? 0, icon: Clock, color: "text-blue-400" },
+    { label: "Dormant", value: s?.dormant ?? 0, icon: Clock, color: "text-amber-400" },
+    { label: "Never signed in", value: s?.never_signed_in ?? 0, icon: UserX, color: "text-red-400" },
+    { label: "Orgs with activity", value: s?.orgs_with_activity ?? 0, icon: TrendingUp, color: "text-green-400" },
+    { label: "Orgs no activity", value: s?.orgs_no_activity ?? 0, icon: UserX, color: "text-red-400" },
+  ];
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between flex-wrap gap-3">
+        <h2 className="text-lg font-semibold text-foreground">Org & User Activity</h2>
+        <div className="flex items-center gap-2">
+          {[7, 30, 90].map((d) => (
+            <Button key={d} size="sm" variant={days === d ? "default" : "outline"} onClick={() => setDays(d)}>Last {d}d</Button>
+          ))}
+          <Button variant="outline" size="sm" onClick={exportCSV}><Download className="h-3.5 w-3.5 mr-1.5" />CSV</Button>
+          <Button variant="outline" size="sm" onClick={load} disabled={loading}>
+            <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} />
+          </Button>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-3">
+        {summaryCards.map((c) => (
+          <Card key={c.label} className="bg-card/50 border-border/30">
+            <CardContent className="pt-4">
+              <div className="flex items-center gap-2">
+                <c.icon className={`h-4 w-4 ${c.color || "text-primary"}`} />
+                <p className="text-[11px] text-muted-foreground">{c.label}</p>
+              </div>
+              <p className="text-xl font-bold text-foreground mt-1">
+                {loading ? <Skeleton className="h-6 w-10" /> : c.value}
+              </p>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      <div className="flex items-center gap-3 flex-wrap">
+        <div className="relative flex-1 min-w-[200px]">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input placeholder="Search by email or org..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
+        </div>
+        <div className="flex items-center gap-1 flex-wrap">
+          {(["all", "active", "recent", "dormant", "never_signed_in", "with_org", "no_org"] as const).map((f) => (
+            <Button key={f} size="sm" variant={filter === f ? "default" : "outline"} onClick={() => setFilter(f)} className="text-xs capitalize">
+              {f.replace(/_/g, " ")}
+            </Button>
+          ))}
+        </div>
+      </div>
+
+      <p className="text-xs text-muted-foreground">{sorted.length} of {rows.length} users — click a row for granular activity</p>
+
+      {loading ? (
+        <div className="space-y-2">{[...Array(6)].map((_, i) => <Skeleton key={i} className="h-12 w-full" />)}</div>
+      ) : (
+        <div className="rounded-lg border border-border/30 overflow-auto">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="w-8"></TableHead>
+                <TableHead className="cursor-pointer" onClick={() => toggleSort("email")}>User</TableHead>
+                <TableHead className="cursor-pointer" onClick={() => toggleSort("org_name")}>Organisation</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead className="cursor-pointer" onClick={() => toggleSort("last_sign_in_at")}>Last sign-in</TableHead>
+                <TableHead className="cursor-pointer" onClick={() => toggleSort("sessions_count")}>Sessions</TableHead>
+                <TableHead className="cursor-pointer" onClick={() => toggleSort("page_views_count")}>Page views</TableHead>
+                <TableHead>Engaged</TableHead>
+                <TableHead className="cursor-pointer" onClick={() => toggleSort("proposals_count")}>Proposals</TableHead>
+                <TableHead className="cursor-pointer" onClick={() => toggleSort("applications_count")}>Apps</TableHead>
+                <TableHead className="cursor-pointer" onClick={() => toggleSort("created_at")}>Registered</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {sorted.map((r) => {
+                const isOpen = expanded === r.user_id;
+                return (
+                  <React.Fragment key={r.user_id}>
+                    <TableRow className="cursor-pointer hover:bg-muted/30" onClick={() => setExpanded(isOpen ? null : r.user_id)}>
+                      <TableCell>{isOpen ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronRight className="h-3.5 w-3.5" />}</TableCell>
+                      <TableCell className="text-sm font-medium">
+                        {r.email}
+                        {r.beta_tester && <Badge className="ml-2 text-[10px] bg-green-500/20 text-green-400 border-green-500/30">Beta</Badge>}
+                      </TableCell>
+                      <TableCell className="text-xs">
+                        {r.org ? (
+                          <div>
+                            <div className="text-foreground">{r.org.name}</div>
+                            <div className="text-muted-foreground text-[10px]">{r.org.country || ""}</div>
+                          </div>
+                        ) : <span className="text-muted-foreground italic">No org</span>}
+                      </TableCell>
+                      <TableCell>{statusBadge(r.activity_status)}</TableCell>
+                      <TableCell className="text-xs text-muted-foreground">
+                        {r.last_sign_in_at ? (
+                          <div>
+                            <div>{new Date(r.last_sign_in_at).toLocaleString()}</div>
+                            <div className="text-[10px]">{r.days_since_sign_in === 0 ? "today" : `${r.days_since_sign_in}d ago`}</div>
+                          </div>
+                        ) : "—"}
+                      </TableCell>
+                      <TableCell className="text-sm">{r.sessions_count}</TableCell>
+                      <TableCell className="text-sm">{r.page_views_count}</TableCell>
+                      <TableCell className="text-xs text-muted-foreground">{fmtDur(r.total_duration_seconds)}</TableCell>
+                      <TableCell className="text-sm">{r.proposals_count}</TableCell>
+                      <TableCell className="text-sm">{r.applications_count}</TableCell>
+                      <TableCell className="text-xs text-muted-foreground">{new Date(r.created_at).toLocaleDateString()}</TableCell>
+                    </TableRow>
+                    {isOpen && (
+                      <TableRow key={`${r.user_id}-detail`} className="bg-muted/10">
+                        <TableCell colSpan={11} className="p-4">
+                          <div className="grid md:grid-cols-2 gap-6">
+                            <div>
+                              <h4 className="text-sm font-semibold text-foreground mb-2">Recent sessions (last {days}d)</h4>
+                              {r.recent_sessions.length === 0 ? (
+                                <p className="text-xs text-muted-foreground">No sessions in window.</p>
+                              ) : (
+                                <div className="space-y-1.5">
+                                  {r.recent_sessions.map((sess: any, i: number) => (
+                                    <div key={i} className="text-xs grid grid-cols-12 gap-2 items-center border-b border-border/20 pb-1">
+                                      <span className="col-span-4 text-muted-foreground">{new Date(sess.started_at).toLocaleString()}</span>
+                                      <span className="col-span-3 truncate" title={sess.landing_path}>{sess.landing_path}</span>
+                                      <span className="col-span-2 text-muted-foreground">{sess.device_type}</span>
+                                      <span className="col-span-2 text-muted-foreground truncate">{sess.source}</span>
+                                      <span className="col-span-1 text-right">{fmtDur(sess.duration_seconds || 0)}</span>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                            <div>
+                              <h4 className="text-sm font-semibold text-foreground mb-2">Most visited pages</h4>
+                              {r.top_paths.length === 0 ? (
+                                <p className="text-xs text-muted-foreground">No page views in window.</p>
+                              ) : (
+                                <div className="space-y-1.5">
+                                  {r.top_paths.map((p: any) => (
+                                    <div key={p.path} className="flex justify-between text-xs border-b border-border/20 pb-1">
+                                      <span className="truncate max-w-[80%]" title={p.path}>{p.path}</span>
+                                      <span className="text-muted-foreground">{p.count}</span>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                              {r.org && (
+                                <div className="mt-4 text-xs text-muted-foreground">
+                                  <div>Org created: {new Date(r.org.created_at).toLocaleDateString()}</div>
+                                  <div>Sector: {r.org.sector || "—"}</div>
+                                  <div>Proposals used: {r.org.proposals_used ?? 0}</div>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </React.Fragment>
+                );
+              })}
+              {sorted.length === 0 && (
+                <TableRow><TableCell colSpan={11} className="text-center text-muted-foreground py-8">No users match these filters</TableCell></TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ─── Admin Page ──────────────────────────────────────────────────────────────
 export default function AdminPage() {
   const { user, loading: authLoading } = useAuth();
@@ -861,6 +1132,7 @@ export default function AdminPage() {
         <Tabs defaultValue="overview" className="space-y-6">
           <TabsList className="bg-card/50">
             <TabsTrigger value="overview"><BarChart3 className="h-3.5 w-3.5 mr-1.5" />Overview</TabsTrigger>
+            <TabsTrigger value="org-activity"><Building2 className="h-3.5 w-3.5 mr-1.5" />Org Activity</TabsTrigger>
             <TabsTrigger value="analytics"><Activity className="h-3.5 w-3.5 mr-1.5" />Website Analytics</TabsTrigger>
             <TabsTrigger value="users"><Users className="h-3.5 w-3.5 mr-1.5" />Users</TabsTrigger>
             <TabsTrigger value="waitlist"><ListChecks className="h-3.5 w-3.5 mr-1.5" />Waitlist</TabsTrigger>
@@ -868,6 +1140,7 @@ export default function AdminPage() {
           </TabsList>
 
           <TabsContent value="overview"><StatsOverview /></TabsContent>
+          <TabsContent value="org-activity"><OrgActivity /></TabsContent>
           <TabsContent value="analytics"><WebsiteAnalytics /></TabsContent>
           <TabsContent value="users"><UserManagement /></TabsContent>
           <TabsContent value="waitlist"><WaitlistManagement /></TabsContent>
