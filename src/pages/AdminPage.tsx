@@ -1000,8 +1000,8 @@ function OrgActivity() {
               {sorted.map((r) => {
                 const isOpen = expanded === r.user_id;
                 return (
-                  <>
-                    <TableRow key={r.user_id} className="cursor-pointer hover:bg-muted/30" onClick={() => setExpanded(isOpen ? null : r.user_id)}>
+                  <React.Fragment key={r.user_id}>
+                    <TableRow className="cursor-pointer hover:bg-muted/30" onClick={() => setExpanded(isOpen ? null : r.user_id)}>
                       <TableCell>{isOpen ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronRight className="h-3.5 w-3.5" />}</TableCell>
                       <TableCell className="text-sm font-medium">
                         {r.email}
