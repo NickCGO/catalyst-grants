@@ -6,6 +6,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import LandingPage from "./pages/LandingPage";
 import AuthPage from "./pages/AuthPage";
+import ResetPasswordPage from "./pages/ResetPasswordPage";
 import OnboardingPage from "./pages/OnboardingPage";
 import DashboardPage from "./pages/DashboardPage";
 import GrantsPage from "./pages/GrantsPage";
@@ -45,7 +46,7 @@ import TermsPage from "./pages/TermsPage";
 
 const queryClient = new QueryClient();
 
-const PUBLIC_ROUTES = ["/", "/login", "/signup", "/privacy", "/terms"];
+const PUBLIC_ROUTES = ["/", "/login", "/signup", "/forgot-password", "/reset-password", "/privacy", "/terms"];
 
 const AnalyticsTracker = () => {
   useAnalytics();
@@ -70,6 +71,8 @@ const App = () => (
           <Route path="/" element={<LandingPage />} />
           <Route path="/login" element={<AuthPage />} />
           <Route path="/signup" element={<AuthPage />} />
+          <Route path="/forgot-password" element={<AuthPage />} />
+          <Route path="/reset-password" element={<ResetPasswordPage />} />
 
           {/* Onboarding */}
           <Route path="/onboarding" element={<OnboardingPage />} />
