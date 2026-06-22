@@ -828,7 +828,7 @@ function OrgActivity() {
   const [loading, setLoading] = useState(true);
   const [days, setDays] = useState(30);
   const [search, setSearch] = useState("");
-  const [filter, setFilter] = useState<"all" | "active" | "recent" | "dormant" | "never_signed_in" | "no_org" | "with_org">("all");
+  const [filter, setFilter] = useState<"all" | "active" | "recent" | "dormant" | "never_signed_in" | "anonymous" | "no_org" | "with_org">("all");
   const [sortKey, setSortKey] = useState<string>("last_sign_in_at");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
   const [expanded, setExpanded] = useState<string | null>(null);
