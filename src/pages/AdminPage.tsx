@@ -860,6 +860,7 @@ function OrgActivity() {
       recent: { label: "Recent (30d)", cls: "bg-blue-500/20 text-blue-400 border-blue-500/30" },
       dormant: { label: "Dormant", cls: "bg-amber-500/20 text-amber-400 border-amber-500/30" },
       never_signed_in: { label: "Never signed in", cls: "bg-red-500/20 text-red-400 border-red-500/30" },
+      anonymous: { label: "Anonymous visitor", cls: "bg-slate-500/20 text-slate-300 border-slate-500/30" },
     };
     const m = map[s] || { label: s, cls: "" };
     return <Badge className={m.cls}>{m.label}</Badge>;
