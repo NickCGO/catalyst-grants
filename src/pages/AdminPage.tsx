@@ -969,7 +969,7 @@ function OrgActivity() {
           <Input placeholder="Search by email or org..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
         </div>
         <div className="flex items-center gap-1 flex-wrap">
-          {(["all", "active", "recent", "dormant", "never_signed_in", "with_org", "no_org"] as const).map((f) => (
+          {(["all", "active", "recent", "dormant", "never_signed_in", "anonymous", "with_org", "no_org"] as const).map((f) => (
             <Button key={f} size="sm" variant={filter === f ? "default" : "outline"} onClick={() => setFilter(f)} className="text-xs capitalize">
               {f.replace(/_/g, " ")}
             </Button>
