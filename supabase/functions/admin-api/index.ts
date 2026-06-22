@@ -247,7 +247,7 @@ Deno.serve(async (req) => {
               name: org.name,
               created_at: org.created_at,
               country: org.country,
-              sector: org.sector,
+              sector: Array.isArray(org.focus_areas) ? org.focus_areas.join(", ") : null,
               proposals_used: org.proposals_used,
             } : null,
             sessions_count: uSessions.length,
