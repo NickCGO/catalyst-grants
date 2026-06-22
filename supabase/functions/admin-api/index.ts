@@ -158,7 +158,7 @@ Deno.serve(async (req) => {
 
         const { data: orgs, error: orgsErr } = await supabase
           .from("organisations")
-          .select("id, name, user_id, created_at, proposals_used, trial_started_at, country, sector");
+          .select("id, name, user_id, created_at, proposals_used, trial_started_at, country, focus_areas");
         if (orgsErr) throw orgsErr;
 
         const { data: sessions, error: sessErr } = await supabase
@@ -247,7 +247,7 @@ Deno.serve(async (req) => {
               name: org.name,
               created_at: org.created_at,
               country: org.country,
-              sector: org.sector,
+              sector: Array.isArray(org.focus_areas) ? org.focus_areas.join(", ") : null,
               proposals_used: org.proposals_used,
             } : null,
             sessions_count: uSessions.length,
