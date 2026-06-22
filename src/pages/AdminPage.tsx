@@ -926,6 +926,8 @@ function OrgActivity() {
     { label: "Recent (30d)", value: s?.recent_30d ?? 0, icon: Clock, color: "text-blue-400" },
     { label: "Dormant", value: s?.dormant ?? 0, icon: Clock, color: "text-amber-400" },
     { label: "Never signed in", value: s?.never_signed_in ?? 0, icon: UserX, color: "text-red-400" },
+    { label: "Anonymous visitors", value: s?.anonymous_visitors ?? 0, icon: Users, color: "text-slate-300" },
+    { label: "Total sessions", value: s?.total_sessions ?? 0, icon: Activity, color: "text-primary" },
     { label: "Orgs with activity", value: s?.orgs_with_activity ?? 0, icon: TrendingUp, color: "text-green-400" },
     { label: "Orgs no activity", value: s?.orgs_no_activity ?? 0, icon: UserX, color: "text-red-400" },
   ];
