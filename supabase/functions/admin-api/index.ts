@@ -158,7 +158,7 @@ Deno.serve(async (req) => {
 
         const { data: orgs, error: orgsErr } = await supabase
           .from("organisations")
-          .select("id, name, user_id, created_at, proposals_used, trial_started_at, country, sector");
+          .select("id, name, user_id, created_at, proposals_used, trial_started_at, country, focus_areas");
         if (orgsErr) throw orgsErr;
 
         const { data: sessions, error: sessErr } = await supabase
