@@ -270,6 +270,68 @@ Deno.serve(async (req) => {
           };
         });
 
+        const anonByVisitor = new Map<string, any[]>();
+        (sessions || []).forEach((s: any) => {
+          if (s.user_id) return;
+          const vid = s.visitor_id || "unknown";
+          if (!anonByVisitor.has(vid)) anonByVisitor.set(vid, []);
+          anonByVisitor.get(vid)!.push(s);
+        });
+        const anonViewsBySession = new Map<string, any[]>();
+        (views || []).forEach((v: any) => {
+          if (sessionUser.get(v.session_id)) return;
+          if (!anonViewsBySession.has(v.session_id)) anonViewsBySession.set(v.session_id, []);
+          anonViewsBySession.get(v.session_id)!.push(v);
+        });
+
+        const anonRows = Array.from(anonByVisitor.entries()).map(([visitorId, vSessions]) => {
+          const vViews: any[] = [];
+          vSessions.forEach((s: any) => {
+            const sv = anonViewsBySession.get(s.id) || [];
+            sv.forEach((v) => vViews.push(v));
+          });
+          const pathCount = new Map<string, number>();
+          vViews.forEach((v: any) => pathCount.set(v.path, (pathCount.get(v.path) || 0) + 1));
+          const topPaths = Array.from(pathCount.entries())
+            .map(([path, count]) => ({ path, count }))
+            .sort((a, b) => b.count - a.count)
+            .slice(0, 8);
+          const lastSeenAt = vSessions.reduce((m: string | null, s: any) => {
+            const t = s.last_seen_at || s.started_at;
+            return !m || (t && t > m) ? t : m;
+          }, null);
+          return {
+            user_id: null,
+            visitor_id: visitorId,
+            email: `Anonymous · ${visitorId.slice(0, 8)}`,
+            created_at: vSessions[vSessions.length - 1]?.started_at,
+            last_sign_in_at: null,
+            days_since_sign_in: null,
+            activity_status: "anonymous",
+            beta_tester: false,
+            org: null,
+            sessions_count: vSessions.length,
+            page_views_count: vViews.length,
+            last_seen_at: lastSeenAt,
+            total_duration_seconds: vSessions.reduce((a: number, s: any) => a + (Number(s.duration_seconds) || 0), 0),
+            proposals_count: 0,
+            applications_count: 0,
+            top_paths: topPaths,
+            recent_sessions: vSessions.slice(0, 10).map((s: any) => ({
+              started_at: s.started_at,
+              last_seen_at: s.last_seen_at,
+              duration_seconds: s.duration_seconds,
+              landing_path: s.landing_path,
+              device_type: s.device_type,
+              browser: s.browser,
+              country: s.country,
+              source: s.utm_source || (s.referrer ? (() => { try { return new URL(s.referrer).hostname; } catch { return "Direct"; } })() : "Direct"),
+            })),
+          };
+        });
+
+        const allRows = [...rows, ...anonRows];
+
         const summary = {
           window_days: days,
           total_users: users.length,
@@ -280,9 +342,11 @@ Deno.serve(async (req) => {
           dormant: rows.filter((r: any) => r.activity_status === "dormant").length,
           orgs_with_activity: rows.filter((r: any) => r.org && r.sessions_count > 0).length,
           orgs_no_activity: rows.filter((r: any) => r.org && r.sessions_count === 0).length,
+          anonymous_visitors: anonRows.length,
+          total_sessions: (sessions || []).length,
         };
 
-        return new Response(JSON.stringify({ summary, rows }), {
+        return new Response(JSON.stringify({ summary, rows: allRows }), {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }

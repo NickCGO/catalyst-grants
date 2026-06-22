@@ -37,31 +37,38 @@ function detectDevice(ua: string) {
   return { device, browser, os };
 }
 
+async function getCurrentUserId(): Promise<string | null> {
+  try {
+    const { data } = await supabase.auth.getUser();
+    return data?.user?.id ?? null;
+  } catch {
+    return null;
+  }
+}
+
 async function startSession(path: string): Promise<string | null> {
   const visitorId = getOrCreateVisitorId();
   const ua = navigator.userAgent;
   const { device, browser, os } = detectDevice(ua);
   const params = new URLSearchParams(window.location.search);
-  // Generate the session id client-side so we don't need to read it back
-  // (RLS blocks SELECT on analytics tables — write-only for visitors).
   const sessionId = crypto.randomUUID();
+  const userId = await getCurrentUserId();
 
-  const { error } = await db
-    .from("analytics_sessions")
-    .insert({
-      id: sessionId,
-      visitor_id: visitorId,
-      referrer: document.referrer || null,
-      utm_source: params.get("utm_source"),
-      utm_medium: params.get("utm_medium"),
-      utm_campaign: params.get("utm_campaign"),
-      landing_path: path,
-      user_agent: ua,
-      device_type: device,
-      browser,
-      os,
-      language: navigator.language,
-    });
+  const { error } = await db.from("analytics_sessions").insert({
+    id: sessionId,
+    visitor_id: visitorId,
+    user_id: userId,
+    referrer: document.referrer || null,
+    utm_source: params.get("utm_source"),
+    utm_medium: params.get("utm_medium"),
+    utm_campaign: params.get("utm_campaign"),
+    landing_path: path,
+    user_agent: ua,
+    device_type: device,
+    browser,
+    os,
+    language: navigator.language,
+  });
 
   if (error) {
     console.error("[analytics] startSession failed:", error);
@@ -83,10 +90,13 @@ async function trackPageView(path: string, sessionId: string) {
   });
   const start = parseInt(sessionStorage.getItem(SESSION_START_KEY) || "0", 10);
   const duration = start ? Math.round((Date.now() - start) / 1000) : 0;
-  await db
-    .from("analytics_sessions")
-    .update({ last_seen_at: new Date().toISOString(), duration_seconds: duration })
-    .eq("id", sessionId);
+  const userId = await getCurrentUserId();
+  const update: Record<string, any> = {
+    last_seen_at: new Date().toISOString(),
+    duration_seconds: duration,
+  };
+  if (userId) update.user_id = userId;
+  await db.from("analytics_sessions").update(update).eq("id", sessionId);
 
   const w = window as any;
   if (typeof w.gtag === "function") {
@@ -113,6 +123,19 @@ export function useAnalytics() {
     })();
     return () => { active = false; };
   }, [location.pathname]);
+
+  useEffect(() => {
+    // Backfill user_id onto current session when auth state changes (e.g. login)
+    const { data: sub } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      const sessionId = sessionStorage.getItem(SESSION_KEY);
+      const uid = session?.user?.id;
+      if (!sessionId || !uid) return;
+      try {
+        await db.from("analytics_sessions").update({ user_id: uid }).eq("id", sessionId);
+      } catch {}
+    });
+    return () => sub.subscription.unsubscribe();
+  }, []);
 
   useEffect(() => {
     // Heartbeat: every 30s update last_seen_at + duration so engagement metrics aren't stuck at 0

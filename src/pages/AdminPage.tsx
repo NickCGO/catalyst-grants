@@ -828,7 +828,7 @@ function OrgActivity() {
   const [loading, setLoading] = useState(true);
   const [days, setDays] = useState(30);
   const [search, setSearch] = useState("");
-  const [filter, setFilter] = useState<"all" | "active" | "recent" | "dormant" | "never_signed_in" | "no_org" | "with_org">("all");
+  const [filter, setFilter] = useState<"all" | "active" | "recent" | "dormant" | "never_signed_in" | "anonymous" | "no_org" | "with_org">("all");
   const [sortKey, setSortKey] = useState<string>("last_sign_in_at");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
   const [expanded, setExpanded] = useState<string | null>(null);
@@ -860,6 +860,7 @@ function OrgActivity() {
       recent: { label: "Recent (30d)", cls: "bg-blue-500/20 text-blue-400 border-blue-500/30" },
       dormant: { label: "Dormant", cls: "bg-amber-500/20 text-amber-400 border-amber-500/30" },
       never_signed_in: { label: "Never signed in", cls: "bg-red-500/20 text-red-400 border-red-500/30" },
+      anonymous: { label: "Anonymous visitor", cls: "bg-slate-500/20 text-slate-300 border-slate-500/30" },
     };
     const m = map[s] || { label: s, cls: "" };
     return <Badge className={m.cls}>{m.label}</Badge>;
@@ -925,6 +926,8 @@ function OrgActivity() {
     { label: "Recent (30d)", value: s?.recent_30d ?? 0, icon: Clock, color: "text-blue-400" },
     { label: "Dormant", value: s?.dormant ?? 0, icon: Clock, color: "text-amber-400" },
     { label: "Never signed in", value: s?.never_signed_in ?? 0, icon: UserX, color: "text-red-400" },
+    { label: "Anonymous visitors", value: s?.anonymous_visitors ?? 0, icon: Users, color: "text-slate-300" },
+    { label: "Total sessions", value: s?.total_sessions ?? 0, icon: Activity, color: "text-primary" },
     { label: "Orgs with activity", value: s?.orgs_with_activity ?? 0, icon: TrendingUp, color: "text-green-400" },
     { label: "Orgs no activity", value: s?.orgs_no_activity ?? 0, icon: UserX, color: "text-red-400" },
   ];
@@ -966,7 +969,7 @@ function OrgActivity() {
           <Input placeholder="Search by email or org..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
         </div>
         <div className="flex items-center gap-1 flex-wrap">
-          {(["all", "active", "recent", "dormant", "never_signed_in", "with_org", "no_org"] as const).map((f) => (
+          {(["all", "active", "recent", "dormant", "never_signed_in", "anonymous", "with_org", "no_org"] as const).map((f) => (
             <Button key={f} size="sm" variant={filter === f ? "default" : "outline"} onClick={() => setFilter(f)} className="text-xs capitalize">
               {f.replace(/_/g, " ")}
             </Button>
