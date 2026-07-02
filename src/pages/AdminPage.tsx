@@ -1284,6 +1284,7 @@ export default function AdminPage() {
             <TabsTrigger value="users"><Users className="h-3.5 w-3.5 mr-1.5" />Users</TabsTrigger>
             <TabsTrigger value="waitlist"><ListChecks className="h-3.5 w-3.5 mr-1.5" />Waitlist</TabsTrigger>
             <TabsTrigger value="funders"><Database className="h-3.5 w-3.5 mr-1.5" />Funders</TabsTrigger>
+            <TabsTrigger value="ingest"><FileUp className="h-3.5 w-3.5 mr-1.5" />Ingest Form</TabsTrigger>
           </TabsList>
 
           <TabsContent value="overview"><StatsOverview /></TabsContent>
@@ -1292,6 +1293,7 @@ export default function AdminPage() {
           <TabsContent value="users"><UserManagement /></TabsContent>
           <TabsContent value="waitlist"><WaitlistManagement /></TabsContent>
           <TabsContent value="funders"><FunderManagement /></TabsContent>
+          <TabsContent value="ingest"><IngestFunderForm /></TabsContent>
         </Tabs>
       </div>
     </DashboardLayout>
