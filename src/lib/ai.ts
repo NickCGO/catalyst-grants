@@ -1,29 +1,17 @@
 import { supabase } from "@/integrations/supabase/client";
 
-const AI_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-generate`;
-
 interface Message {
   role: "system" | "user" | "assistant";
   content: string;
 }
 
 export async function callAI(messages: Message[]): Promise<string> {
-  const resp = await fetch(AI_URL, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
-    },
-    body: JSON.stringify({ messages, stream: false }),
+  const { data, error } = await supabase.functions.invoke("ai-generate", {
+    body: { messages, stream: false },
   });
-
-  if (!resp.ok) {
-    const err = await resp.json().catch(() => ({ error: "AI request failed" }));
-    throw new Error(err.error || `AI error: ${resp.status}`);
-  }
-
-  const data = await resp.json();
-  return data.choices?.[0]?.message?.content || "";
+  if (error) throw new Error(error.message || "AI request failed");
+  if (data?.error) throw new Error(data.error);
+  return data?.choices?.[0]?.message?.content || "";
 }
 
 export async function callAIJSON<T>(messages: Message[]): Promise<T> {
@@ -39,21 +27,30 @@ export async function streamAI(
   onDelta: (text: string) => void,
   onDone: () => void,
 ) {
-  const resp = await fetch(AI_URL, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
-    },
-    body: JSON.stringify({ messages, stream: true }),
+  const { data, error } = await supabase.functions.invoke("ai-generate", {
+    body: { messages, stream: true },
   });
+  if (error) throw new Error(error.message || "Failed to start AI stream");
 
-  if (!resp.ok || !resp.body) throw new Error("Failed to start AI stream");
+  // invoke may return a ReadableStream, a Blob, or a string depending on runtime.
+  let reader: ReadableStreamDefaultReader<Uint8Array> | null = null;
+  if (data instanceof ReadableStream) {
+    reader = data.getReader();
+  } else if (data instanceof Blob) {
+    reader = data.stream().getReader();
+  } else if (typeof data === "string") {
+    processChunk(data, onDelta, onDone);
+    return;
+  } else if (data?.choices?.[0]?.message?.content) {
+    onDelta(data.choices[0].message.content);
+    onDone();
+    return;
+  } else {
+    throw new Error("Unexpected AI stream response");
+  }
 
-  const reader = resp.body.getReader();
   const decoder = new TextDecoder();
   let buffer = "";
-
   while (true) {
     const { done, value } = await reader.read();
     if (done) break;
@@ -73,6 +70,21 @@ export async function streamAI(
         if (content) onDelta(content);
       } catch { /* partial JSON, skip */ }
     }
+  }
+  onDone();
+}
+
+function processChunk(text: string, onDelta: (t: string) => void, onDone: () => void) {
+  for (const rawLine of text.split("\n")) {
+    const line = rawLine.endsWith("\r") ? rawLine.slice(0, -1) : rawLine;
+    if (!line.startsWith("data: ")) continue;
+    const jsonStr = line.slice(6).trim();
+    if (jsonStr === "[DONE]") { onDone(); return; }
+    try {
+      const parsed = JSON.parse(jsonStr);
+      const content = parsed.choices?.[0]?.delta?.content;
+      if (content) onDelta(content);
+    } catch { /* skip */ }
   }
   onDone();
 }

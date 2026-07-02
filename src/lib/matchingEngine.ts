@@ -164,10 +164,9 @@ export async function computeMatchScores(org: OrgProfile): Promise<number> {
       calculated_at: new Date().toISOString(),
     }));
 
-    // Delete existing then insert (no unique constraint available for upsert)
-    const funderIds = chunk.map(c => c.funder_id);
-    await supabase.from("grant_matches").delete().eq("org_id", org.id).in("funder_id", funderIds);
-    await supabase.from("grant_matches").insert(chunk);
+    await supabase
+      .from("grant_matches")
+      .upsert(chunk, { onConflict: "org_id,funder_id" });
   }
 
   return matches.length;
