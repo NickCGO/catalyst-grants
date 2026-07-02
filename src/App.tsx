@@ -12,6 +12,7 @@ import DashboardPage from "./pages/DashboardPage";
 import GrantsPage from "./pages/GrantsPage";
 import FunderDetailPage from "./pages/FunderDetailPage";
 import ApplicationsPage from "./pages/ApplicationsPage";
+import ApplicationDetailPage from "./pages/ApplicationDetailPage";
 import ProposalListPage from "./pages/ProposalListPage";
 import ProposalEditorPage from "./pages/ProposalEditorPage";
 import ReportsPage from "./pages/ReportsPage";
@@ -83,6 +84,7 @@ const App = () => (
           <Route path="/grants" element={<GrantsPage />} />
           <Route path="/grants/:id" element={<FunderDetailPage />} />
           <Route path="/applications" element={<ApplicationsPage />} />
+          <Route path="/applications/:id" element={<ApplicationDetailPage />} />
           <Route path="/writer" element={<ProposalListPage />} />
           <Route path="/writer/new" element={<ProposalEditorPage />} />
           <Route path="/writer/:id" element={<ProposalEditorPage />} />

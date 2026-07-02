@@ -357,6 +357,14 @@ const ApplicationsPage = () => {
                                 size="sm"
                                 variant="ghost"
                                 className="h-6 text-[10px] px-2 text-primary"
+                                onClick={() => navigate(`/applications/${item.id}`)}
+                              >
+                                Open
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                className="h-6 text-[10px] px-2 text-primary"
                                 onClick={() => navigate(item.proposal_id ? `/writer/${item.proposal_id}` : `/grants`)}
                               >
                                 {item.proposal_id ? "Edit Proposal" : "Write Proposal"}
