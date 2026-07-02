@@ -1098,6 +1098,148 @@ function OrgActivity() {
   );
 }
 
+// ─── Ingest Funder Form ──────────────────────────────────────────────────────
+function IngestFunderForm() {
+  const [search, setSearch] = useState("");
+  const [results, setResults] = useState<{ id: string; donor_name: string }[]>([]);
+  const [funder, setFunder] = useState<{ id: string; donor_name: string } | null>(null);
+  const [files, setFiles] = useState<File[]>([]);
+  const [running, setRunning] = useState(false);
+  const [output, setOutput] = useState<any>(null);
+
+  useEffect(() => {
+    if (!search || funder) { setResults([]); return; }
+    const t = setTimeout(async () => {
+      const { data } = await supabase
+        .from("funders")
+        .select("id, donor_name")
+        .ilike("donor_name", `%${search.trim()}%`)
+        .order("donor_name")
+        .limit(15);
+      setResults(data || []);
+    }, 250);
+    return () => clearTimeout(t);
+  }, [search, funder]);
+
+  const fileToBase64 = (f: File) =>
+    new Promise<string>((resolve, reject) => {
+      const r = new FileReader();
+      r.onload = () => {
+        const s = String(r.result || "");
+        resolve(s.includes(",") ? s.split(",")[1] : s);
+      };
+      r.onerror = () => reject(r.error);
+      r.readAsDataURL(f);
+    });
+
+  const run = async () => {
+    if (!funder || files.length === 0) return;
+    setRunning(true);
+    setOutput(null);
+    try {
+      const sources = await Promise.all(
+        files.map(async (f) => ({
+          type: "pdf_base64",
+          value: await fileToBase64(f),
+          filename: f.name,
+        }))
+      );
+      const { data, error } = await supabase.functions.invoke("ingest-funder-form", {
+        body: { funder_id: funder.id, sources },
+      });
+      if (error) throw error;
+      setOutput(data);
+      toast({ title: "Ingest complete" });
+    } catch (e: any) {
+      setOutput({ error: e.message || String(e) });
+      toast({ title: "Ingest failed", description: e.message || String(e), variant: "destructive" });
+    } finally {
+      setRunning(false);
+    }
+  };
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2 text-base">
+          <FileUp className="h-4 w-4" /> Ingest funder form
+        </CardTitle>
+        <CardDescription>
+          Staff only. Upload the funder's guideline / application PDFs; Claude will extract the
+          structured form. Everything is written unverified.
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div>
+          <Label className="text-xs">Funder</Label>
+          {funder ? (
+            <div className="flex items-center justify-between mt-1 p-2 rounded border border-border bg-secondary/40">
+              <span className="text-sm">{funder.donor_name}</span>
+              <Button variant="ghost" size="sm" onClick={() => { setFunder(null); setSearch(""); }}>
+                Change
+              </Button>
+            </div>
+          ) : (
+            <>
+              <Input
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search funders…"
+                className="mt-1"
+              />
+              {results.length > 0 && (
+                <div className="mt-2 border border-border rounded max-h-52 overflow-auto">
+                  {results.map((r) => (
+                    <button
+                      key={r.id}
+                      type="button"
+                      onClick={() => { setFunder(r); setResults([]); }}
+                      className="block w-full text-left px-3 py-1.5 text-sm hover:bg-secondary/60"
+                    >
+                      {r.donor_name}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </>
+          )}
+        </div>
+
+        <div>
+          <Label className="text-xs">PDF files</Label>
+          <Input
+            type="file"
+            accept="application/pdf"
+            multiple
+            onChange={(e) => setFiles(Array.from(e.target.files || []))}
+            className="mt-1"
+          />
+          {files.length > 0 && (
+            <p className="text-xs text-muted-foreground mt-1">
+              {files.length} file{files.length === 1 ? "" : "s"}: {files.map((f) => f.name).join(", ")}
+            </p>
+          )}
+        </div>
+
+        <Button onClick={run} disabled={!funder || files.length === 0 || running}>
+          {running ? "Running…" : "Run ingest"}
+        </Button>
+
+        {output && (
+          <div>
+            <Label className="text-xs">Response</Label>
+            <Textarea
+              readOnly
+              value={JSON.stringify(output, null, 2)}
+              className="mt-1 font-mono text-xs h-80"
+            />
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
 // ─── Admin Page ──────────────────────────────────────────────────────────────
 export default function AdminPage() {
   const { user, loading: authLoading } = useAuth();
