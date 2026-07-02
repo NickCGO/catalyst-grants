@@ -153,6 +153,104 @@ export type Database = {
         }
         Relationships: []
       }
+      answer_library: {
+        Row: {
+          content: string
+          created_at: string | null
+          id: string
+          label: string
+          org_id: string
+          tags: string[] | null
+          updated_at: string | null
+          usage_count: number | null
+          version: number | null
+        }
+        Insert: {
+          content: string
+          created_at?: string | null
+          id?: string
+          label: string
+          org_id: string
+          tags?: string[] | null
+          updated_at?: string | null
+          usage_count?: number | null
+          version?: number | null
+        }
+        Update: {
+          content?: string
+          created_at?: string | null
+          id?: string
+          label?: string
+          org_id?: string
+          tags?: string[] | null
+          updated_at?: string | null
+          usage_count?: number | null
+          version?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "answer_library_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organisations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      application_answers: {
+        Row: {
+          answer: string | null
+          application_id: string
+          created_at: string | null
+          id: string
+          question_id: string
+          sourced_from: string | null
+          status: string | null
+          updated_at: string | null
+          updated_by: string | null
+          word_count: number | null
+        }
+        Insert: {
+          answer?: string | null
+          application_id: string
+          created_at?: string | null
+          id?: string
+          question_id: string
+          sourced_from?: string | null
+          status?: string | null
+          updated_at?: string | null
+          updated_by?: string | null
+          word_count?: number | null
+        }
+        Update: {
+          answer?: string | null
+          application_id?: string
+          created_at?: string | null
+          id?: string
+          question_id?: string
+          sourced_from?: string | null
+          status?: string | null
+          updated_at?: string | null
+          updated_by?: string | null
+          word_count?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "application_answers_application_id_fkey"
+            columns: ["application_id"]
+            isOneToOne: false
+            referencedRelation: "applications"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "application_answers_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "form_questions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       applications: {
         Row: {
           activity_category: string | null
@@ -171,6 +269,8 @@ export type Database = {
           org_id: string
           project_name: string | null
           status: string | null
+          submission_method: string | null
+          submitted_at: string | null
           updated_at: string | null
         }
         Insert: {
@@ -190,6 +290,8 @@ export type Database = {
           org_id: string
           project_name?: string | null
           status?: string | null
+          submission_method?: string | null
+          submitted_at?: string | null
           updated_at?: string | null
         }
         Update: {
@@ -209,6 +311,8 @@ export type Database = {
           org_id?: string
           project_name?: string | null
           status?: string | null
+          submission_method?: string | null
+          submitted_at?: string | null
           updated_at?: string | null
         }
         Relationships: [
@@ -684,6 +788,56 @@ export type Database = {
         }
         Relationships: []
       }
+      form_questions: {
+        Row: {
+          answer_type: string | null
+          char_limit: number | null
+          created_at: string | null
+          form_id: string
+          guidance: string | null
+          id: string
+          options: Json | null
+          order_index: number
+          question: string
+          required: boolean | null
+          word_limit: number | null
+        }
+        Insert: {
+          answer_type?: string | null
+          char_limit?: number | null
+          created_at?: string | null
+          form_id: string
+          guidance?: string | null
+          id?: string
+          options?: Json | null
+          order_index?: number
+          question: string
+          required?: boolean | null
+          word_limit?: number | null
+        }
+        Update: {
+          answer_type?: string | null
+          char_limit?: number | null
+          created_at?: string | null
+          form_id?: string
+          guidance?: string | null
+          id?: string
+          options?: Json | null
+          order_index?: number
+          question?: string
+          required?: boolean | null
+          word_limit?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "form_questions_form_id_fkey"
+            columns: ["form_id"]
+            isOneToOne: false
+            referencedRelation: "funder_forms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       funder_focus_areas: {
         Row: {
           aged_elderly: boolean | null
@@ -778,6 +932,62 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "funder_focus_areas_funder_id_fkey"
+            columns: ["funder_id"]
+            isOneToOne: false
+            referencedRelation: "funders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      funder_forms: {
+        Row: {
+          created_at: string | null
+          funder_id: string
+          id: string
+          last_verified: string | null
+          required_attachments: Json | null
+          source: string | null
+          source_url: string | null
+          submission_method: string | null
+          submission_url: string | null
+          title: string | null
+          updated_at: string | null
+          verified: boolean | null
+          verified_by: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          funder_id: string
+          id?: string
+          last_verified?: string | null
+          required_attachments?: Json | null
+          source?: string | null
+          source_url?: string | null
+          submission_method?: string | null
+          submission_url?: string | null
+          title?: string | null
+          updated_at?: string | null
+          verified?: boolean | null
+          verified_by?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          funder_id?: string
+          id?: string
+          last_verified?: string | null
+          required_attachments?: Json | null
+          source?: string | null
+          source_url?: string | null
+          submission_method?: string | null
+          submission_url?: string | null
+          title?: string | null
+          updated_at?: string | null
+          verified?: boolean | null
+          verified_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "funder_forms_funder_id_fkey"
             columns: ["funder_id"]
             isOneToOne: false
             referencedRelation: "funders"
@@ -2678,6 +2888,7 @@ export type Database = {
         Args: { message_id: number; queue_name: string }
         Returns: boolean
       }
+      email_queue_dispatch: { Args: never; Returns: undefined }
       enqueue_email: {
         Args: { payload: Json; queue_name: string }
         Returns: number
