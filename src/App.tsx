@@ -12,6 +12,7 @@ import DashboardPage from "./pages/DashboardPage";
 import GrantsPage from "./pages/GrantsPage";
 import FunderDetailPage from "./pages/FunderDetailPage";
 import ApplicationsPage from "./pages/ApplicationsPage";
+import ApplicationDetailPage from "./pages/ApplicationDetailPage";
 import ProposalListPage from "./pages/ProposalListPage";
 import ProposalEditorPage from "./pages/ProposalEditorPage";
 import ReportsPage from "./pages/ReportsPage";
