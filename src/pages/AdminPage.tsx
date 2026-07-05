@@ -118,6 +118,7 @@ function UserManagement() {
   const [users, setUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
+  const [visitorStats, setVisitorStats] = useState<{ visitors: number; sessions: number } | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -131,7 +132,21 @@ function UserManagement() {
     }
   }, []);
 
-  useEffect(() => { load(); }, [load]);
+  const loadVisitors = useCallback(async () => {
+    try {
+      const since = new Date(Date.now() - 30 * 86400000).toISOString();
+      const { data } = await supabase
+        .from("analytics_sessions")
+        .select("visitor_id", { count: "exact" })
+        .gte("started_at", since)
+        .limit(5000);
+      const uniq = new Set((data || []).map((s: any) => s.visitor_id)).size;
+      setVisitorStats({ visitors: uniq, sessions: data?.length || 0 });
+    } catch { /* ignore */ }
+  }, []);
+
+  useEffect(() => { load(); loadVisitors(); }, [load, loadVisitors]);
+
 
   const toggleBeta = async (userId: string) => {
     try {
@@ -159,6 +174,17 @@ function UserManagement() {
 
   return (
     <div className="space-y-4">
+      <div className="rounded-lg border border-border/50 bg-muted/30 p-3 text-sm">
+        <div className="flex flex-wrap items-center gap-x-6 gap-y-1">
+          <span><strong className="text-foreground">{users.length}</strong> <span className="text-muted-foreground">registered users (accounts)</span></span>
+          {visitorStats && (
+            <span><strong className="text-foreground">{visitorStats.visitors}</strong> <span className="text-muted-foreground">anonymous visitors in last 30 days ({visitorStats.sessions} sessions)</span></span>
+          )}
+        </div>
+        <p className="text-xs text-muted-foreground mt-1">
+          This tab only lists people who created an account. To see anonymous visitors, referrers, pages, and per-user activity, use the <strong>Analytics</strong> and <strong>Org Activity</strong> tabs.
+        </p>
+      </div>
       <div className="flex items-center gap-3">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -168,6 +194,7 @@ function UserManagement() {
           <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} />
         </Button>
       </div>
+
 
       {loading ? (
         <div className="space-y-2">{[...Array(5)].map((_, i) => <Skeleton key={i} className="h-12 w-full" />)}</div>
