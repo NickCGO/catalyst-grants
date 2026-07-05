@@ -118,6 +118,7 @@ function UserManagement() {
   const [users, setUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
+  const [visitorStats, setVisitorStats] = useState<{ visitors: number; sessions: number } | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -131,7 +132,21 @@ function UserManagement() {
     }
   }, []);
 
-  useEffect(() => { load(); }, [load]);
+  const loadVisitors = useCallback(async () => {
+    try {
+      const since = new Date(Date.now() - 30 * 86400000).toISOString();
+      const { data } = await supabase
+        .from("analytics_sessions")
+        .select("visitor_id", { count: "exact" })
+        .gte("started_at", since)
+        .limit(5000);
+      const uniq = new Set((data || []).map((s: any) => s.visitor_id)).size;
+      setVisitorStats({ visitors: uniq, sessions: data?.length || 0 });
+    } catch { /* ignore */ }
+  }, []);
+
+  useEffect(() => { load(); loadVisitors(); }, [load, loadVisitors]);
+
 
   const toggleBeta = async (userId: string) => {
     try {
