@@ -1,16 +1,21 @@
 import { useEffect, useState, useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Inbox, Mail, Reply, ExternalLink, Search } from "lucide-react";
+import { Inbox, Mail, Reply, ExternalLink, Search, Link2 } from "lucide-react";
 import DashboardLayout from "@/components/DashboardLayout";
 import GlassCard from "@/components/GlassCard";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
 import { formatDistanceToNow } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth, useOrganisation } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
 import AfricaSpinner from "../components/AfricaSpinner";
+
 
 interface InboundEmail {
   id: string;
@@ -33,6 +38,13 @@ const InboxPage = () => {
   const [loading, setLoading] = useState(true);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [search, setSearch] = useState("");
+  const [tab, setTab] = useState<"all" | "unassigned">("all");
+  const [assignOpen, setAssignOpen] = useState(false);
+  const [assignQuery, setAssignQuery] = useState("");
+  const [assignResults, setAssignResults] = useState<{ id: string; donor_name: string }[]>([]);
+  const [assignSaveContact, setAssignSaveContact] = useState(true);
+  const [assignBusy, setAssignBusy] = useState(false);
+
 
   const load = async () => {
     if (!org?.id) return;
@@ -71,13 +83,15 @@ const InboxPage = () => {
   }, [org?.id]);
 
   const filtered = useMemo(() => {
-    if (!search.trim()) return emails;
+    let list = emails;
+    if (tab === "unassigned") list = list.filter((e) => !e.funder_id);
+    if (!search.trim()) return list;
     const q = search.toLowerCase();
-    return emails.filter((e) =>
+    return list.filter((e) =>
       (e.subject || "").toLowerCase().includes(q) ||
       (e.from_email || "").toLowerCase().includes(q) ||
       (e.body_text || "").toLowerCase().includes(q));
-  }, [emails, search]);
+  }, [emails, search, tab]);
 
   const selected = filtered.find((e) => e.id === selectedId) || filtered[0];
 
@@ -88,13 +102,96 @@ const InboxPage = () => {
 
   const openReply = (e: InboundEmail) => {
     if (!e.funder_id) {
-      toast({ title: "No funder linked", description: "Reply from the Funder CRM once you've linked this funder." });
+      toast({ title: "No funder linked", description: "Assign this email to a funder first." });
       return;
     }
     navigate(`/crm/${e.funder_id}?tab=communications&reply=${e.id}`);
   };
 
   const unreadCount = emails.filter((e) => !e.is_read).length;
+  const unassignedCount = emails.filter((e) => !e.funder_id).length;
+
+  const openAssign = () => {
+    setAssignQuery("");
+    setAssignResults([]);
+    setAssignSaveContact(true);
+    setAssignOpen(true);
+  };
+
+  useEffect(() => {
+    if (!assignOpen) return;
+    const q = assignQuery.trim();
+    if (!q) { setAssignResults([]); return; }
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase
+        .from("funders")
+        .select("id, donor_name")
+        .ilike("donor_name", `%${q}%`)
+        .order("donor_name")
+        .limit(20);
+      if (!cancelled) setAssignResults((data as any) || []);
+    })();
+    return () => { cancelled = true; };
+  }, [assignQuery, assignOpen]);
+
+  const assignToFunder = async (funderId: string) => {
+    if (!selected || !org?.id) return;
+    setAssignBusy(true);
+    try {
+      const today = new Date().toISOString().slice(0, 10);
+      // find or create funder_relationship
+      const { data: rel } = await supabase
+        .from("funder_relationships").select("id")
+        .eq("org_id", org.id).eq("funder_id", funderId).maybeSingle();
+      let relationshipId = rel?.id ?? null;
+      if (!relationshipId) {
+        const { data: created, error: relErr } = await supabase
+          .from("funder_relationships")
+          .insert({ org_id: org.id, funder_id: funderId, relationship_status: "engaged", last_interaction_date: today })
+          .select("id").single();
+        if (relErr) throw relErr;
+        relationshipId = created?.id ?? null;
+      } else {
+        await supabase.from("funder_relationships")
+          .update({ last_interaction_date: today, relationship_status: "engaged" })
+          .eq("id", relationshipId);
+      }
+
+      const { error: upErr } = await supabase.from("inbound_emails").update({
+        funder_id: funderId,
+        relationship_id: relationshipId,
+        match_method: "manual",
+      }).eq("id", selected.id);
+      if (upErr) throw upErr;
+
+      if (assignSaveContact) {
+        const email = (selected.from_email || "").toLowerCase();
+        const { data: existing } = await supabase
+          .from("funder_contacts").select("id")
+          .eq("org_id", org.id).eq("funder_id", funderId).ilike("email", email).maybeSingle();
+        if (!existing) {
+          await supabase.from("funder_contacts").insert({
+            org_id: org.id,
+            funder_id: funderId,
+            relationship_id: relationshipId,
+            name: selected.from_name ?? email,
+            email,
+            source: "manual_inbox",
+          });
+        }
+      }
+
+      toast({ title: "Assigned", description: "Email linked to funder." });
+      setAssignOpen(false);
+      load();
+    } catch (e: any) {
+      toast({ title: "Assign failed", description: e.message, variant: "destructive" });
+    } finally {
+      setAssignBusy(false);
+    }
+  };
+
 
   return (
     <DashboardLayout>
@@ -120,6 +217,16 @@ const InboxPage = () => {
               className="pl-7 h-9 text-xs bg-secondary/30 border-border/50" />
           </div>
         </div>
+
+        <Tabs value={tab} onValueChange={(v) => setTab(v as "all" | "unassigned")}>
+          <TabsList className="bg-secondary/30 border border-border/30">
+            <TabsTrigger value="all" className="text-xs">All ({emails.length})</TabsTrigger>
+            <TabsTrigger value="unassigned" className="text-xs">
+              Unassigned{unassignedCount > 0 ? ` (${unassignedCount})` : ""}
+            </TabsTrigger>
+          </TabsList>
+        </Tabs>
+
 
         {loading ? (
           <div className="flex items-center justify-center py-20">
@@ -199,11 +306,15 @@ const InboxPage = () => {
                         </p>
                       </div>
                       <div className="flex items-center gap-2 shrink-0">
-                        {selected.funder_id && (
+                        {selected.funder_id ? (
                           <Button asChild size="sm" variant="outline" className="h-7 text-[10px]">
                             <Link to={`/crm/${selected.funder_id}`}>
                               <ExternalLink className="h-3 w-3 mr-1" /> Funder
                             </Link>
+                          </Button>
+                        ) : (
+                          <Button size="sm" variant="outline" onClick={openAssign} className="h-7 text-[10px]">
+                            <Link2 className="h-3 w-3 mr-1" /> Assign to funder
                           </Button>
                         )}
                         <Button size="sm" onClick={() => openReply(selected)}
@@ -211,6 +322,7 @@ const InboxPage = () => {
                           <Reply className="h-3 w-3 mr-1" /> Reply
                         </Button>
                       </div>
+
                     </div>
                   </div>
                   <div className="p-4 overflow-y-auto max-h-[60vh]">
@@ -233,7 +345,59 @@ const InboxPage = () => {
           </div>
         )}
       </div>
+
+      <Dialog open={assignOpen} onOpenChange={setAssignOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="text-base">Assign email to funder</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div>
+              <Label className="text-xs">Search funders</Label>
+              <Input
+                autoFocus
+                value={assignQuery}
+                onChange={(e) => setAssignQuery(e.target.value)}
+                placeholder="Type a funder name…"
+                className="h-9 text-xs bg-secondary/30 border-border/50"
+              />
+            </div>
+            <div className="max-h-64 overflow-y-auto divide-y divide-border/20 border border-border/30 rounded-md">
+              {assignResults.length === 0 ? (
+                <p className="p-3 text-[11px] text-muted-foreground">
+                  {assignQuery.trim() ? "No matches." : "Start typing to search."}
+                </p>
+              ) : (
+                assignResults.map((f) => (
+                  <button
+                    key={f.id}
+                    onClick={() => assignToFunder(f.id)}
+                    disabled={assignBusy}
+                    className="w-full text-left p-2 text-xs hover:bg-secondary/40 disabled:opacity-50"
+                  >
+                    {f.donor_name}
+                  </button>
+                ))
+              )}
+            </div>
+            <div className="flex items-center gap-2">
+              <Checkbox
+                id="save-contact"
+                checked={assignSaveContact}
+                onCheckedChange={(v) => setAssignSaveContact(v === true)}
+              />
+              <Label htmlFor="save-contact" className="text-[11px] cursor-pointer">
+                Also save {selected?.from_name || selected?.from_email || "sender"} as a contact
+              </Label>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" size="sm" onClick={() => setAssignOpen(false)}>Cancel</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </DashboardLayout>
+
   );
 };
 

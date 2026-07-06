@@ -159,34 +159,7 @@ Deno.serve(async (req: Request) => {
     });
   }
 
-  // Try to associate with a funder by sender email
-  let funderId: string | null = null;
-  let relationshipId: string | null = null;
-  const { data: matchingFunder } = await supabase
-    .from("funders")
-    .select("id")
-    .ilike("email", normalized.from)
-    .maybeSingle();
-  if (matchingFunder) {
-    funderId = matchingFunder.id;
-    const { data: rel } = await supabase
-      .from("funder_relationships")
-      .select("id")
-      .eq("org_id", org.id)
-      .eq("funder_id", funderId)
-      .maybeSingle();
-    if (rel) {
-      relationshipId = rel.id;
-      // Bump health and stamp last_interaction
-      await supabase
-        .from("funder_relationships")
-        .update({
-          last_interaction_date: new Date().toISOString().slice(0, 10),
-          relationship_status: "engaged",
-        })
-        .eq("id", rel.id);
-    }
-  }
+  const { funderId, relationshipId, matchMethod } = await associateInbound(supabase, org.id, normalized);
 
   const { error: insertErr } = await supabase.from("inbound_emails").insert({
     org_id: org.id,
@@ -201,7 +174,9 @@ Deno.serve(async (req: Request) => {
     message_id: normalized.messageId ?? null,
     in_reply_to: normalized.inReplyTo ?? null,
     raw_payload: body,
+    match_method: matchMethod,
   });
+
   if (insertErr) {
     console.error("Insert error:", insertErr);
     return new Response(JSON.stringify({ error: "Insert failed" }), {
@@ -215,3 +190,72 @@ Deno.serve(async (req: Request) => {
     headers: { ...corsHeaders, "Content-Type": "application/json" },
   });
 });
+
+export async function associateInbound(
+  supabase: any,
+  orgId: string,
+  normalized: { from: string; fromName?: string },
+): Promise<{ funderId: string | null; relationshipId: string | null; contactId: string | null; matchMethod: string }> {
+  const from = (normalized.from || "").trim().toLowerCase();
+  if (!from) return { funderId: null, relationshipId: null, contactId: null, matchMethod: "none" };
+  const domain = from.includes("@") ? from.split("@")[1] : null;
+
+  let funderId: string | null = null;
+  let contactId: string | null = null;
+  let matchMethod = "none";
+
+  // 1. Known contact (primary or alt email)
+  const { data: byEmail } = await supabase
+    .from("funder_contacts").select("id, funder_id")
+    .eq("org_id", orgId).ilike("email", from).maybeSingle();
+  let contact = byEmail;
+  if (!contact) {
+    const { data: byAlt } = await supabase
+      .from("funder_contacts").select("id, funder_id")
+      .eq("org_id", orgId).contains("alt_emails", [from]).maybeSingle();
+    contact = byAlt;
+  }
+  if (contact) { funderId = contact.funder_id; contactId = contact.id; matchMethod = "contact"; }
+
+  // 2. Exact funder address
+  if (!funderId) {
+    const { data: f } = await supabase.from("funders").select("id").ilike("email", from).maybeSingle();
+    if (f) { funderId = f.id; matchMethod = "funder_email"; }
+  }
+
+  // 3. Unambiguous domain match
+  if (!funderId && domain) {
+    const { data: fs } = await supabase.from("funders").select("id").ilike("email", `%@${domain}`).limit(2);
+    if (fs && fs.length === 1) { funderId = fs[0].id; matchMethod = "domain"; }
+  }
+
+  if (!funderId) return { funderId: null, relationshipId: null, contactId: null, matchMethod: "none" };
+
+  const today = new Date().toISOString().slice(0, 10);
+  const { data: rel } = await supabase
+    .from("funder_relationships").select("id")
+    .eq("org_id", orgId).eq("funder_id", funderId).maybeSingle();
+
+  let relationshipId: string | null = rel?.id ?? null;
+  if (relationshipId) {
+    await supabase.from("funder_relationships")
+      .update({ last_interaction_date: today, relationship_status: "engaged" }).eq("id", relationshipId);
+  } else {
+    const { data: created } = await supabase.from("funder_relationships")
+      .insert({ org_id: orgId, funder_id: funderId, relationship_status: "engaged", last_interaction_date: today })
+      .select("id").single();
+    relationshipId = created?.id ?? null;
+  }
+
+  if (!contactId) {
+    const { data: newContact } = await supabase.from("funder_contacts")
+      .insert({ org_id: orgId, funder_id: funderId, relationship_id: relationshipId,
+        name: normalized.fromName ?? from, email: from, source: "auto_inbound" })
+      .select("id").single();
+    contactId = newContact?.id ?? null;
+  } else if (relationshipId) {
+    await supabase.from("funder_contacts").update({ relationship_id: relationshipId }).eq("id", contactId);
+  }
+
+  return { funderId, relationshipId, contactId, matchMethod };
+}

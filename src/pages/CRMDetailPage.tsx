@@ -19,6 +19,8 @@ import { useAuth } from "@/hooks/useAuth";
 import CRMEmailComposer from "@/components/crm/CRMEmailComposer";
 import CRMEmailLog from "@/components/crm/CRMEmailLog";
 import CRMActivityFeed from "@/components/crm/CRMActivityFeed";
+import CRMContactsSection from "@/components/crm/CRMContactsSection";
+
 import { hints } from "@/lib/formHints";
 
 const CRMDetailPage = () => {
@@ -152,12 +154,14 @@ const CRMDetailPage = () => {
         <Tabs defaultValue="overview" className="space-y-4">
           <TabsList className="bg-secondary/30 border border-border/30">
             <TabsTrigger value="overview" className="text-xs">Overview</TabsTrigger>
+            <TabsTrigger value="contacts" className="text-xs">Contacts</TabsTrigger>
             <TabsTrigger value="communications" className="text-xs">Communications</TabsTrigger>
             <TabsTrigger value="inbox" className="text-xs">Inbox ({inboundEmails.length})</TabsTrigger>
             <TabsTrigger value="activity" className="text-xs">Activity</TabsTrigger>
             <TabsTrigger value="applications" className="text-xs">Applications ({applications.length})</TabsTrigger>
             <TabsTrigger value="notes" className="text-xs">Notes</TabsTrigger>
           </TabsList>
+
 
           {/* Overview Tab */}
           <TabsContent value="overview" className="space-y-4">
@@ -200,6 +204,15 @@ const CRMDetailPage = () => {
               </GlassCard>
             </div>
           </TabsContent>
+
+          {/* Contacts Tab */}
+          <TabsContent value="contacts" className="space-y-4">
+            {orgId && funderId && (
+              <CRMContactsSection orgId={orgId} funderId={funderId} relationshipId={relationship?.id} />
+            )}
+          </TabsContent>
+
+
 
           {/* Communications Tab */}
           <TabsContent value="communications" className="space-y-4">
