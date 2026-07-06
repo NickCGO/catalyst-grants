@@ -83,13 +83,15 @@ const InboxPage = () => {
   }, [org?.id]);
 
   const filtered = useMemo(() => {
-    if (!search.trim()) return emails;
+    let list = emails;
+    if (tab === "unassigned") list = list.filter((e) => !e.funder_id);
+    if (!search.trim()) return list;
     const q = search.toLowerCase();
-    return emails.filter((e) =>
+    return list.filter((e) =>
       (e.subject || "").toLowerCase().includes(q) ||
       (e.from_email || "").toLowerCase().includes(q) ||
       (e.body_text || "").toLowerCase().includes(q));
-  }, [emails, search]);
+  }, [emails, search, tab]);
 
   const selected = filtered.find((e) => e.id === selectedId) || filtered[0];
 
@@ -100,13 +102,96 @@ const InboxPage = () => {
 
   const openReply = (e: InboundEmail) => {
     if (!e.funder_id) {
-      toast({ title: "No funder linked", description: "Reply from the Funder CRM once you've linked this funder." });
+      toast({ title: "No funder linked", description: "Assign this email to a funder first." });
       return;
     }
     navigate(`/crm/${e.funder_id}?tab=communications&reply=${e.id}`);
   };
 
   const unreadCount = emails.filter((e) => !e.is_read).length;
+  const unassignedCount = emails.filter((e) => !e.funder_id).length;
+
+  const openAssign = () => {
+    setAssignQuery("");
+    setAssignResults([]);
+    setAssignSaveContact(true);
+    setAssignOpen(true);
+  };
+
+  useEffect(() => {
+    if (!assignOpen) return;
+    const q = assignQuery.trim();
+    if (!q) { setAssignResults([]); return; }
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase
+        .from("funders")
+        .select("id, donor_name")
+        .ilike("donor_name", `%${q}%`)
+        .order("donor_name")
+        .limit(20);
+      if (!cancelled) setAssignResults((data as any) || []);
+    })();
+    return () => { cancelled = true; };
+  }, [assignQuery, assignOpen]);
+
+  const assignToFunder = async (funderId: string) => {
+    if (!selected || !org?.id) return;
+    setAssignBusy(true);
+    try {
+      const today = new Date().toISOString().slice(0, 10);
+      // find or create funder_relationship
+      const { data: rel } = await supabase
+        .from("funder_relationships").select("id")
+        .eq("org_id", org.id).eq("funder_id", funderId).maybeSingle();
+      let relationshipId = rel?.id ?? null;
+      if (!relationshipId) {
+        const { data: created, error: relErr } = await supabase
+          .from("funder_relationships")
+          .insert({ org_id: org.id, funder_id: funderId, relationship_status: "engaged", last_interaction_date: today })
+          .select("id").single();
+        if (relErr) throw relErr;
+        relationshipId = created?.id ?? null;
+      } else {
+        await supabase.from("funder_relationships")
+          .update({ last_interaction_date: today, relationship_status: "engaged" })
+          .eq("id", relationshipId);
+      }
+
+      const { error: upErr } = await supabase.from("inbound_emails").update({
+        funder_id: funderId,
+        relationship_id: relationshipId,
+        match_method: "manual",
+      }).eq("id", selected.id);
+      if (upErr) throw upErr;
+
+      if (assignSaveContact) {
+        const email = (selected.from_email || "").toLowerCase();
+        const { data: existing } = await supabase
+          .from("funder_contacts").select("id")
+          .eq("org_id", org.id).eq("funder_id", funderId).ilike("email", email).maybeSingle();
+        if (!existing) {
+          await supabase.from("funder_contacts").insert({
+            org_id: org.id,
+            funder_id: funderId,
+            relationship_id: relationshipId,
+            name: selected.from_name ?? email,
+            email,
+            source: "manual_inbox",
+          });
+        }
+      }
+
+      toast({ title: "Assigned", description: "Email linked to funder." });
+      setAssignOpen(false);
+      load();
+    } catch (e: any) {
+      toast({ title: "Assign failed", description: e.message, variant: "destructive" });
+    } finally {
+      setAssignBusy(false);
+    }
+  };
+
 
   return (
     <DashboardLayout>
