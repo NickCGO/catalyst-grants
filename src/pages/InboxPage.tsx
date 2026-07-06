@@ -345,7 +345,59 @@ const InboxPage = () => {
           </div>
         )}
       </div>
+
+      <Dialog open={assignOpen} onOpenChange={setAssignOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="text-base">Assign email to funder</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div>
+              <Label className="text-xs">Search funders</Label>
+              <Input
+                autoFocus
+                value={assignQuery}
+                onChange={(e) => setAssignQuery(e.target.value)}
+                placeholder="Type a funder name…"
+                className="h-9 text-xs bg-secondary/30 border-border/50"
+              />
+            </div>
+            <div className="max-h-64 overflow-y-auto divide-y divide-border/20 border border-border/30 rounded-md">
+              {assignResults.length === 0 ? (
+                <p className="p-3 text-[11px] text-muted-foreground">
+                  {assignQuery.trim() ? "No matches." : "Start typing to search."}
+                </p>
+              ) : (
+                assignResults.map((f) => (
+                  <button
+                    key={f.id}
+                    onClick={() => assignToFunder(f.id)}
+                    disabled={assignBusy}
+                    className="w-full text-left p-2 text-xs hover:bg-secondary/40 disabled:opacity-50"
+                  >
+                    {f.donor_name}
+                  </button>
+                ))
+              )}
+            </div>
+            <div className="flex items-center gap-2">
+              <Checkbox
+                id="save-contact"
+                checked={assignSaveContact}
+                onCheckedChange={(v) => setAssignSaveContact(v === true)}
+              />
+              <Label htmlFor="save-contact" className="text-[11px] cursor-pointer">
+                Also save {selected?.from_name || selected?.from_email || "sender"} as a contact
+              </Label>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" size="sm" onClick={() => setAssignOpen(false)}>Cancel</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </DashboardLayout>
+
   );
 };
 
