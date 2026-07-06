@@ -19,6 +19,8 @@ import { useAuth } from "@/hooks/useAuth";
 import CRMEmailComposer from "@/components/crm/CRMEmailComposer";
 import CRMEmailLog from "@/components/crm/CRMEmailLog";
 import CRMActivityFeed from "@/components/crm/CRMActivityFeed";
+import CRMContactsSection from "@/components/crm/CRMContactsSection";
+
 import { hints } from "@/lib/formHints";
 
 const CRMDetailPage = () => {
