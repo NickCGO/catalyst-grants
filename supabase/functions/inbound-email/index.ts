@@ -159,34 +159,7 @@ Deno.serve(async (req: Request) => {
     });
   }
 
-  // Try to associate with a funder by sender email
-  let funderId: string | null = null;
-  let relationshipId: string | null = null;
-  const { data: matchingFunder } = await supabase
-    .from("funders")
-    .select("id")
-    .ilike("email", normalized.from)
-    .maybeSingle();
-  if (matchingFunder) {
-    funderId = matchingFunder.id;
-    const { data: rel } = await supabase
-      .from("funder_relationships")
-      .select("id")
-      .eq("org_id", org.id)
-      .eq("funder_id", funderId)
-      .maybeSingle();
-    if (rel) {
-      relationshipId = rel.id;
-      // Bump health and stamp last_interaction
-      await supabase
-        .from("funder_relationships")
-        .update({
-          last_interaction_date: new Date().toISOString().slice(0, 10),
-          relationship_status: "engaged",
-        })
-        .eq("id", rel.id);
-    }
-  }
+  const { funderId, relationshipId, matchMethod } = await associateInbound(supabase, org.id, normalized);
 
   const { error: insertErr } = await supabase.from("inbound_emails").insert({
     org_id: org.id,
@@ -201,7 +174,9 @@ Deno.serve(async (req: Request) => {
     message_id: normalized.messageId ?? null,
     in_reply_to: normalized.inReplyTo ?? null,
     raw_payload: body,
+    match_method: matchMethod,
   });
+
   if (insertErr) {
     console.error("Insert error:", insertErr);
     return new Response(JSON.stringify({ error: "Insert failed" }), {
