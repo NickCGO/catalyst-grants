@@ -218,6 +218,16 @@ const InboxPage = () => {
           </div>
         </div>
 
+        <Tabs value={tab} onValueChange={(v) => setTab(v as "all" | "unassigned")}>
+          <TabsList className="bg-secondary/30 border border-border/30">
+            <TabsTrigger value="all" className="text-xs">All ({emails.length})</TabsTrigger>
+            <TabsTrigger value="unassigned" className="text-xs">
+              Unassigned{unassignedCount > 0 ? ` (${unassignedCount})` : ""}
+            </TabsTrigger>
+          </TabsList>
+        </Tabs>
+
+
         {loading ? (
           <div className="flex items-center justify-center py-20">
             <AfricaSpinner className="h-6 w-6 animate-spin text-primary" />
