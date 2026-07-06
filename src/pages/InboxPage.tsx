@@ -306,11 +306,15 @@ const InboxPage = () => {
                         </p>
                       </div>
                       <div className="flex items-center gap-2 shrink-0">
-                        {selected.funder_id && (
+                        {selected.funder_id ? (
                           <Button asChild size="sm" variant="outline" className="h-7 text-[10px]">
                             <Link to={`/crm/${selected.funder_id}`}>
                               <ExternalLink className="h-3 w-3 mr-1" /> Funder
                             </Link>
+                          </Button>
+                        ) : (
+                          <Button size="sm" variant="outline" onClick={openAssign} className="h-7 text-[10px]">
+                            <Link2 className="h-3 w-3 mr-1" /> Assign to funder
                           </Button>
                         )}
                         <Button size="sm" onClick={() => openReply(selected)}
@@ -318,6 +322,7 @@ const InboxPage = () => {
                           <Reply className="h-3 w-3 mr-1" /> Reply
                         </Button>
                       </div>
+
                     </div>
                   </div>
                   <div className="p-4 overflow-y-auto max-h-[60vh]">
