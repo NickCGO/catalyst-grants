@@ -205,6 +205,15 @@ const CRMDetailPage = () => {
             </div>
           </TabsContent>
 
+          {/* Contacts Tab */}
+          <TabsContent value="contacts" className="space-y-4">
+            {orgId && funderId && (
+              <CRMContactsSection orgId={orgId} funderId={funderId} relationshipId={relationship?.id} />
+            )}
+          </TabsContent>
+
+
+
           {/* Communications Tab */}
           <TabsContent value="communications" className="space-y-4">
             {orgId && funderId && (
