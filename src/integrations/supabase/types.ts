@@ -838,6 +838,85 @@ export type Database = {
           },
         ]
       }
+      funder_contacts: {
+        Row: {
+          alt_emails: string[] | null
+          created_at: string | null
+          created_by: string | null
+          email: string | null
+          funder_id: string
+          id: string
+          is_primary: boolean | null
+          name: string | null
+          notes: string | null
+          org_id: string
+          phone: string | null
+          relationship_id: string | null
+          role: string | null
+          source: string | null
+          tags: string[] | null
+          updated_at: string | null
+        }
+        Insert: {
+          alt_emails?: string[] | null
+          created_at?: string | null
+          created_by?: string | null
+          email?: string | null
+          funder_id: string
+          id?: string
+          is_primary?: boolean | null
+          name?: string | null
+          notes?: string | null
+          org_id: string
+          phone?: string | null
+          relationship_id?: string | null
+          role?: string | null
+          source?: string | null
+          tags?: string[] | null
+          updated_at?: string | null
+        }
+        Update: {
+          alt_emails?: string[] | null
+          created_at?: string | null
+          created_by?: string | null
+          email?: string | null
+          funder_id?: string
+          id?: string
+          is_primary?: boolean | null
+          name?: string | null
+          notes?: string | null
+          org_id?: string
+          phone?: string | null
+          relationship_id?: string | null
+          role?: string | null
+          source?: string | null
+          tags?: string[] | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "funder_contacts_funder_id_fkey"
+            columns: ["funder_id"]
+            isOneToOne: false
+            referencedRelation: "funders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "funder_contacts_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organisations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "funder_contacts_relationship_id_fkey"
+            columns: ["relationship_id"]
+            isOneToOne: false
+            referencedRelation: "funder_relationships"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       funder_focus_areas: {
         Row: {
           aged_elderly: boolean | null
@@ -1424,6 +1503,7 @@ export type Database = {
           id: string
           in_reply_to: string | null
           is_read: boolean
+          match_method: string | null
           message_id: string | null
           org_id: string
           raw_payload: Json | null
@@ -1442,6 +1522,7 @@ export type Database = {
           id?: string
           in_reply_to?: string | null
           is_read?: boolean
+          match_method?: string | null
           message_id?: string | null
           org_id: string
           raw_payload?: Json | null
@@ -1460,6 +1541,7 @@ export type Database = {
           id?: string
           in_reply_to?: string | null
           is_read?: boolean
+          match_method?: string | null
           message_id?: string | null
           org_id?: string
           raw_payload?: Json | null
