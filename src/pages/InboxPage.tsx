@@ -38,6 +38,13 @@ const InboxPage = () => {
   const [loading, setLoading] = useState(true);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [search, setSearch] = useState("");
+  const [tab, setTab] = useState<"all" | "unassigned">("all");
+  const [assignOpen, setAssignOpen] = useState(false);
+  const [assignQuery, setAssignQuery] = useState("");
+  const [assignResults, setAssignResults] = useState<{ id: string; donor_name: string }[]>([]);
+  const [assignSaveContact, setAssignSaveContact] = useState(true);
+  const [assignBusy, setAssignBusy] = useState(false);
+
 
   const load = async () => {
     if (!org?.id) return;
