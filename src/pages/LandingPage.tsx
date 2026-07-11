@@ -302,7 +302,7 @@ function WaitlistSuccess({ data }: { data: { name: string; email: string; positi
 
 /* ─── Main Page ─── */
 const LandingPage = () => {
-  const BASE_COUNT = 17;
+  const BASE_COUNT = 21;
   const [waitlistCount, setWaitlistCount] = useState(BASE_COUNT);
   const [successData, setSuccessData] = useState<{ name: string; email: string; position: number } | null>(null);
   const [activeTab, setActiveTab] = useState(0);
