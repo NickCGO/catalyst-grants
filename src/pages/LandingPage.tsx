@@ -272,7 +272,7 @@ function WaitlistForm({ onSuccess }: { onSuccess: (d: { name: string; email: str
       </label>
       <Button type="submit" disabled={submitting} className="w-full bg-primary text-primary-foreground hover:bg-primary/90 text-base py-4 rounded-xl h-auto">
         {submitting ? <AfricaSpinner className="h-4 w-4 animate-spin mr-2" /> : null}
-        Claim my founding member spot →
+        Claim my Charter Member spot →
       </Button>
     </form>
   );
