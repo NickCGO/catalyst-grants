@@ -653,11 +653,11 @@ const LandingPage = () => {
           </p>
           <a href="#pricing">
             <Button size="lg" className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-xl text-base px-8 py-6 h-auto shadow-md">
-              Claim your founding member spot <ArrowRight className="ml-2 h-4 w-4" />
+              Claim your Charter Member spot <ArrowRight className="ml-2 h-4 w-4" />
             </Button>
           </a>
           <p className="text-xs text-muted-foreground mt-5">
-            No charge until launch. Cancel any time. $47/month for life if you join now.
+            Only 50 Charter spots. Cancel any time. $47/month for life if you join now.
           </p>
           <div className="mt-6">
             <Link to="/login">
