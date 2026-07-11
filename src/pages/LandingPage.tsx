@@ -53,7 +53,7 @@ function Nav({ waitlistCount }: { waitlistCount: number }) {
       <div className="flex items-center gap-5">
         <span className="hidden md:inline-flex items-center gap-2 text-sm text-muted-foreground">
           <span className="h-2 w-2 rounded-full bg-success" />
-          <AnimatedCounter end={waitlistCount} className="text-foreground font-semibold" /> NGOs already waiting
+          <AnimatedCounter end={waitlistCount} className="text-foreground font-semibold" /> of 50 Charter spots taken
         </span>
         <Link to="/login" className="hidden md:inline-flex">
           <Button variant="ghost" className="text-sm font-semibold text-muted-foreground hover:text-foreground hover:bg-secondary rounded-xl px-4">
