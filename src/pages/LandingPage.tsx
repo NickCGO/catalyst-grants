@@ -595,13 +595,13 @@ const LandingPage = () => {
             {/* Plan card */}
             <div className="bg-card border-2 border-primary rounded-2xl p-8 shadow-md">
               <div className="inline-block text-xs font-bold text-primary-foreground bg-primary px-3 py-1 rounded-full mb-4">
-                Founding Member
+                Charter Member
               </div>
               <div className="flex items-baseline gap-2 mb-2">
                 <span className="text-5xl font-bold text-foreground">$47</span>
                 <span className="text-muted-foreground">/ month</span>
               </div>
-              <p className="text-sm text-muted-foreground mb-6">(for life, locks in at launch)</p>
+              <p className="text-sm text-muted-foreground mb-6">(Locked in for life · only the first 50 NGOs)</p>
               <ul className="space-y-3">
                 {[
                   "Unlimited grant applications",
