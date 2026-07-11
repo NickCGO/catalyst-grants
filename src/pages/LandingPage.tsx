@@ -613,8 +613,8 @@ const LandingPage = () => {
                   "Funder relationship CRM",
                   "NGO Partnership Hub",
                   "Analytics dashboard",
-                  "Priority support at launch",
-                  "Founding member badge",
+                  "Priority support",
+                  "Charter Member badge",
                 ].map((item) => (
                   <li key={item} className="flex items-start gap-3 text-sm text-foreground">
                     <Check className="h-4 w-4 text-success mt-0.5 flex-shrink-0" />
