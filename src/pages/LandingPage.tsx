@@ -268,7 +268,7 @@ function WaitlistForm({ onSuccess }: { onSuccess: (d: { name: string; email: str
       </div>
       <label className="flex items-start gap-3 cursor-pointer">
         <input type="checkbox" name="commit" checked={committed} onChange={(e) => setCommitted(e.target.checked)} className="mt-1 h-4 w-4 rounded border-input accent-primary" />
-        <span className="text-xs text-muted-foreground">I commit to paying $47/month when Find The Grant launches. (No charge until launch day.)</span>
+        <span className="text-xs text-muted-foreground">I commit to paying $47/month for life as one of the first 50 Charter Members.</span>
       </label>
       <Button type="submit" disabled={submitting} className="w-full bg-primary text-primary-foreground hover:bg-primary/90 text-base py-4 rounded-xl h-auto">
         {submitting ? <AfricaSpinner className="h-4 w-4 animate-spin mr-2" /> : null}
