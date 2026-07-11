@@ -623,7 +623,7 @@ const LandingPage = () => {
                 ))}
               </ul>
               <p className="text-xs text-muted-foreground mt-6 pt-6 border-t border-border">
-                vs <span className="line-through">$99/month</span> after launch
+                vs <span className="line-through">$99/month</span> once the 50 Charter spots are gone
               </p>
             </div>
 
