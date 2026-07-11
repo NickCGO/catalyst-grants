@@ -430,7 +430,7 @@ const LandingPage = () => {
           <div className="grid md:grid-cols-3 gap-6">
             {[
               { stat: "47 hours", label: "Average time spent researching funders per application", body: "Your programme staff are grant writers by default. Every hour on funder research is an hour not spent in the community." },
-              { stat: "1 in 15", label: "Applications succeed on average for African NGOs", body: "The odds are brutal. Not because your work isn't good enough. Because most proposals don't show it clearly." },
+              { stat: "1 in 10", label: "Applications succeed on average for African NGOs", body: "The odds are brutal. Not because your work isn't good enough. Because most proposals don't show it clearly." },
               { stat: "$2.4M", label: "Average funding gap African NGOs report annually", body: "The money is out there. Hundreds of funders are actively accepting applications right now. Most NGOs never find them in time." },
             ].map((s) => (
               <div key={s.stat} className="bg-card border border-border rounded-2xl p-7 text-left shadow-sm hover:shadow-md transition-shadow">
