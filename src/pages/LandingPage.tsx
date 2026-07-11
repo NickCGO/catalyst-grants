@@ -241,7 +241,7 @@ function WaitlistForm({ onSuccess }: { onSuccess: (d: { name: string; email: str
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      <h3 className="text-xl font-bold text-foreground mb-1">Reserve your founding member spot</h3>
+      <h3 className="text-xl font-bold text-foreground mb-1">Reserve your Charter Member spot</h3>
       <div>
         <Label htmlFor="waitlist-name" className="text-xs font-medium text-muted-foreground">Your name</Label>
         <Input id="waitlist-name" name="name" autoComplete="name" value={name} onChange={(e) => setName(e.target.value)} required className="mt-1" placeholder="Full name" />
@@ -268,24 +268,24 @@ function WaitlistForm({ onSuccess }: { onSuccess: (d: { name: string; email: str
       </div>
       <label className="flex items-start gap-3 cursor-pointer">
         <input type="checkbox" name="commit" checked={committed} onChange={(e) => setCommitted(e.target.checked)} className="mt-1 h-4 w-4 rounded border-input accent-primary" />
-        <span className="text-xs text-muted-foreground">I commit to paying $47/month when Find The Grant launches. (No charge until launch day.)</span>
+        <span className="text-xs text-muted-foreground">I commit to paying $47/month for life as one of the first 50 Charter Members.</span>
       </label>
       <Button type="submit" disabled={submitting} className="w-full bg-primary text-primary-foreground hover:bg-primary/90 text-base py-4 rounded-xl h-auto">
         {submitting ? <AfricaSpinner className="h-4 w-4 animate-spin mr-2" /> : null}
-        Claim my founding member spot →
+        Claim my Charter Member spot →
       </Button>
     </form>
   );
 }
 
 function WaitlistSuccess({ data }: { data: { name: string; email: string; position: number } }) {
-  const shareText = `I just joined the Find The Grant waitlist. It is an AI tool that finds funders for African NGOs and writes the grant proposals. Launching soon at $47/month. Join here: ${window.location.origin}`;
+  const shareText = `I just claimed a Charter Member spot at Find The Grant. It is an AI tool that finds funders for African NGOs and writes the grant proposals. Only 50 spots at $47/month for life. Join here: ${window.location.origin}`;
   return (
     <div className="text-center py-8">
       <div className="text-5xl mb-4">🎉</div>
-      <h3 className="text-xl font-bold text-foreground mb-2">You're on the list, {data.name}!</h3>
-      <p className="text-muted-foreground mb-1">You are founding member <span className="text-primary font-bold">#{data.position}</span></p>
-      <p className="text-sm text-muted-foreground/80 mb-6">We will email you at {data.email} when Find The Grant is ready to launch.</p>
+      <h3 className="text-xl font-bold text-foreground mb-2">You're in, {data.name}!</h3>
+      <p className="text-muted-foreground mb-1">You are Charter Member <span className="text-primary font-bold">#{data.position}</span> of 50</p>
+      <p className="text-sm text-muted-foreground/80 mb-6">We will email you at {data.email} with next steps to activate your account.</p>
       <p className="text-xs text-muted-foreground mb-4">In the meantime, tell another NGO:</p>
       <div className="flex flex-col gap-2">
         <a href={`https://wa.me/?text=${encodeURIComponent(shareText)}`} target="_blank" rel="noopener noreferrer">
@@ -351,7 +351,7 @@ const LandingPage = () => {
     { q: "What if I only need help with one proposal?", a: "You can use Find The Grant for a single application — but most NGOs find that the matching engine, deadline tracking, and proposal writer pay for themselves many times over across a year." },
     { q: "Is my organisation data safe?", a: "Yes. Your profile and proposals are private to your organisation. We do not share, sell, or expose your data to other users or funders without your action." },
     { q: "How is this different from just Googling for grants?", a: "Google returns lists. Find The Grant matches funders to your specific mission, programme areas, geography, and budget — then ranks them by likelihood of funding you. Plus we track deadlines, draft proposals, and manage your pipeline." },
-    { q: "Can I cancel anytime?", a: "Yes. Cancel any time, no questions asked. Founding members keep the $47/month rate for life as long as they remain subscribed." },
+    { q: "Can I cancel anytime?", a: "Yes. Cancel any time, no questions asked. Charter Members keep the $47/month rate for life as long as they remain subscribed." },
     { q: "Do you cover funders outside South Africa?", a: "Yes. Our database covers funders active across the African continent, plus major international funders (USA, UK, Europe) with African portfolios." },
   ];
 
@@ -379,7 +379,7 @@ const LandingPage = () => {
             </p>
             <a href="#pricing" className="block w-full sm:inline-block sm:w-auto">
               <Button size="lg" className="w-full sm:w-auto whitespace-normal text-center bg-primary text-primary-foreground hover:bg-primary/90 rounded-xl text-base px-7 py-6 h-auto shadow-md">
-                Claim your spot: $47/month at launch <ArrowRight className="ml-2 h-4 w-4 shrink-0" />
+                Claim your spot: $47/month for life <ArrowRight className="ml-2 h-4 w-4 shrink-0" />
               </Button>
             </a>
             <div className="mt-4">
@@ -394,7 +394,7 @@ const LandingPage = () => {
               <AnimatedCounter end={waitlistCount} className="text-foreground font-semibold" /> of 50 Charter spots taken
             </div>
             <p className="text-xs text-muted-foreground/80 mt-4 max-w-md">
-              Lock in your price before we launch. Get 7 days free access at launch. Cancel any time. No charge until launch day.
+              Only 50 Charter spots at $47/month for life. Cancel any time.
             </p>
           </motion.div>
           <motion.div initial="hidden" animate="visible" variants={fadeUp(0.2)}>
@@ -582,7 +582,7 @@ const LandingPage = () => {
       <section id="pricing" className="py-24 px-6 lg:px-12">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-16">
-            <SectionEyebrow>Join The Waitlist</SectionEyebrow>
+            <SectionEyebrow>Charter Membership</SectionEyebrow>
             <h2 className="text-4xl lg:text-5xl font-bold tracking-tight mb-6">
               Charter pricing is $47/month, locked in for life — but only the first 50 NGOs get it.
             </h2>
@@ -613,8 +613,8 @@ const LandingPage = () => {
                   "Funder relationship CRM",
                   "NGO Partnership Hub",
                   "Analytics dashboard",
-                  "Priority support at launch",
-                  "Founding member badge",
+                  "Priority support",
+                  "Charter Member badge",
                 ].map((item) => (
                   <li key={item} className="flex items-start gap-3 text-sm text-foreground">
                     <Check className="h-4 w-4 text-success mt-0.5 flex-shrink-0" />
@@ -623,7 +623,7 @@ const LandingPage = () => {
                 ))}
               </ul>
               <p className="text-xs text-muted-foreground mt-6 pt-6 border-t border-border">
-                vs <span className="line-through">$99/month</span> after launch
+                vs <span className="line-through">$99/month</span> once the 50 Charter spots are gone
               </p>
             </div>
 
@@ -634,10 +634,10 @@ const LandingPage = () => {
           </div>
 
           <p className="text-center text-sm text-accent-amber mt-10">
-            ⚡ Only founding member pricing available until launch. Price goes to $99/month after launch.
+            ⚡ Only 50 Charter spots at $47/month for life. Then pricing rises to $99/month.
           </p>
           <p className="text-center text-sm text-muted-foreground mt-3">
-            🟢 <AnimatedCounter end={waitlistCount} className="text-foreground font-semibold" /> people on the waitlist
+            🟢 <AnimatedCounter end={waitlistCount} className="text-foreground font-semibold" /> of 50 Charter spots taken
           </p>
         </div>
       </section>
@@ -653,11 +653,11 @@ const LandingPage = () => {
           </p>
           <a href="#pricing">
             <Button size="lg" className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-xl text-base px-8 py-6 h-auto shadow-md">
-              Claim your founding member spot <ArrowRight className="ml-2 h-4 w-4" />
+              Claim your Charter Member spot <ArrowRight className="ml-2 h-4 w-4" />
             </Button>
           </a>
           <p className="text-xs text-muted-foreground mt-5">
-            No charge until launch. Cancel any time. $47/month for life if you join now.
+            Only 50 Charter spots. Cancel any time. $47/month for life if you join now.
           </p>
           <div className="mt-6">
             <Link to="/login">
