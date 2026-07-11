@@ -351,7 +351,7 @@ const LandingPage = () => {
     { q: "What if I only need help with one proposal?", a: "You can use Find The Grant for a single application — but most NGOs find that the matching engine, deadline tracking, and proposal writer pay for themselves many times over across a year." },
     { q: "Is my organisation data safe?", a: "Yes. Your profile and proposals are private to your organisation. We do not share, sell, or expose your data to other users or funders without your action." },
     { q: "How is this different from just Googling for grants?", a: "Google returns lists. Find The Grant matches funders to your specific mission, programme areas, geography, and budget — then ranks them by likelihood of funding you. Plus we track deadlines, draft proposals, and manage your pipeline." },
-    { q: "Can I cancel anytime?", a: "Yes. Cancel any time, no questions asked. Founding members keep the $47/month rate for life as long as they remain subscribed." },
+    { q: "Can I cancel anytime?", a: "Yes. Cancel any time, no questions asked. Charter Members keep the $47/month rate for life as long as they remain subscribed." },
     { q: "Do you cover funders outside South Africa?", a: "Yes. Our database covers funders active across the African continent, plus major international funders (USA, UK, Europe) with African portfolios." },
   ];
 
