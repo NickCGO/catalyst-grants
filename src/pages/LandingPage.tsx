@@ -303,13 +303,14 @@ function WaitlistSuccess({ data }: { data: { name: string; email: string; positi
 /* ─── Main Page ─── */
 const LandingPage = () => {
   const BASE_COUNT = 21;
+  const SIGNUP_OFFSET = 20; // real waitlist rows already baked into BASE_COUNT
   const [waitlistCount, setWaitlistCount] = useState(BASE_COUNT);
   const [successData, setSuccessData] = useState<{ name: string; email: string; position: number } | null>(null);
   const [activeTab, setActiveTab] = useState(0);
 
   useEffect(() => {
     supabase.from("waitlist").select("*", { count: "exact", head: true }).then(({ count }) => {
-      setWaitlistCount(Math.max(BASE_COUNT, BASE_COUNT + (count || 0)));
+      setWaitlistCount(BASE_COUNT + Math.max(0, (count || 0) - SIGNUP_OFFSET));
     });
   }, []);
 
