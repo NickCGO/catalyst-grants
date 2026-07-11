@@ -241,7 +241,7 @@ function WaitlistForm({ onSuccess }: { onSuccess: (d: { name: string; email: str
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      <h3 className="text-xl font-bold text-foreground mb-1">Reserve your founding member spot</h3>
+      <h3 className="text-xl font-bold text-foreground mb-1">Reserve your Charter Member spot</h3>
       <div>
         <Label htmlFor="waitlist-name" className="text-xs font-medium text-muted-foreground">Your name</Label>
         <Input id="waitlist-name" name="name" autoComplete="name" value={name} onChange={(e) => setName(e.target.value)} required className="mt-1" placeholder="Full name" />
