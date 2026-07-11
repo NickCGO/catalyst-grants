@@ -582,7 +582,7 @@ const LandingPage = () => {
       <section id="pricing" className="py-24 px-6 lg:px-12">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-16">
-            <SectionEyebrow>Join The Waitlist</SectionEyebrow>
+            <SectionEyebrow>Charter Membership</SectionEyebrow>
             <h2 className="text-4xl lg:text-5xl font-bold tracking-tight mb-6">
               Charter pricing is $47/month, locked in for life — but only the first 50 NGOs get it.
             </h2>
