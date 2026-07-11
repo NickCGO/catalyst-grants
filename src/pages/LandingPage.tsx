@@ -379,7 +379,7 @@ const LandingPage = () => {
             </p>
             <a href="#pricing" className="block w-full sm:inline-block sm:w-auto">
               <Button size="lg" className="w-full sm:w-auto whitespace-normal text-center bg-primary text-primary-foreground hover:bg-primary/90 rounded-xl text-base px-7 py-6 h-auto shadow-md">
-                Claim your spot: $47/month at launch <ArrowRight className="ml-2 h-4 w-4 shrink-0" />
+                Claim your spot: $47/month for life <ArrowRight className="ml-2 h-4 w-4 shrink-0" />
               </Button>
             </a>
             <div className="mt-4">
