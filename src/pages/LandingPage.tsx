@@ -584,10 +584,10 @@ const LandingPage = () => {
           <div className="text-center mb-16">
             <SectionEyebrow>Join The Waitlist</SectionEyebrow>
             <h2 className="text-4xl lg:text-5xl font-bold tracking-tight mb-6">
-              Lock in $47/month before we launch.
+              Charter pricing is $47/month, locked in for life — but only the first 50 NGOs get it.
             </h2>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              After launch, pricing starts at $99/month. Waitlist members who commit now keep $47/month for life. That is our promise.
+              Once the 50 spots are filled, pricing rises to $99/month. Claim your spot before it's gone. That is our promise.
             </p>
           </div>
 
