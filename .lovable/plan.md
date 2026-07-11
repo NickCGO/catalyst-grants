@@ -1,70 +1,25 @@
-# Cherry-pick CRM additions (adapted to existing schema)
+# Why the numbers disagree
 
-Drop everything in the pasted script that already exists or conflicts. Keep only the genuinely new pieces, rewritten to match the project's conventions: `org_id` references `organisations.id` (not `auth.users`), RLS uses `is_org_member()` / `has_org_role()`, and no FKs to `auth.users`.
+All three "X of 50 Charter spots taken" instances on the landing page read from the **same** `waitlistCount` state in `src/pages/LandingPage.tsx`. There is only one source of truth, so the fix is not "change 17 to 37 in some file" — the bug is in how the animated counter displays that state.
 
-## What gets created
+What actually happens:
 
-### 1. `email_threads` — inbox sync (Gmail/Outlook)
-Stores synced email conversations linked to a funder relationship or application. Complements existing `inbound_emails` (which is webhook-based) and `crm_emails` (outbound drafts).
+1. On page load, `waitlistCount` starts at `BASE_COUNT = 17` (line 305).
+2. A moment later, the Supabase query returns the real signup count and updates the state to `17 + <db count>` (e.g. `37`).
+3. The nav counter (top of page) is on-screen immediately, so `AnimatedCounter` animates to `17` and then locks itself with an internal `started.current = true` flag. When `end` later changes to `37`, the effect re-runs but the guard blocks any further animation — the nav is stuck at **17**.
+4. The pricing-section counter is far down the page. By the time you scroll to it, `end` is already `37`, so it animates straight to **37**.
 
-Columns: `org_id`, `funder_id` (nullable), `application_id` (nullable), `relationship_id` (nullable), `provider_thread_id`, `provider_message_id`, `direction` ('inbound'|'outbound'), `from_address`, `to_addresses[]`, `subject`, `snippet`, `body_html`, `sent_at`, `synced_at`.
-Unique `(org_id, provider_message_id)`.
+Result: nav shows 17, pricing shows 37, even though the state is identical.
 
-### 2. `automation_rules` — trigger/action rules per org
-Columns: `org_id`, `name`, `trigger_event` (enum), `action_type` (enum), `action_payload` (jsonb), `is_active`.
+# The fix
 
-Trigger events: `application_submitted`, `application_won`, `application_lost`, `deadline_approaching_7d`, `deadline_approaching_1d`, `no_reply_after_14d`, `no_activity_after_30d`.
-Action types: `create_task`, `send_notification`, `send_email_draft`, `move_kanban_column`.
+One small change in `src/components/AnimatedCounter.tsx`: let the counter re-animate (or at least jump) when the `end` prop changes after the first run, instead of latching forever on the first value it saw.
 
-### 3. `email_credentials` — OAuth tokens for inbox connection
-One row per org. Stores Vault secret IDs only, not raw tokens.
-Columns: `org_id` (unique), `provider` ('gmail'|'outlook'|'smtp'), `email_address`, `access_token_secret_id`, `refresh_token_secret_id`, `token_expires_at`, `last_synced_at`.
+Concretely, in the `useEffect`, when `end` changes and the counter has already started, reset the animation to the new target (either by clearing `started.current` so the IntersectionObserver-triggered animation runs again on the next intersection, or by animating from the current displayed value to the new `end` immediately).
 
-### 4. Reporting views
-- `pipeline_summary` — counts/value/avg-deadline grouped by `org_id` + `applications.kanban_column` (uses existing `applications` table, not a new `opportunities` one).
-- `stage_velocity` — average days between `created_at` and last update per kanban column.
+## Technical notes
 
-Views are `security_invoker` so existing RLS on `applications` applies automatically.
-
-## What gets dropped from your script
-
-| Dropped | Reason |
-|---|---|
-| `funders` | Already exists as public 2,416-row reference DB |
-| `contacts` | Use `funders.contact_person`/`email` + future extension |
-| `opportunities` | Covered by `applications` |
-| `proposals` | Already exists |
-| `activities` | Covered by `funder_interactions` + `crm_activity_notes` |
-| `tasks` | Already exists |
-| All `opportunity_stage`, `proposal_status`, `activity_type` enums | Conflict / unused |
-| `auth.users` FKs | Forbidden by project rules |
-| `org_id = auth.uid()` RLS | Wrong — org_id is the organisation UUID |
-
-## RLS pattern (applied to all 3 new tables)
-
-```sql
--- View: any active team member
-USING (is_org_member(org_id, auth.uid()))
--- Mutate: editor+ role
-WITH CHECK (has_org_role(org_id, auth.uid(), 'editor'))
-```
-
-`email_credentials` gets stricter rules: only `admin`+ can read/write (tokens are sensitive).
-
-## Indexes
-- `email_threads (org_id)`, `(funder_id)`, `(application_id)`, `(provider_thread_id)`
-- `automation_rules (org_id, is_active)`
-- `email_credentials (org_id)` (already unique)
-
-## Triggers
-- Reuse existing `update_updated_at_column()` for `updated_at` on all 3 tables.
-
-## Out of scope (ask separately if needed)
-- Actual OAuth flow / edge functions for Gmail/Outlook sync
-- Automation execution engine (cron job that evaluates triggers)
-- UI for managing rules or connected inboxes
-
-These are bigger features — the schema above just lays the foundation.
-
-## After approval
-I'll run one migration with all of the above, then we can decide whether to wire up the OAuth + sync edge functions next.
+- File to change: `src/components/AnimatedCounter.tsx` only.
+- No changes to `LandingPage.tsx`, no change to `BASE_COUNT`, no change to the Supabase query.
+- The three call sites (nav line 56, hero line 394, pricing line 640) all keep reading the same shared state and will render the same number after the fix.
+- Side benefit: any other place using `AnimatedCounter` with a value that arrives asynchronously (e.g. fetched stats) will also start displaying correctly.
