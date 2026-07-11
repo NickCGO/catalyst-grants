@@ -279,13 +279,13 @@ function WaitlistForm({ onSuccess }: { onSuccess: (d: { name: string; email: str
 }
 
 function WaitlistSuccess({ data }: { data: { name: string; email: string; position: number } }) {
-  const shareText = `I just joined the Find The Grant waitlist. It is an AI tool that finds funders for African NGOs and writes the grant proposals. Launching soon at $47/month. Join here: ${window.location.origin}`;
+  const shareText = `I just claimed a Charter Member spot at Find The Grant. It is an AI tool that finds funders for African NGOs and writes the grant proposals. Only 50 spots at $47/month for life. Join here: ${window.location.origin}`;
   return (
     <div className="text-center py-8">
       <div className="text-5xl mb-4">🎉</div>
-      <h3 className="text-xl font-bold text-foreground mb-2">You're on the list, {data.name}!</h3>
-      <p className="text-muted-foreground mb-1">You are founding member <span className="text-primary font-bold">#{data.position}</span></p>
-      <p className="text-sm text-muted-foreground/80 mb-6">We will email you at {data.email} when Find The Grant is ready to launch.</p>
+      <h3 className="text-xl font-bold text-foreground mb-2">You're in, {data.name}!</h3>
+      <p className="text-muted-foreground mb-1">You are Charter Member <span className="text-primary font-bold">#{data.position}</span> of 50</p>
+      <p className="text-sm text-muted-foreground/80 mb-6">We will email you at {data.email} with next steps to activate your account.</p>
       <p className="text-xs text-muted-foreground mb-4">In the meantime, tell another NGO:</p>
       <div className="flex flex-col gap-2">
         <a href={`https://wa.me/?text=${encodeURIComponent(shareText)}`} target="_blank" rel="noopener noreferrer">
