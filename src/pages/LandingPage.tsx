@@ -634,10 +634,10 @@ const LandingPage = () => {
           </div>
 
           <p className="text-center text-sm text-accent-amber mt-10">
-            ⚡ Only founding member pricing available until launch. Price goes to $99/month after launch.
+            ⚡ Only 50 Charter spots at $47/month for life. Then pricing rises to $99/month.
           </p>
           <p className="text-center text-sm text-muted-foreground mt-3">
-            🟢 <AnimatedCounter end={waitlistCount} className="text-foreground font-semibold" /> people on the waitlist
+            🟢 <AnimatedCounter end={waitlistCount} className="text-foreground font-semibold" /> of 50 Charter spots taken
           </p>
         </div>
       </section>
