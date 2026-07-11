@@ -391,7 +391,7 @@ const LandingPage = () => {
             </div>
             <div className="flex items-center gap-2 mt-5 text-sm text-muted-foreground">
               <span className="h-2 w-2 rounded-full bg-success animate-pulse" />
-              <AnimatedCounter end={waitlistCount} className="text-foreground font-semibold" /> NGOs already waiting
+              <AnimatedCounter end={waitlistCount} className="text-foreground font-semibold" /> of 50 Charter spots taken
             </div>
             <p className="text-xs text-muted-foreground/80 mt-4 max-w-md">
               Lock in your price before we launch. Get 7 days free access at launch. Cancel any time. No charge until launch day.
