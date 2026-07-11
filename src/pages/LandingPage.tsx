@@ -394,7 +394,7 @@ const LandingPage = () => {
               <AnimatedCounter end={waitlistCount} className="text-foreground font-semibold" /> of 50 Charter spots taken
             </div>
             <p className="text-xs text-muted-foreground/80 mt-4 max-w-md">
-              Lock in your price before we launch. Get 7 days free access at launch. Cancel any time. No charge until launch day.
+              Only 50 Charter spots at $47/month for life. Cancel any time.
             </p>
           </motion.div>
           <motion.div initial="hidden" animate="visible" variants={fadeUp(0.2)}>
