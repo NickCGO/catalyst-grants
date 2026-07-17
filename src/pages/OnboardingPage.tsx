@@ -550,10 +550,16 @@ const OnboardingPage = () => {
   };
 
   const saveToSupabase = async () => {
+    if (saving) return; // prevent duplicate submissions
     setSaving(true);
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) { navigate("/login"); return; }
+      const { data: { user }, error: userErr } = await supabase.auth.getUser();
+      if (userErr) throw userErr;
+      if (!user) {
+        toast({ title: "Session expired", description: "Please sign in again.", variant: "destructive" });
+        navigate("/login");
+        return;
+      }
 
       const orgData: any = {
         name: orgName,
@@ -565,7 +571,7 @@ const OnboardingPage = () => {
         founded_year: yearEstablished ? parseInt(yearEstablished) : null,
         tax_status: taxStatus || null,
         pbo_number: pboNumber || null,
-        is_audited: isAudited,
+        is_audited: !!isAudited,
         last_audit_year: lastAuditYear ? parseInt(lastAuditYear) : null,
         physical_address: physicalAddress || null,
         mission_statement: mission || null,
@@ -613,8 +619,8 @@ const OnboardingPage = () => {
         funding_gap: fundingGap ? parseFloat(fundingGap) : null,
         typical_grant_size_range: typicalGrantSize || null,
         financial_management_system: financialSystem || null,
-        has_dedicated_bank_account: hasDedicatedBank,
-        cofunding_available: cofundingAvailable,
+        has_dedicated_bank_account: !!hasDedicatedBank,
+        cofunding_available: !!cofundingAvailable,
         cofunding_description: cofundingDescription || null,
         pct_grants: pctGrants,
         pct_government: pctGovernment,
@@ -623,11 +629,11 @@ const OnboardingPage = () => {
         parttime_count: parttimeCount ? parseInt(parttimeCount) : null,
         volunteer_count: volunteerCount ? parseInt(volunteerCount) : null,
         board_count: boardCount ? parseInt(boardCount) : null,
-        has_grant_writer: hasGrantWriter,
+        has_grant_writer: !!hasGrantWriter,
         ceo_name: ceoName || null,
         executive_director_bio: ceoBio || null,
         key_staff: keyStaff.length > 0 ? keyStaff : null,
-        has_bbbee: hasBBBEE,
+        has_bbbee: !!hasBBBEE,
         bbbee_level: bbbeeLevel ? parseInt(bbbeeLevel) : null,
         has_policies: selectedPolicies.length > 0,
         policies_list: selectedPolicies.length > 0 ? selectedPolicies : null,
@@ -646,50 +652,86 @@ const OnboardingPage = () => {
         partnership_strengths: partnershipBrings.length > 0 ? partnershipBrings : null,
         partnership_seeks: partnershipSeeks.length > 0 ? partnershipSeeks : null,
         partnership_statement: partnershipStatement || null,
-        is_discoverable: isDiscoverable,
+        is_discoverable: !!isDiscoverable,
         onboarding_complete: true,
         onboarding_step: 9,
         profile_completeness: completeness,
       };
 
-      if (orgId) {
-        const { error: updateErr } = await supabase.from("organisations").update(orgData).eq("id", orgId);
-        if (updateErr) throw updateErr;
+      // Strip undefined values defensively
+      Object.keys(orgData).forEach(k => orgData[k] === undefined && delete orgData[k]);
+
+      let effectiveOrgId = orgId;
+      if (effectiveOrgId) {
+        const { data: updated, error: updateErr } = await supabase
+          .from("organisations")
+          .update(orgData)
+          .eq("id", effectiveOrgId)
+          .select("id");
+        if (updateErr) {
+          console.error("Step 9 org update failed:", updateErr);
+          throw updateErr;
+        }
+        if (!updated || updated.length === 0) {
+          // Row missing or RLS blocked — fall back to insert
+          const { data: inserted, error: insertErr } = await supabase
+            .from("organisations")
+            .insert({ ...orgData, user_id: user.id })
+            .select("id")
+            .single();
+          if (insertErr) { console.error("Step 9 org insert (fallback) failed:", insertErr); throw insertErr; }
+          if (inserted) { setOrgId(inserted.id); effectiveOrgId = inserted.id; }
+        }
       } else {
-        const { data, error: insertErr } = await supabase.from("organisations").insert({ ...orgData, user_id: user.id }).select("id").single();
-        if (insertErr) throw insertErr;
-        if (data) setOrgId(data.id);
+        const { data, error: insertErr } = await supabase
+          .from("organisations")
+          .insert({ ...orgData, user_id: user.id })
+          .select("id")
+          .single();
+        if (insertErr) { console.error("Step 9 org insert failed:", insertErr); throw insertErr; }
+        if (data) { setOrgId(data.id); effectiveOrgId = data.id; }
       }
 
-      // Save programme details to separate table
-      if (orgId) {
-        for (const prog of programmes.filter(p => p.name)) {
-          await supabase.from("programme_details").upsert({
-            org_id: orgId,
-            programme_name: prog.name,
-            description: prog.shortDesc,
-            detailed_description: prog.fullDesc,
-            activities: prog.activities.filter(Boolean),
-            key_outputs: prog.outputs.filter(Boolean),
-            key_outcomes: prog.outcomes.filter(Boolean),
-            success_story: prog.impactStory,
-            geographic_areas: prog.areas ? prog.areas.split(",").map(s => s.trim()) : [],
-            annual_reach: prog.reach ? parseInt(prog.reach) : null,
-            annual_budget_range: prog.budget,
-            status: prog.status.toLowerCase(),
-            year_started: prog.yearStarted ? parseInt(prog.yearStarted) : null,
-            intervention_approaches: prog.approaches,
-            partner_organisations: prog.partners ? prog.partners.split(",").map(s => s.trim()) : [],
-          }, { onConflict: "id" });
+      // Save programme details to separate table (non-fatal on failure)
+      if (effectiveOrgId) {
+        try {
+          for (const prog of programmes.filter(p => p.name)) {
+            const { error: progErr } = await supabase.from("programme_details").insert({
+              org_id: effectiveOrgId,
+              programme_name: prog.name,
+              description: prog.shortDesc,
+              detailed_description: prog.fullDesc,
+              activities: prog.activities.filter(Boolean),
+              key_outputs: prog.outputs.filter(Boolean),
+              key_outcomes: prog.outcomes.filter(Boolean),
+              success_story: prog.impactStory,
+              geographic_areas: prog.areas ? prog.areas.split(",").map(s => s.trim()) : [],
+              annual_reach: prog.reach ? parseInt(prog.reach) : null,
+              annual_budget_range: prog.budget,
+              status: prog.status.toLowerCase(),
+              year_started: prog.yearStarted ? parseInt(prog.yearStarted) : null,
+              intervention_approaches: prog.approaches,
+              partner_organisations: prog.partners ? prog.partners.split(",").map(s => s.trim()) : [],
+            });
+            if (progErr) console.warn("programme_details insert warning:", progErr);
+          }
+        } catch (progException) {
+          console.warn("programme_details save skipped:", progException);
         }
       }
 
       toast({ title: "🎉 Onboarding complete!", description: "Welcome to your dashboard!" });
       navigate("/dashboard", { replace: true });
     } catch (error: any) {
-      toast({ title: "Save failed", description: error.message, variant: "destructive" });
+      console.error("Step 9 onboarding save failed:", error);
+      toast({
+        title: "We could not save this step",
+        description: error?.message || "Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setSaving(false);
     }
-    setSaving(false);
   };
 
   const next = () => {
