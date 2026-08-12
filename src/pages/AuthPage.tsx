@@ -43,9 +43,22 @@ const AuthPage = () => {
           setSubmitting(false);
           return;
         }
-        await signUp(email, password, orgName, country);
-        toast({ title: "Account created!", description: "Please check your email to verify your account, then log in." });
-        navigate("/login");
+        const signUpData = await signUp(email, password, orgName, country);
+        if (signUpData?.user) {
+          const { supabase } = await import("@/integrations/supabase/client");
+          supabase.functions
+            .invoke("send-transactional-email", {
+              body: {
+                templateName: "welcome",
+                recipientEmail: email,
+                idempotencyKey: `welcome-${signUpData.user.id}`,
+                templateData: { organisation: orgName, appUrl: window.location.origin },
+              },
+            })
+            .catch((err) => console.error("Welcome email error:", err));
+        }
+        toast({ title: "Account created!", description: "Let's set up your organisation profile." });
+        navigate("/onboarding");
       } else {
         const data = await signIn(email, password);
         if (data.user) {

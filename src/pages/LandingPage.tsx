@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ArrowRight, Check, Copy, Globe, Play } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -197,10 +197,12 @@ function DemoVideo() {
   );
 }
 
-/* ─── Waitlist form ─── */
-function WaitlistForm({ onSuccess }: { onSuccess: (d: { name: string; email: string; position: number }) => void }) {
+/* ─── Charter signup form (creates account immediately) ─── */
+function CharterSignupForm() {
+  const navigate = useNavigate();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [org, setOrg] = useState("");
   const [country, setCountry] = useState("South Africa");
   const [role, setRole] = useState("Executive Director");
@@ -213,25 +215,53 @@ function WaitlistForm({ onSuccess }: { onSuccess: (d: { name: string; email: str
       toast({ title: "Please confirm your commitment", variant: "destructive" });
       return;
     }
+    if (password.length < 8) {
+      toast({ title: "Password must be at least 8 characters", variant: "destructive" });
+      return;
+    }
     setSubmitting(true);
     try {
-      const { count } = await supabase.from("waitlist").select("*", { count: "exact", head: true });
-      const position = 7 + (count || 0) + 1;
-      const { error } = await supabase.from("waitlist").insert({
-        email, name, organisation: org, country, role, committed_to_pay: committed, position,
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          emailRedirectTo: window.location.origin,
+          data: { org_name: org, country, full_name: name, role },
+        },
       });
-      if (error) {
-        if (error.code === "23505") {
-          toast({ title: "You are already on the waitlist.", description: "Check your email for confirmation." });
-        } else {
-          throw error;
-        }
-        setSubmitting(false);
-        return;
+      if (error) throw error;
+
+      if (data.user) {
+        const { error: orgError } = await supabase.from("organisations").insert({
+          user_id: data.user.id,
+          name: org,
+          country,
+          onboarding_step: 0,
+          onboarding_complete: false,
+        });
+        if (orgError) console.error("Org creation error:", orgError);
+
+        supabase.functions
+          .invoke("send-transactional-email", {
+            body: {
+              templateName: "welcome",
+              recipientEmail: email,
+              idempotencyKey: `welcome-${data.user.id}`,
+              templateData: { name, organisation: org, appUrl: window.location.origin },
+            },
+          })
+          .catch((err) => console.error("Welcome email error:", err));
       }
-      onSuccess({ name, email, position });
+
+      toast({ title: `Welcome aboard, ${name || "friend"}!`, description: "Let's set up your organisation profile." });
+      navigate("/onboarding");
     } catch (err: any) {
-      toast({ title: "Something went wrong", description: err.message, variant: "destructive" });
+      const msg = err?.message || "";
+      toast({
+        title: /already registered|already exists/i.test(msg) ? "You already have an account" : "Something went wrong",
+        description: /already registered|already exists/i.test(msg) ? "Please log in instead." : msg,
+        variant: "destructive",
+      });
     }
     setSubmitting(false);
   };
@@ -242,27 +272,32 @@ function WaitlistForm({ onSuccess }: { onSuccess: (d: { name: string; email: str
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <h3 className="text-xl font-bold text-foreground mb-1">Sign up for Charter Member spot</h3>
+      <p className="text-xs text-muted-foreground -mt-1">Create your account and start using Find The Grant right away.</p>
       <div>
-        <Label htmlFor="waitlist-name" className="text-xs font-medium text-muted-foreground">Your name</Label>
-        <Input id="waitlist-name" name="name" autoComplete="name" value={name} onChange={(e) => setName(e.target.value)} required className="mt-1" placeholder="Full name" />
+        <Label htmlFor="signup-name" className="text-xs font-medium text-muted-foreground">Your name</Label>
+        <Input id="signup-name" name="name" autoComplete="name" value={name} onChange={(e) => setName(e.target.value)} required className="mt-1" placeholder="Full name" />
       </div>
       <div>
-        <Label htmlFor="waitlist-email" className="text-xs font-medium text-muted-foreground">Work email address</Label>
-        <Input id="waitlist-email" name="email" type="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} required className="mt-1" placeholder="you@organisation.org" />
+        <Label htmlFor="signup-email" className="text-xs font-medium text-muted-foreground">Work email address</Label>
+        <Input id="signup-email" name="email" type="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} required className="mt-1" placeholder="you@organisation.org" />
       </div>
       <div>
-        <Label htmlFor="waitlist-org" className="text-xs font-medium text-muted-foreground">Organisation name</Label>
-        <Input id="waitlist-org" name="organization" autoComplete="organization" value={org} onChange={(e) => setOrg(e.target.value)} required className="mt-1" placeholder="Your NGO name" />
+        <Label htmlFor="signup-password" className="text-xs font-medium text-muted-foreground">Create a password</Label>
+        <Input id="signup-password" name="password" type="password" autoComplete="new-password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={8} className="mt-1" placeholder="At least 8 characters" />
       </div>
       <div>
-        <Label htmlFor="waitlist-country" className="text-xs font-medium text-muted-foreground">Country</Label>
-        <select id="waitlist-country" name="country" autoComplete="country-name" value={country} onChange={(e) => setCountry(e.target.value)} className="mt-1 w-full rounded-md bg-background border border-input text-foreground text-sm px-3 py-2">
+        <Label htmlFor="signup-org" className="text-xs font-medium text-muted-foreground">Organisation name</Label>
+        <Input id="signup-org" name="organization" autoComplete="organization" value={org} onChange={(e) => setOrg(e.target.value)} required className="mt-1" placeholder="Your NGO name" />
+      </div>
+      <div>
+        <Label htmlFor="signup-country" className="text-xs font-medium text-muted-foreground">Country</Label>
+        <select id="signup-country" name="country" autoComplete="country-name" value={country} onChange={(e) => setCountry(e.target.value)} className="mt-1 w-full rounded-md bg-background border border-input text-foreground text-sm px-3 py-2">
           {countries.map((c) => <option key={c} value={c}>{c}</option>)}
         </select>
       </div>
       <div>
-        <Label htmlFor="waitlist-role" className="text-xs font-medium text-muted-foreground">Your role</Label>
-        <select id="waitlist-role" name="role" autoComplete="organization-title" value={role} onChange={(e) => setRole(e.target.value)} className="mt-1 w-full rounded-md bg-background border border-input text-foreground text-sm px-3 py-2">
+        <Label htmlFor="signup-role" className="text-xs font-medium text-muted-foreground">Your role</Label>
+        <select id="signup-role" name="role" autoComplete="organization-title" value={role} onChange={(e) => setRole(e.target.value)} className="mt-1 w-full rounded-md bg-background border border-input text-foreground text-sm px-3 py-2">
           {roles.map((r) => <option key={r} value={r}>{r}</option>)}
         </select>
       </div>
@@ -272,31 +307,12 @@ function WaitlistForm({ onSuccess }: { onSuccess: (d: { name: string; email: str
       </label>
       <Button type="submit" disabled={submitting} className="w-full bg-primary text-primary-foreground hover:bg-primary/90 text-base py-4 rounded-xl h-auto">
         {submitting ? <AfricaSpinner className="h-4 w-4 animate-spin mr-2" /> : null}
-        Claim my Charter Member spot →
+        Create my account →
       </Button>
+      <p className="text-center text-xs text-muted-foreground">
+        Already have an account? <Link to="/login" className="text-primary font-semibold">Log in</Link>
+      </p>
     </form>
-  );
-}
-
-function WaitlistSuccess({ data }: { data: { name: string; email: string; position: number } }) {
-  const shareText = `I just claimed a Charter Member spot at Find The Grant. It is an AI tool that finds funders for African NGOs and writes the grant proposals. Only 50 spots at $47/month for life. Join here: ${window.location.origin}`;
-  return (
-    <div className="text-center py-8">
-      <div className="text-5xl mb-4">🎉</div>
-      <h3 className="text-xl font-bold text-foreground mb-2">You're in, {data.name}!</h3>
-      <p className="text-muted-foreground mb-1">You are Charter Member <span className="text-primary font-bold">#{data.position}</span> of 50</p>
-      <p className="text-sm text-muted-foreground/80 mb-6">We will email you at {data.email} with next steps to activate your account.</p>
-      <p className="text-xs text-muted-foreground mb-4">In the meantime, tell another NGO:</p>
-      <div className="flex flex-col gap-2">
-        <a href={`https://wa.me/?text=${encodeURIComponent(shareText)}`} target="_blank" rel="noopener noreferrer">
-          <Button variant="outline" className="w-full">Share on WhatsApp</Button>
-        </a>
-        <Button variant="outline" className="w-full" onClick={() => { navigator.clipboard.writeText(window.location.origin); toast({ title: "Link copied!" }); }}>
-          <Copy className="h-3 w-3 mr-2" /> Copy my referral link
-        </Button>
-      </div>
-      <p className="text-[10px] text-muted-foreground/70 mt-4">Every NGO you refer moves you 3 spots up the queue.</p>
-    </div>
   );
 }
 
@@ -630,7 +646,7 @@ const LandingPage = () => {
 
             {/* Form */}
             <div className="bg-card border border-border rounded-2xl p-8 shadow-sm">
-              {successData ? <WaitlistSuccess data={successData} /> : <WaitlistForm onSuccess={setSuccessData} />}
+              <CharterSignupForm />
             </div>
           </div>
 
