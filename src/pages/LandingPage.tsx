@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ArrowRight, Check, Copy, Globe, Play } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -646,7 +646,7 @@ const LandingPage = () => {
 
             {/* Form */}
             <div className="bg-card border border-border rounded-2xl p-8 shadow-sm">
-              {successData ? <WaitlistSuccess data={successData} /> : <WaitlistForm onSuccess={setSuccessData} />}
+              <CharterSignupForm />
             </div>
           </div>
 
