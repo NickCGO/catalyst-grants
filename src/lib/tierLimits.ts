@@ -19,7 +19,7 @@ export const TIER_LIMITS: Record<Exclude<Tier, 'trial'>, TierLimits> = {
     monthlyPriceCents: 4700,
     monthlyPriceId: 'founders_monthly',
     highlights: [
-      'Locked-in founding-member price for life',
+      'Charter Member price — limited to the first 50 NGOs',
       '3 AI grant proposals / month',
       '3 team seats',
       'Full funder database access',

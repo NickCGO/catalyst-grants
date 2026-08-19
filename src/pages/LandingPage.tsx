@@ -303,7 +303,7 @@ function CharterSignupForm() {
       </div>
       <label className="flex items-start gap-3 cursor-pointer">
         <input type="checkbox" name="commit" checked={committed} onChange={(e) => setCommitted(e.target.checked)} className="mt-1 h-4 w-4 rounded border-input accent-primary" />
-        <span className="text-xs text-muted-foreground">I commit to paying $47/month for life as one of the first 50 Charter Members.</span>
+        <span className="text-xs text-muted-foreground">I commit to paying $47/month as one of the first 50 Charter Members.</span>
       </label>
       <Button type="submit" disabled={submitting} className="w-full bg-primary text-primary-foreground hover:bg-primary/90 text-base py-4 rounded-xl h-auto">
         {submitting ? <AfricaSpinner className="h-4 w-4 animate-spin mr-2" /> : null}
@@ -368,7 +368,7 @@ const LandingPage = () => {
     { q: "What if I only need help with one proposal?", a: "You can use Find The Grant for a single application — but most NGOs find that the matching engine, deadline tracking, and proposal writer pay for themselves many times over across a year." },
     { q: "Is my organisation data safe?", a: "Yes. Your profile and proposals are private to your organisation. We do not share, sell, or expose your data to other users or funders without your action." },
     { q: "How is this different from just Googling for grants?", a: "Google returns lists. Find The Grant matches funders to your specific mission, programme areas, geography, and budget — then ranks them by likelihood of funding you. Plus we track deadlines, draft proposals, and manage your pipeline." },
-    { q: "Can I cancel anytime?", a: "Yes. Cancel any time, no questions asked. Charter Members keep the $47/month rate for life as long as they remain subscribed." },
+    { q: "Can I cancel anytime?", a: "Yes. Cancel any time, no questions asked. Charter Members keep the $47/month rate as long as they remain subscribed." },
     { q: "Do you cover funders outside South Africa?", a: "Yes. Our database covers funders active across the African continent, plus major international funders (USA, UK, Europe) with African portfolios." },
   ];
 
@@ -396,7 +396,7 @@ const LandingPage = () => {
             </p>
             <a href="#pricing" className="block w-full sm:inline-block sm:w-auto">
               <Button size="lg" className="w-full sm:w-auto whitespace-normal text-center bg-primary text-primary-foreground hover:bg-primary/90 rounded-xl text-base px-7 py-6 h-auto shadow-md">
-                Claim your spot: $47/month for life <ArrowRight className="ml-2 h-4 w-4 shrink-0" />
+                Claim your spot: $47/month <ArrowRight className="ml-2 h-4 w-4 shrink-0" />
               </Button>
             </a>
             <div className="mt-4">
@@ -411,7 +411,7 @@ const LandingPage = () => {
               <AnimatedCounter end={waitlistCount} className="text-foreground font-semibold" /> of 50 Charter spots taken
             </div>
             <p className="text-xs text-muted-foreground/80 mt-4 max-w-md">
-              Only 50 Charter spots at $47/month for life. Cancel any time.
+              Only 50 Charter spots at $47/month. Cancel any time.
             </p>
           </motion.div>
           <motion.div initial="hidden" animate="visible" variants={fadeUp(0.2)}>
@@ -601,7 +601,7 @@ const LandingPage = () => {
           <div className="text-center mb-16">
             <SectionEyebrow>Charter Membership</SectionEyebrow>
             <h2 className="text-4xl lg:text-5xl font-bold tracking-tight mb-6">
-              Charter pricing is $47/month, locked in for life — but only the first 50 NGOs get it.
+              Charter pricing is $47/month — but only the first 50 NGOs get it.
             </h2>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
               Once the 50 spots are filled, pricing rises to $99/month. Claim your spot before it's gone. That is our promise.
@@ -618,7 +618,7 @@ const LandingPage = () => {
                 <span className="text-5xl font-bold text-foreground">$47</span>
                 <span className="text-muted-foreground">/ month</span>
               </div>
-              <p className="text-sm text-muted-foreground mb-6">(Locked in for life · only the first 50 NGOs)</p>
+              <p className="text-sm text-muted-foreground mb-6">($47/month · only the first 50 NGOs)</p>
               <ul className="space-y-3">
                 {[
                   "Unlimited grant applications",
@@ -651,7 +651,7 @@ const LandingPage = () => {
           </div>
 
           <p className="text-center text-sm text-accent-amber mt-10">
-            ⚡ Only 50 Charter spots at $47/month for life. Then pricing rises to $99/month.
+            ⚡ Only 50 Charter spots at $47/month. Then pricing rises to $99/month.
           </p>
           <p className="text-center text-sm text-muted-foreground mt-3">
             🟢 <AnimatedCounter end={waitlistCount} className="text-foreground font-semibold" /> of 50 Charter spots taken
@@ -674,7 +674,7 @@ const LandingPage = () => {
             </Button>
           </a>
           <p className="text-xs text-muted-foreground mt-5">
-            Only 50 Charter spots. Cancel any time. $47/month for life if you join now.
+            Only 50 Charter spots. Cancel any time. $47/month if you join now.
           </p>
           <div className="mt-6">
             <Link to="/login">
