@@ -17,7 +17,7 @@ export default function TermsPage() {
       <h2>3. Subscriptions and billing</h2>
       <ul>
         <li>Paid plans are billed monthly in advance via Stripe, in USD, unless otherwise stated.</li>
-        <li>Founding-member pricing ($47/month) is locked in for as long as the subscription remains active and is not retroactively available to members who cancel and later resubscribe.</li>
+        <li>Charter Member pricing ($47/month) is available to the first 50 subscribing NGOs and remains at that rate for as long as the subscription remains active. It is not retroactively available to members who cancel and later resubscribe.</li>
         <li>You can cancel at any time from Settings; cancellation takes effect at the end of the current billing period, and you will not be charged again.</li>
         <li>Fees are non-refundable except where required by law, or at our discretion.</li>
         <li>We may change pricing for new subscribers at any time; existing subscribers will be notified before any price change affecting them.</li>
