@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useParams, Link, useNavigate } from "react-router-dom";
+import { useParams, Link, useNavigate, useSearchParams } from "react-router-dom";
 import DashboardLayout from "@/components/DashboardLayout";
 import GlassCard from "@/components/GlassCard";
 import { Badge } from "@/components/ui/badge";
@@ -18,13 +18,14 @@ const FunderDetailPage = () => {
   const { id } = useParams();
   const { user } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [funder, setFunder] = useState<any>(null);
   const [windows, setWindows] = useState<any>(null);
   const [matchScore, setMatchScore] = useState<number>(0);
   const [loading, setLoading] = useState(true);
   const [orgId, setOrgId] = useState("");
   const [programmes, setProgrammes] = useState<string[]>([]);
-  const [showApplyModal, setShowApplyModal] = useState(false);
+  const [showApplyModal, setShowApplyModal] = useState(searchParams.get("apply") === "1");
 
   useEffect(() => {
     if (!id) return;

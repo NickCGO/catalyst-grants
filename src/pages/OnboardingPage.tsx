@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import brandLogo from "@/assets/find-the-grant-logo.png.asset.json";
@@ -19,6 +19,7 @@ import { Progress } from "@/components/ui/progress";
 import GlassCard from "@/components/GlassCard";
 import { callAI, callAIJSON } from "@/lib/ai";
 import { toast } from "@/hooks/use-toast";
+import { safeProfileReturn } from "@/lib/onboardingAccess";
 import {
   Tooltip,
   TooltipContent,
@@ -191,6 +192,10 @@ const OnboardingPage = () => {
   const [orgId, setOrgId] = useState<string | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const returnTo = safeProfileReturn(searchParams.get("returnTo"));
+  const completingForApplication = searchParams.has("returnTo");
+  const [orgSettings, setOrgSettings] = useState<Record<string, any>>({});
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
@@ -370,7 +375,8 @@ const OnboardingPage = () => {
       const { data: org } = await supabase.from("organisations").select("*").eq("user_id", user.id).maybeSingle();
       if (org) {
         setOrgId(org.id);
-        if (org.onboarding_complete) { navigate("/dashboard"); return; }
+        setOrgSettings((org.org_settings as Record<string, any>) || {});
+        if (org.onboarding_complete) { navigate(returnTo); return; }
         // Pre-fill from existing data
         if (org.name) setOrgName(org.name);
         if (org.trading_name) setTradingName(org.trading_name);
@@ -422,10 +428,56 @@ const OnboardingPage = () => {
         if (org.largest_grant_range) setLargestGrant(org.largest_grant_range);
         if (org.total_funding_3yr) setTotalFunding3yr(org.total_funding_3yr);
         if (org.funding_achievement) setProudAchievement(org.funding_achievement);
+        // Restore every detailed field saved during a deferred profile.
+        const textFields: Record<string, (value: string) => void> = {
+          physical_address: setPhysicalAddress, beneficiary_reach_unit: setBeneficiaryReachUnit,
+          problem_geographic_context: setProblemGeoContext, community_voice_quote: setCommunityVoice,
+          gap_in_services: setGapInServices, innovation_factor: setInnovationFactor,
+          beneficiary_participation: setBeneficiaryParticipation, reporting_frequency: setReportingFrequency,
+          mne_framework_description: setMneDescription, baseline_data: setBaselineData,
+          annual_budget_currency: setBudgetCurrency, typical_grant_size_range: setTypicalGrantSize,
+          financial_management_system: setFinancialSystem, cofunding_description: setCofundingDescription,
+          executive_director_bio: setCeoBio, strategic_plan_period: setStrategicPlanPeriod,
+          governance_structure: setGovernanceStructure, grant_management_experience: setGrantManagement,
+          lessons_learned: setLessonsLearned,
+        };
+        const values = org as Record<string, any>;
+        Object.entries(textFields).forEach(([key, setter]) => { if (values[key] != null) setter(String(values[key])); });
+        const arrayFields: Record<string, (value: any[]) => void> = {
+          primary_sdgs: setPrimarySDGs, key_outcomes: setKeyOutcomes, impact_indicators: setIndicators,
+          data_collection_methods: setDataCollectionMethods, key_staff: setKeyStaff,
+          policies_list: setSelectedPolicies, past_funders_detailed: setPastFundersDetailed,
+          partnership_strengths: setPartnershipBrings, partnership_seeks: setPartnershipSeeks,
+        };
+        Object.entries(arrayFields).forEach(([key, setter]) => { if (Array.isArray(values[key]) && values[key].length) setter(values[key]); });
+        if (Array.isArray(values.programme_details) && values.programme_details.length) setProgrammes(values.programme_details);
+        if (values.focus_priority) setFocusPriority(values.focus_priority);
+        if (values.problem_evidence) setProblemEvidence(values.problem_evidence.split("\n---\n"));
+        if (values.past_impact_achievements) setPastImpactAchievements(values.past_impact_achievements.split("\n---\n"));
+        if (values.organisational_achievements) setOrgAchievements(values.organisational_achievements.split("\n---\n"));
+        if (values.beneficiary_demographics) {
+          setGenderFemale(values.beneficiary_demographics.gender_female_pct ?? 50);
+          setVulnerabilityFactors(values.beneficiary_demographics.vulnerability_factors || []);
+        }
+        if (values.budget_breakdown) {
+          setStaffPercent(values.budget_breakdown.staff ?? 40);
+          setProgrammesPercent(values.budget_breakdown.programmes ?? 40);
+          setOverheadsPercent(values.budget_breakdown.overheads ?? 20);
+        }
+        if (values.funding_sources_detail) setPctSelfGenerated(values.funding_sources_detail.self_generated ?? 10);
+        setHasDedicatedBank(values.has_dedicated_bank_account === true);
+        setCofundingAvailable(values.cofunding_available === true);
+        setHasReceivedGrants(Array.isArray(values.past_funders_detailed) && values.past_funders_detailed.length > 0);
+        const draft = values.org_settings?.onboarding_draft;
+        if (draft) {
+          setTocAction(draft.tocAction || ""); setTocPopulation(draft.tocPopulation || "");
+          setTocChange(draft.tocChange || ""); setTocMechanism(draft.tocMechanism || "");
+          setUploadedDocs(draft.uploadedDocs || {});
+        }
       }
     };
     loadOrg();
-  }, [navigate]);
+  }, [navigate, returnTo]);
 
   // ── AI Assist functions ──
   const generateMission = useCallback(async () => {
@@ -549,8 +601,8 @@ const OnboardingPage = () => {
     } catch { /* silent */ }
   };
 
-  const saveToSupabase = async () => {
-    if (saving) return; // prevent duplicate submissions
+  const saveToSupabase = async (complete = true, quickStart = false, nextStep = step) => {
+    if (saving) return;
     setSaving(true);
     try {
       const { data: { user }, error: userErr } = await supabase.auth.getUser();
@@ -653,16 +705,21 @@ const OnboardingPage = () => {
         partnership_seeks: partnershipSeeks.length > 0 ? partnershipSeeks : null,
         partnership_statement: partnershipStatement || null,
         is_discoverable: !!isDiscoverable,
-        onboarding_complete: true,
-        onboarding_step: 9,
+        onboarding_complete: complete,
+        onboarding_step: complete ? 9 : nextStep,
         profile_completeness: completeness,
+        org_settings: {
+          ...orgSettings,
+          quick_start: complete ? false : quickStart || orgSettings.quick_start === true,
+          onboarding_draft: { tocAction, tocPopulation, tocChange, tocMechanism, uploadedDocs },
+        },
       };
 
       // Strip undefined values defensively
       Object.keys(orgData).forEach(k => orgData[k] === undefined && delete orgData[k]);
 
       let effectiveOrgId = orgId;
-      if (effectiveOrgId) {
+      if (complete && effectiveOrgId) {
         const { data: updated, error: updateErr } = await supabase
           .from("organisations")
           .update(orgData)
@@ -720,8 +777,15 @@ const OnboardingPage = () => {
         }
       }
 
-      toast({ title: "🎉 Onboarding complete!", description: "Welcome to your dashboard!" });
-      navigate("/dashboard", { replace: true });
+      if (complete) {
+        toast({ title: "Profile complete!" });
+        navigate(returnTo, { replace: true });
+      } else if (quickStart) {
+        toast({ title: "Progress saved" });
+        navigate("/grants", { replace: true });
+      } else {
+        setStep(nextStep);
+      }
     } catch (error: any) {
       console.error("Step 9 onboarding save failed:", error);
       toast({
@@ -735,7 +799,7 @@ const OnboardingPage = () => {
   };
 
   const next = () => {
-    if (step < 8) { setStep(step + 1); saveProgress(step + 1); }
+    if (step < 8) { saveToSupabase(false, false, step + 1); }
     else saveToSupabase();
   };
 
@@ -943,14 +1007,15 @@ const OnboardingPage = () => {
           )}
           <span className="text-xs text-muted-foreground hidden sm:inline">Profile: {completeness}%</span>
           <Progress value={completeness} className="w-20 sm:w-28 h-1.5" />
-          <Button variant="ghost" size="sm" className="text-xs text-muted-foreground" onClick={() => { saveProgress(step); toast({ title: "Progress saved!" }); navigate("/dashboard"); }}>
-            <Save className="h-3 w-3 mr-1" /> Save & exit
+          <Button variant="ghost" size="sm" disabled={saving || !orgId} className="text-xs text-muted-foreground" onClick={() => saveToSupabase(false, true)}>
+            <Save className="h-3 w-3 mr-1" /> {completingForApplication ? "Save & browse grants" : "Skip for now"}
           </Button>
         </div>
       </div>
 
       {/* Info quality note + document upload */}
       <div className="mx-auto max-w-2xl px-4 sm:px-6 pt-4">
+        {completingForApplication && <h1 className="text-xl font-semibold text-foreground mb-4">Complete your organisation details to continue your application</h1>}
         <div className="flex items-start gap-3 p-4 rounded-xl bg-primary/5 border border-primary/20">
           <Info className="h-5 w-5 text-primary mt-0.5 shrink-0" />
           <div className="flex-1">

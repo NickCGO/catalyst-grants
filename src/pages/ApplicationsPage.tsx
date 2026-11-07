@@ -8,7 +8,8 @@ import { Plus, Trash2, ArrowRight, Link2 } from "lucide-react";
 import { motion } from "framer-motion";
 import { Skeleton } from "@/components/ui/skeleton";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth, useOrganisation } from "@/hooks/useAuth";
+import { needsApplicationProfile, profileCompletionUrl } from "@/lib/onboardingAccess";
 import { useNavigate } from "react-router-dom";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -36,6 +37,12 @@ const statusOptions = ["pending", "in_progress", "submitted", "follow_up", "succ
 const ApplicationsPage = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { org, loading: orgLoading } = useOrganisation();
+  const openNewApplication = () => {
+    if (orgLoading) return;
+    if (needsApplicationProfile(org)) { navigate(profileCompletionUrl("/applications?new=1")); return; }
+    setCreateOpen(true);
+  };
   const [apps, setApps] = useState<AppItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [orgId, setOrgId] = useState<string | null>(null);
@@ -52,6 +59,10 @@ const ApplicationsPage = () => {
   const [funderSearch, setFunderSearch] = useState("");
   const [funderResults, setFunderResults] = useState<{ id: string; donor_name: string }[]>([]);
   const [attachLoading, setAttachLoading] = useState(false);
+
+  useEffect(() => {
+    if (!orgLoading && !needsApplicationProfile(org) && new URLSearchParams(window.location.search).get("new") === "1") setCreateOpen(true);
+  }, [orgLoading, org]);
 
   const loadApps = async (oid: string) => {
     const { data: applications } = await supabase
@@ -187,6 +198,7 @@ const ApplicationsPage = () => {
   };
 
   const createManualApp = async () => {
+    if (orgLoading || needsApplicationProfile(org)) { openNewApplication(); return; }
     if (!orgId || !newProjectName) return;
     const status = newReadyToSubmit ? "in_progress" : "pending";
     const kanban = newReadyToSubmit ? "in_progress" : "backlog";
@@ -268,7 +280,7 @@ const ApplicationsPage = () => {
             <Button variant="outline" onClick={() => navigate("/grants")} className="text-sm">
               Find Grants
             </Button>
-            <Button className="bg-primary text-primary-foreground hover:bg-primary/90" onClick={() => setCreateOpen(true)}>
+            <Button className="bg-primary text-primary-foreground hover:bg-primary/90" onClick={openNewApplication}>
               <Plus className="h-4 w-4 mr-1" /> New Application
             </Button>
           </div>
@@ -279,7 +291,7 @@ const ApplicationsPage = () => {
             <p className="text-sm text-muted-foreground mb-4">No applications yet. You can start from a matched grant or create a blank application and attach a funder later.</p>
             <div className="flex gap-2 justify-center">
               <Button onClick={() => navigate("/grants")} variant="outline">Browse Grants</Button>
-              <Button className="bg-primary text-primary-foreground" onClick={() => setCreateOpen(true)}>
+              <Button className="bg-primary text-primary-foreground" onClick={openNewApplication}>
                 <Plus className="h-4 w-4 mr-1" /> Blank Application
               </Button>
             </div>
