@@ -1,3 +1,6 @@
 - [x] Add a persistent quick-start choice without marking profiles complete.
 - [x] Collect missing profile details before grant applications and proposal drafting, then return to the intended grant.
 - [x] Verify quick-start signup, refresh persistence, resumable onboarding, application gating, and mobile layout.
+- [ ] Secure critical admin, organisation-data, AI, transactional-email, and email-connection findings.
+- [ ] Sanitize agreement and report previews; add regression tests and verify critical protections.
+- [ ] Update only resolved critical scan findings and report remaining blockers.
