@@ -18,6 +18,7 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { requireAdmin, accessResponse } from "../_shared/security.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -126,8 +127,7 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
   try {
-    // TODO: wire to your existing admin/role check. Fail closed.
-    // await assertPlatformAdmin(req);
+    await requireAdmin(req);
 
     const { funder_id, sources } = await req.json();
     if (!funder_id || !Array.isArray(sources) || sources.length === 0) {
@@ -225,7 +225,7 @@ serve(async (req) => {
       extraction: parsed, // return the full object for the review screen
     });
   } catch (e) {
-    return json({ error: String(e?.message ?? e) }, 500);
+    return accessResponse(e, corsHeaders);
   }
 });
 

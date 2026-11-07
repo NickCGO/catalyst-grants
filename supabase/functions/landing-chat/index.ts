@@ -1,4 +1,5 @@
-// Public chat endpoint for the landing page chatbot.
+import { requireUser, requireOrgAccess, requireAI, accessResponse } from "../_shared/security.ts";
+// Public visitors receive non-metered help; AI requires an authenticated account.
 // Streams responses from Lovable AI, grounded with a system prompt about Find Your Grant services.
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -27,6 +28,14 @@ Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
+    let identity;
+    try { identity = await requireUser(req); } catch {
+      const content = "Find The Grant helps African NGOs discover funders and prepare applications. Sign in to use your AI assistant, or choose Talk to a human for help. [ESCALATE]";
+      return new Response(`data: ${JSON.stringify({ choices: [{ delta: { content } }] })}\n\ndata: [DONE]\n\n`, { headers: { ...corsHeaders, "Content-Type": "text/event-stream" } });
+    }
+    const { data: org } = await identity.admin.from("organisations").select("id").eq("user_id", identity.user.id).maybeSingle();
+    const authorizedOrg = await requireOrgAccess(identity.admin, identity.user.id, org?.id);
+    await requireAI(identity.admin, authorizedOrg);
     const { messages } = await req.json();
     if (!Array.isArray(messages)) {
       return new Response(JSON.stringify({ error: "messages must be an array" }), {
@@ -77,9 +86,6 @@ Deno.serve(async (req: Request) => {
     });
   } catch (e) {
     console.error("landing-chat error:", e);
-    return new Response(
-      JSON.stringify({ error: e instanceof Error ? e.message : "Unknown error" }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },
-    );
+    return accessResponse(e, corsHeaders);
   }
 });

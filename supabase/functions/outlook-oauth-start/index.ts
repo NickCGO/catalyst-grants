@@ -1,4 +1,6 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { signState, safeOrigin, safeReturnPath } from "../_shared/oauthState.ts";
+import { serviceClient } from "../_shared/security.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -25,11 +27,15 @@ Deno.serve(async (req) => {
     if (!org) return new Response(JSON.stringify({ error: "no_org" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
     const { returnTo, origin: bodyOrigin } = await req.json().catch(() => ({ returnTo: "", origin: "" }));
-    const appOrigin = bodyOrigin || req.headers.get("origin") || req.headers.get("referer") || "";
+    const appOrigin = safeOrigin(bodyOrigin || req.headers.get("origin"));
 
     const clientId = Deno.env.get("MICROSOFT_OAUTH_CLIENT_ID")!;
     const redirectUri = `${Deno.env.get("SUPABASE_URL")}/functions/v1/outlook-oauth-callback`;
-    const state = btoa(JSON.stringify({ org_id: org.id, user_id: user.id, return_to: returnTo || "/settings", origin: appOrigin, t: Date.now() }));
+    const nonce = crypto.randomUUID();
+    const exp = Date.now() + 600000;
+    const { error: stateError } = await serviceClient().from("oauth_connection_states").insert({ nonce, org_id: org.id, user_id: user.id, provider: "outlook", expires_at: new Date(exp).toISOString() });
+    if (stateError) throw new Error("Could not start secure connection");
+    const state = await signState({ provider: "outlook", org_id: org.id, user_id: user.id, return_to: safeReturnPath(returnTo), origin: appOrigin, nonce, exp }, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "");
 
     const scope = [
       "offline_access",

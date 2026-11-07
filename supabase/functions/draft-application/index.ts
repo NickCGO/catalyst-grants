@@ -14,6 +14,7 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { requireUser, requireOrgAccess, requireAI, accessResponse } from "../_shared/security.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -63,12 +64,15 @@ function libraryBlock(entries: any[]) {
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
   try {
+    const { user } = await requireUser(req);
     const { application_id } = await req.json();
     if (!application_id) return json({ error: "application_id is required" }, 400);
 
     const { data: app } = await supa.from("applications")
       .select("id, org_id, funder_id").eq("id", application_id).maybeSingle();
     if (!app) return json({ error: "application not found" }, 404);
+    const authorizedOrg = await requireOrgAccess(supa, user.id, app.org_id, true);
+    await requireAI(supa, authorizedOrg);
 
     const [{ data: org }, { data: funder }, { data: form }, { data: library }] = await Promise.all([
       supa.from("organisations").select("*").eq("id", app.org_id).maybeSingle(),
@@ -123,13 +127,15 @@ ${JSON.stringify(compactQs, null, 2)}`;
     catch { return json({ error: "model did not return valid JSON", raw }, 502); }
 
     const answers = Array.isArray(parsed.answers) ? parsed.answers : [];
-    const rows = answers.map((a: any) => ({
+    const questionIds = new Set(questions.map(q => q.id));
+    const libraryIds = new Set((library || []).map(e => e.id));
+    const rows = answers.filter((a: any) => questionIds.has(a.question_id)).map((a: any) => ({
       application_id,
       question_id: a.question_id,
       answer: a.answer ?? "",
       status: "ai_drafted",
       word_count: (a.answer ?? "").trim().split(/\s+/).filter(Boolean).length,
-      sourced_from: a.sourced_from || null,
+      sourced_from: libraryIds.has(a.sourced_from) ? a.sourced_from : null,
       updated_at: new Date().toISOString(),
     }));
 
@@ -141,7 +147,7 @@ ${JSON.stringify(compactQs, null, 2)}`;
 
     return json({ ok: true, drafted: rows.length, answers });
   } catch (e) {
-    return json({ error: String(e?.message ?? e) }, 500);
+    return accessResponse(e, corsHeaders);
   }
 });
 

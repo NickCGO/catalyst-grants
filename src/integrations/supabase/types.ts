@@ -14,6 +14,32 @@ export type Database = {
   }
   public: {
     Tables: {
+      ai_daily_usage: {
+        Row: {
+          calls: number
+          org_id: string
+          usage_day: string
+        }
+        Insert: {
+          calls?: number
+          org_id: string
+          usage_day?: string
+        }
+        Update: {
+          calls?: number
+          org_id?: string
+          usage_day?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_daily_usage_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organisations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ai_usage_log: {
         Row: {
           created_at: string | null
@@ -1604,6 +1630,38 @@ export type Database = {
           },
         ]
       }
+      oauth_connection_states: {
+        Row: {
+          expires_at: string
+          nonce: string
+          org_id: string
+          provider: string
+          user_id: string
+        }
+        Insert: {
+          expires_at: string
+          nonce: string
+          org_id: string
+          provider: string
+          user_id: string
+        }
+        Update: {
+          expires_at?: string
+          nonce?: string
+          org_id?: string
+          provider?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "oauth_connection_states_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organisations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       organisations: {
         Row: {
           annual_beneficiary_reach: number | null
@@ -2887,6 +2945,24 @@ export type Database = {
           },
         ]
       }
+      user_roles: {
+        Row: {
+          id: string
+          role: string
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          role: string
+          user_id: string
+        }
+        Update: {
+          id?: string
+          role?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       waitlist: {
         Row: {
           committed_to_pay: boolean | null
@@ -3005,6 +3081,7 @@ export type Database = {
           read_ct: number
         }[]
       }
+      reserve_ai_call: { Args: { _org_id: string }; Returns: boolean }
     }
     Enums: {
       automation_action:

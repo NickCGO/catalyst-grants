@@ -1,4 +1,6 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { verifyState } from "../_shared/oauthState.ts";
+import { requireOrgAccess, serviceClient } from "../_shared/security.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -30,17 +32,23 @@ Deno.serve(async (req) => {
   const stateRaw = url.searchParams.get("state");
   const errorParam = url.searchParams.get("error");
 
-  const fallbackOrigin = req.headers.get("origin") || "https://catalyst-grants.lovable.app";
+  const fallbackOrigin = "https://www.findthegrant.com";
   let returnTo = `${fallbackOrigin}/settings`;
 
   if (errorParam) return htmlResponse(`Google returned: ${errorParam}`, returnTo, false);
   if (!code || !stateRaw) return htmlResponse("Missing code or state parameter.", returnTo, false);
 
-  let state: any;
-  try { state = JSON.parse(atob(stateRaw)); } catch { return htmlResponse("Invalid state.", returnTo, false); }
-  const { org_id, user_id, return_to, origin: stateOrigin } = state;
-  const appOrigin = stateOrigin || fallbackOrigin;
-  if (return_to) returnTo = return_to.startsWith("http") ? return_to : `${appOrigin}${return_to}`;
+  let state;
+  try {
+    state = await verifyState(stateRaw, "gmail", Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "");
+    const admin = serviceClient();
+    const org = await requireOrgAccess(admin, state.user_id, state.org_id, true);
+    if (org.user_id !== state.user_id) throw new Error("Owner access required");
+    const { data: consumed, error } = await admin.from("oauth_connection_states").delete().eq("nonce", state.nonce).eq("user_id", state.user_id).eq("org_id", state.org_id).eq("provider", "gmail").gt("expires_at", new Date().toISOString()).select("nonce").maybeSingle();
+    if (error || !consumed) throw new Error("State already used");
+  } catch { return htmlResponse("This connection request is invalid or expired. Please start again from Settings.", returnTo, false); }
+  const { org_id } = state;
+  returnTo = `${state.origin}${state.return_to}`;
 
   try {
     const clientId = Deno.env.get("GOOGLE_OAUTH_CLIENT_ID")!;

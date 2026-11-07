@@ -3,6 +3,7 @@
 //           format?, current_content?, extra_instructions?, stream? }
 // Returns OpenAI-compatible response shape (so existing callers keep working).
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { requireUser, requireOrgAccess, requireAI, accessResponse } from "../_shared/security.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -82,6 +83,7 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
+    const { user, admin: supa } = await requireUser(req);
     const body = await req.json();
     const {
       org_id,
@@ -100,9 +102,8 @@ Deno.serve(async (req) => {
     const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY");
     if (!ANTHROPIC_API_KEY) throw new Error("ANTHROPIC_API_KEY is not configured");
 
-    const supaUrl = Deno.env.get("SUPABASE_URL")!;
-    const supaKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const supa = createClient(supaUrl, supaKey);
+    const authorizedOrg = await requireOrgAccess(supa, user.id, org_id, true);
+    await requireAI(supa, authorizedOrg);
 
     // Fetch context server-side
     let org: any = null;
@@ -184,7 +185,8 @@ ${funderBlock}`;
     }
 
     // Re-stream as OpenAI-compatible SSE
-    const reader = anthropicResp.body!.getReader();
+    if (!anthropicResp.body) throw new Error("Missing response stream");
+    const reader = anthropicResp.body.getReader();
     const decoder = new TextDecoder();
     const encoder = new TextEncoder();
 
@@ -227,8 +229,6 @@ ${funderBlock}`;
     });
   } catch (e) {
     console.error("claude-generate error", e);
-    return new Response(JSON.stringify({ error: e instanceof Error ? e.message : "Unknown error" }), {
-      status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    return accessResponse(e, corsHeaders);
   }
 });
