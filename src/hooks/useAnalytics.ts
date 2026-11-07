@@ -126,13 +126,14 @@ export function useAnalytics() {
 
   useEffect(() => {
     // Backfill user_id onto current session when auth state changes (e.g. login)
-    const { data: sub } = supabase.auth.onAuthStateChange(async (_event, session) => {
+    const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
       const sessionId = sessionStorage.getItem(SESSION_KEY);
       const uid = session?.user?.id;
       if (!sessionId || !uid) return;
-      try {
-        await db.from("analytics_sessions").update({ user_id: uid }).eq("id", sessionId);
-      } catch {}
+      // Auth callbacks hold the session lock; defer database work until it is released.
+      setTimeout(() => {
+        Promise.resolve(db.from("analytics_sessions").update({ user_id: uid }).eq("id", sessionId)).catch(() => {});
+      }, 0);
     });
     return () => sub.subscription.unsubscribe();
   }, []);
