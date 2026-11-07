@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
 import { callAI } from "@/lib/ai";
+import { sanitizeDocument } from "@/lib/sanitizeDocument";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import {
@@ -565,7 +566,7 @@ const PartnershipWorkspacePage = () => {
                     </Button>
                     {mouContent && (
                       <Button size="sm" variant="outline" className="text-xs gap-1" onClick={() => {
-                        const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>MOU - ${partnership?.partnership_name || "Partnership"}</title><style>body{font-family:Georgia,serif;max-width:800px;margin:40px auto;padding:0 20px;line-height:1.6;color:#111}h1,h2,h3{color:#0c4a6e}</style></head><body>${mouContent}</body></html>`;
+                        const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Partnership MOU</title><style>body{font-family:Georgia,serif;max-width:800px;margin:40px auto;padding:0 20px;line-height:1.6;color:#111}h1,h2,h3{color:#0c4a6e}</style></head><body>${sanitizeDocument(mouContent)}</body></html>`;
                         const blob = new Blob([html], { type: "text/html" });
                         const url = URL.createObjectURL(blob);
                         const a = document.createElement("a");
@@ -585,7 +586,7 @@ const PartnershipWorkspacePage = () => {
                 {mouContent && (
                   <GlassCard hoverable={false}>
                     <h3 className="text-sm font-semibold text-foreground mb-2">Generated MOU</h3>
-                    <div className="text-xs text-muted-foreground border border-border/30 rounded-lg p-4 max-h-60 overflow-y-auto prose prose-invert prose-xs" dangerouslySetInnerHTML={{ __html: mouContent }} />
+                    <div className="text-xs text-muted-foreground border border-border/30 rounded-lg p-4 max-h-60 overflow-y-auto prose prose-invert prose-xs" dangerouslySetInnerHTML={{ __html: sanitizeDocument(mouContent) }} />
                     <p className="text-[10px] text-muted-foreground/60 mt-2 italic">⚠️ This is a starting point — have it reviewed by a legal advisor before signing.</p>
                   </GlassCard>
                 )}

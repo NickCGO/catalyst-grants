@@ -13,6 +13,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth, useOrganisation } from "@/hooks/useAuth";
 import { hints } from "@/lib/formHints";
 import AfricaSpinner from "../components/AfricaSpinner";
+import { sanitizeDocument } from "@/lib/sanitizeDocument";
 
 type Step = "select" | "format" | "input" | "preview";
 
@@ -168,7 +169,7 @@ const ReportsPage = () => {
                 </div>
               </div>
               <div className="prose prose-sm prose-invert max-w-none p-6 rounded-lg bg-secondary/20 border border-border/30"
-                dangerouslySetInnerHTML={{ __html: generatedReport }} />
+                dangerouslySetInnerHTML={{ __html: sanitizeDocument(generatedReport) }} />
             </GlassCard>
           )}
         </div>
