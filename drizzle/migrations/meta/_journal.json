@@ -1,0 +1,13 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1794078708811,
+      "tag": "0000_critical_security_roles_oauth_and_ai_limits",
+      "breakpoints": true
+    }
+  ]
+}
