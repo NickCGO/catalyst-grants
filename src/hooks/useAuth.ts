@@ -42,16 +42,18 @@ const updateAuthSnapshot = (session: Session | null, loading = false) => {
 const ensureAuthInitialized = () => {
   if (authInitialized) return;
   authInitialized = true;
+  let receivedAuthEvent = false;
 
   supabase.auth.onAuthStateChange((_event, session) => {
+    receivedAuthEvent = true;
     updateAuthSnapshot(session, false);
   });
 
   withAsyncTimeout(supabase.auth.getSession(), AUTH_RESTORE_TIMEOUT_MS, "Session restore")
-    .then(({ data: { session } }) => updateAuthSnapshot(session, false))
+    .then(({ data: { session } }) => { if (!receivedAuthEvent) updateAuthSnapshot(session, false); })
     .catch((error) => {
       console.error("Session restore error:", error);
-      updateAuthSnapshot(null, false);
+      if (!receivedAuthEvent) updateAuthSnapshot(null, false);
     });
 };
 
@@ -148,6 +150,7 @@ export function useOrganisation() {
   const [org, setOrg] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [loadedUserId, setLoadedUserId] = useState<string | null | undefined>(undefined);
 
   const refetch = useCallback(() => setRefreshKey((k) => k + 1), []);
 
@@ -162,6 +165,7 @@ export function useOrganisation() {
 
       if (!user) {
         setOrg(null);
+        setLoadedUserId(null);
         setLoading(false);
         return;
       }
@@ -192,7 +196,10 @@ export function useOrganisation() {
         console.error("Organisation load exception:", error);
         setOrg(null);
       } finally {
-        if (isActive) setLoading(false);
+        if (isActive) {
+          setLoadedUserId(user.id);
+          setLoading(false);
+        }
       }
     };
 
@@ -203,5 +210,6 @@ export function useOrganisation() {
     };
   }, [authLoading, user?.id, refreshKey]);
 
-  return { org, loading, refetch };
+  const identityPending = authLoading || loadedUserId !== (user?.id ?? null);
+  return { org: identityPending ? null : org, loading: loading || identityPending, refetch };
 }
