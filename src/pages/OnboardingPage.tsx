@@ -588,21 +588,6 @@ const OnboardingPage = () => {
   };
 
   // ── Save & Navigate ──
-  const saveProgress = async (currentStep: number) => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-      const baseData: any = {
-        onboarding_step: currentStep,
-        profile_completeness: completeness,
-        name: orgName || "My Organisation",
-      };
-      if (orgId) {
-        await supabase.from("organisations").update(baseData).eq("id", orgId);
-      }
-    } catch { /* silent */ }
-  };
-
   const saveToSupabase = async (complete = true, quickStart = false, nextStep = step) => {
     if (saving || !orgLoaded) return;
     setSaving(true);
