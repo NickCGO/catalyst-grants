@@ -55,11 +55,12 @@ export default function SupportChatWidget() {
     };
 
     try {
+      const { data: { session } } = await supabase.auth.getSession();
       const resp = await fetch(CHAT_URL, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${ANON}`,
+          Authorization: `Bearer ${session?.access_token || ANON}`,
         },
         body: JSON.stringify({ messages: next }),
       });

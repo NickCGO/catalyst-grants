@@ -2,6 +2,7 @@ import * as React from 'npm:react@18.3.1'
 import { renderAsync } from 'npm:@react-email/components@0.0.22'
 import { createClient } from 'npm:@supabase/supabase-js@2'
 import { TEMPLATES } from '../_shared/transactional-email-templates/registry.ts'
+import { requireUser, accessResponse } from '../_shared/security.ts'
 
 // Configuration baked in at scaffold time — do NOT change these manually.
 // To update, re-run the email domain setup flow.
@@ -30,9 +31,7 @@ function generateToken(): string {
     .join('')
 }
 
-// Auth note: this function uses verify_jwt = true in config.toml, so Supabase's
-// gateway validates the caller's JWT (anon or service_role) before the request
-// reaches this code. No in-function auth check is needed.
+// Browser callers may request only their own server-derived welcome email.
 
 Deno.serve(async (req) => {
   // Handle CORS preflight
@@ -87,6 +86,21 @@ Deno.serve(async (req) => {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       }
     )
+  }
+
+  const internal = req.headers.get('Authorization') === `Bearer ${supabaseServiceKey}`;
+  if (!internal) {
+    try {
+      const { user, admin } = await requireUser(req);
+      if (templateName !== 'welcome' || !user.email) return new Response(JSON.stringify({ error: 'Not permitted' }), { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      recipientEmail = user.email;
+      idempotencyKey = `welcome-${user.id}`;
+      const { data: org } = await admin.from('organisations').select('name').eq('user_id', user.id).maybeSingle();
+      templateData = { name: String(user.user_metadata?.full_name || '').slice(0, 200), organisation: org?.name || '', appUrl: 'https://www.findthegrant.com' };
+      const { data: existing, error } = await admin.from('email_send_log').select('id').eq('template_name', 'welcome').eq('recipient_email', user.email).in('status', ['pending', 'sent']).limit(1);
+      if (error) throw new Error('Unable to verify welcome status');
+      if (existing?.length) return new Response(JSON.stringify({ success: true, alreadyQueued: true }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    } catch (error) { return accessResponse(error, corsHeaders); }
   }
 
   // 1. Look up template from registry (early — needed to resolve recipient)
