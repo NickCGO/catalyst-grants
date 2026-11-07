@@ -721,7 +721,7 @@ const OnboardingPage = () => {
       Object.keys(orgData).forEach(k => orgData[k] === undefined && delete orgData[k]);
 
       let effectiveOrgId = orgId;
-      if (complete && effectiveOrgId) {
+      if (effectiveOrgId) {
         const { data: updated, error: updateErr } = await supabase
           .from("organisations")
           .update(orgData)
@@ -752,7 +752,7 @@ const OnboardingPage = () => {
       }
 
       // Save programme details to separate table (non-fatal on failure)
-      if (effectiveOrgId) {
+      if (complete && effectiveOrgId) {
         try {
           for (const prog of programmes.filter(p => p.name)) {
             const { error: progErr } = await supabase.from("programme_details").insert({
