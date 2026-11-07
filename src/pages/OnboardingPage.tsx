@@ -196,6 +196,7 @@ const OnboardingPage = () => {
   const returnTo = safeProfileReturn(searchParams.get("returnTo"));
   const completingForApplication = searchParams.has("returnTo");
   const [orgSettings, setOrgSettings] = useState<Record<string, any>>({});
+  const [orgLoaded, setOrgLoaded] = useState(false);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
@@ -475,6 +476,7 @@ const OnboardingPage = () => {
           setUploadedDocs(draft.uploadedDocs || {});
         }
       }
+      setOrgLoaded(true);
     };
     loadOrg();
   }, [navigate, returnTo]);
@@ -602,7 +604,7 @@ const OnboardingPage = () => {
   };
 
   const saveToSupabase = async (complete = true, quickStart = false, nextStep = step) => {
-    if (saving) return;
+    if (saving || !orgLoaded) return;
     setSaving(true);
     try {
       const { data: { user }, error: userErr } = await supabase.auth.getUser();
@@ -1007,7 +1009,7 @@ const OnboardingPage = () => {
           )}
           <span className="text-xs text-muted-foreground hidden sm:inline">Profile: {completeness}%</span>
           <Progress value={completeness} className="w-20 sm:w-28 h-1.5" />
-          <Button variant="ghost" size="sm" disabled={saving || !orgId} className="text-xs text-muted-foreground" onClick={() => saveToSupabase(false, true)}>
+          <Button variant="ghost" size="sm" disabled={saving || !orgLoaded} className="text-xs text-muted-foreground" onClick={() => saveToSupabase(false, true)}>
             <Save className="h-3 w-3 mr-1" /> {completingForApplication ? "Save & browse grants" : "Skip for now"}
           </Button>
         </div>
@@ -2048,7 +2050,7 @@ const OnboardingPage = () => {
                     <Button variant="ghost" onClick={() => setStep(Math.max(0, step - 1))} disabled={step === 0} className="text-sm">
                       <ArrowLeft className="h-4 w-4 mr-1" /> Back
                     </Button>
-                    <Button onClick={next} disabled={saving} className="bg-primary text-primary-foreground text-sm">
+                    <Button onClick={next} disabled={saving || !orgLoaded} className="bg-primary text-primary-foreground text-sm">
                       {saving ? "Saving..." : step === 8 ? "Complete Profile" : "Save & Continue"}
                       <ArrowRight className="h-4 w-4 ml-1" />
                     </Button>
