@@ -1,0 +1,3 @@
+- [ ] Add a persistent quick-start choice without marking profiles complete.
+- [ ] Collect missing profile details before grant applications and proposal drafting, then return to the intended grant.
+- [ ] Verify quick-start persistence, normal onboarding, and application gating.
