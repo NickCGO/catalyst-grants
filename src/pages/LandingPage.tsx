@@ -16,6 +16,7 @@ import brandLogo from "@/assets/find-the-grant-logo.png.asset.json";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import AfricaSpinner from "../components/AfricaSpinner";
+import { Checkbox } from "@/components/ui/checkbox";
 
 /* ─── Helpers ─── */
 const fadeUp = (delay = 0) => ({
@@ -207,6 +208,7 @@ function CharterSignupForm() {
   const [country, setCountry] = useState("South Africa");
   const [role, setRole] = useState("Executive Director");
   const [committed, setCommitted] = useState(false);
+  const [quickStart, setQuickStart] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -238,6 +240,7 @@ function CharterSignupForm() {
           country,
           onboarding_step: 0,
           onboarding_complete: false,
+          org_settings: { quick_start: quickStart },
         });
         if (orgError) console.error("Org creation error:", orgError);
 
@@ -254,7 +257,7 @@ function CharterSignupForm() {
       }
 
       toast({ title: `Welcome aboard, ${name || "friend"}!`, description: "Let's set up your organisation profile." });
-      navigate("/onboarding");
+      navigate(quickStart ? "/grants" : "/onboarding");
     } catch (err: any) {
       const msg = err?.message || "";
       toast({
@@ -305,6 +308,10 @@ function CharterSignupForm() {
         <input type="checkbox" name="commit" checked={committed} onChange={(e) => setCommitted(e.target.checked)} className="mt-1 h-4 w-4 rounded border-input accent-primary" />
         <span className="text-xs text-muted-foreground">I commit to paying $47/month as one of the first 50 Charter Members.</span>
       </label>
+      <div className="flex items-center gap-3">
+        <Checkbox id="charter-quick-start" checked={quickStart} onCheckedChange={(checked) => setQuickStart(checked === true)} />
+        <Label htmlFor="charter-quick-start" className="text-sm text-foreground">Quick start — complete my profile later</Label>
+      </div>
       <Button type="submit" disabled={submitting} className="w-full bg-primary text-primary-foreground hover:bg-primary/90 text-base py-4 rounded-xl h-auto">
         {submitting ? <AfricaSpinner className="h-4 w-4 animate-spin mr-2" /> : null}
         Create my account →

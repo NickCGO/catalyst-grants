@@ -70,7 +70,7 @@ export function useAuth() {
     };
   }, []);
 
-  const signUp = async (email: string, password: string, orgName: string, country: string) => {
+  const signUp = async (email: string, password: string, orgName: string, country: string, quickStart = false) => {
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
@@ -90,6 +90,7 @@ export function useAuth() {
         country,
         onboarding_step: 0,
         onboarding_complete: false,
+        org_settings: { quick_start: quickStart },
       });
       if (orgError) console.error("Org creation error:", orgError);
     }
