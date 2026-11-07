@@ -9,6 +9,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { useAuth, useOrganisation } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
 import AfricaSpinner from "../components/AfricaSpinner";
+import { Checkbox } from "@/components/ui/checkbox";
+import { canExplore } from "@/lib/onboardingAccess";
 
 const AuthPage = () => {
   const location = useLocation();
@@ -26,12 +28,13 @@ const AuthPage = () => {
   const [waitlistMessage, setWaitlistMessage] = useState(false);
   const [loginError, setLoginError] = useState<string | null>(null);
   const [forgotSent, setForgotSent] = useState(false);
+  const [quickStart, setQuickStart] = useState(false);
 
   useEffect(() => {
-    if (!authLoading && user) {
+    if (!authLoading && user && !submitting) {
       navigate("/dashboard");
     }
-  }, [authLoading, user, navigate]);
+  }, [authLoading, user, navigate, submitting]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -43,7 +46,7 @@ const AuthPage = () => {
           setSubmitting(false);
           return;
         }
-        const signUpData = await signUp(email, password, orgName, country);
+        const signUpData = await signUp(email, password, orgName, country, quickStart);
         if (signUpData?.user) {
           const { supabase } = await import("@/integrations/supabase/client");
           supabase.functions
@@ -57,14 +60,14 @@ const AuthPage = () => {
             })
             .catch((err) => console.error("Welcome email error:", err));
         }
-        toast({ title: "Account created!", description: "Let's set up your organisation profile." });
-        navigate("/onboarding");
+        toast({ title: "Account created!" });
+        navigate(quickStart ? "/grants" : "/onboarding");
       } else {
         const data = await signIn(email, password);
         if (data.user) {
           const { supabase } = await import("@/integrations/supabase/client");
-          const { data: org } = await supabase.from("organisations").select("onboarding_complete").eq("user_id", data.user.id).maybeSingle();
-          if (!org || !org.onboarding_complete) {
+          const { data: org } = await supabase.from("organisations").select("onboarding_complete, org_settings").eq("user_id", data.user.id).maybeSingle();
+          if (!canExplore(org)) {
             navigate("/onboarding");
           } else {
             navigate("/dashboard");
@@ -224,7 +227,7 @@ const AuthPage = () => {
     <div className="min-h-screen bg-background flex items-center justify-center px-6">
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="glass-card p-8 max-w-md w-full">
         <h1 className="text-xl font-bold text-foreground mb-2">Create your account</h1>
-        <p className="text-xs text-muted-foreground/80 mb-6">Start your free 7-day trial — no credit card required.</p>
+        <p className="text-xs text-muted-foreground/80 mb-6">Create your NGO account.</p>
         <form className="space-y-4" onSubmit={handleSubmit}>
           <div>
             <Label htmlFor="signup-org" className="text-xs text-muted-foreground">Organisation Name</Label>
@@ -249,6 +252,10 @@ const AuthPage = () => {
             {submitting ? <AfricaSpinner className="h-4 w-4 animate-spin mr-2" /> : null}
             Create account
           </Button>
+          <div className="flex items-center gap-3">
+            <Checkbox id="quick-start" checked={quickStart} onCheckedChange={(checked) => setQuickStart(checked === true)} />
+            <Label htmlFor="quick-start" className="text-sm text-foreground">Quick start — complete my profile later</Label>
+          </div>
         </form>
         <p className="text-center text-xs text-muted-foreground/80 mt-4">Already have an account? <Link to="/login" className="text-primary hover:underline">Log in</Link></p>
       </motion.div>

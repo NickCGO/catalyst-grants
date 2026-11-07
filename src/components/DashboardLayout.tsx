@@ -21,6 +21,8 @@ import { useAuth, useOrganisation } from "@/hooks/useAuth";
 import AfricaSpinner from "@/components/AfricaSpinner";
 import brandLogo from "@/assets/find-the-grant-logo.png.asset.json";
 import { Skeleton } from "@/components/ui/skeleton";
+import { canExplore } from "@/lib/onboardingAccess";
+import { Button } from "@/components/ui/button";
 
 const ADMIN_EMAILS = ["founders@grantmatch.co.za", "admin@grantmatch.co.za", "info@nickfernandes.co.za", "hello@chantalehlen.com"];
 
@@ -222,7 +224,7 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
   }, [loading, user, navigate]);
 
   useEffect(() => {
-    if (!loading && !orgLoading && user && !org?.onboarding_complete) {
+    if (!loading && !orgLoading && user && !canExplore(org)) {
       navigate("/onboarding", { replace: true });
     }
   }, [loading, orgLoading, user, org, navigate]);
@@ -238,7 +240,7 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
     );
   }
 
-  if (!user) return null;
+  if (!user || !canExplore(org)) return null;
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full gradient-bg">
@@ -249,6 +251,12 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
             <NotificationBell />
           </header>
           <AccessBanner />
+          {!org?.onboarding_complete && (
+            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border bg-primary/5 px-6 py-3">
+              <span className="text-sm text-foreground">Organisation profile incomplete</span>
+              <Button variant="outline" size="sm" asChild><Link to="/onboarding">Complete profile</Link></Button>
+            </div>
+          )}
           <main className="flex-1 overflow-auto p-6">
             {children}
           </main>

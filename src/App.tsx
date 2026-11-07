@@ -44,6 +44,7 @@ import PricingPage from "./pages/PricingPage";
 import CheckoutReturnPage from "./pages/CheckoutReturnPage";
 import PrivacyPolicyPage from "./pages/PrivacyPolicyPage";
 import TermsPage from "./pages/TermsPage";
+import ApplicationProfileGate from "./components/ApplicationProfileGate";
 
 const queryClient = new QueryClient();
 
@@ -84,10 +85,10 @@ const App = () => (
           <Route path="/grants" element={<GrantsPage />} />
           <Route path="/grants/:id" element={<FunderDetailPage />} />
           <Route path="/applications" element={<ApplicationsPage />} />
-          <Route path="/applications/:id" element={<ApplicationDetailPage />} />
+          <Route path="/applications/:id" element={<ApplicationProfileGate><ApplicationDetailPage /></ApplicationProfileGate>} />
           <Route path="/writer" element={<ProposalListPage />} />
-          <Route path="/writer/new" element={<ProposalEditorPage />} />
-          <Route path="/writer/:id" element={<ProposalEditorPage />} />
+          <Route path="/writer/new" element={<ApplicationProfileGate><ProposalEditorPage /></ApplicationProfileGate>} />
+          <Route path="/writer/:id" element={<ApplicationProfileGate><ProposalEditorPage /></ApplicationProfileGate>} />
           <Route path="/reports" element={<ReportsPage />} />
           <Route path="/reports/new" element={<ReportsPage />} />
           <Route path="/reports/:id" element={<ReportsPage />} />

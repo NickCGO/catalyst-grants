@@ -10,6 +10,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { hints } from "@/lib/formHints";
 import AfricaSpinner from "./AfricaSpinner";
+import { useNavigate } from "react-router-dom";
+import { useOrganisation } from "@/hooks/useAuth";
+import { needsApplicationProfile, profileCompletionUrl } from "@/lib/onboardingAccess";
 
 type ApplicationRoute = "full_proposal" | "loe" | "concept_note" | "online_form" | "guided";
 
@@ -85,6 +88,8 @@ export default function StartApplicationModal({ open, onClose, funder, matchScor
   const [amountRequested, setAmountRequested] = useState("");
   const [deadline, setDeadline] = useState("");
   const [creating, setCreating] = useState(false);
+  const { org, loading: orgLoading } = useOrganisation();
+  const navigate = useNavigate();
 
   const route = getApplicationRoute(funder.method_of_approach || "");
   const routeInfo = routeLabels[route];
@@ -98,7 +103,14 @@ export default function StartApplicationModal({ open, onClose, funder, matchScor
     }
   }, [open, programmes, funder.application_period]);
 
+  useEffect(() => {
+    if (open && !orgLoading && needsApplicationProfile(org)) {
+      navigate(profileCompletionUrl(`/grants/${funder.id}?apply=1`));
+    }
+  }, [open, orgLoading, org, funder.id, navigate]);
+
   const handleStart = async () => {
+    if (orgLoading || needsApplicationProfile(org)) return;
     setCreating(true);
     try {
       // Create application
@@ -134,6 +146,7 @@ export default function StartApplicationModal({ open, onClose, funder, matchScor
     setCreating(false);
   };
 
+  if (open && (orgLoading || needsApplicationProfile(org))) return null;
   return (
     <Dialog open={open} onOpenChange={v => !v && onClose()}>
       <DialogContent className="sm:max-w-[520px] bg-background border-border/50">
